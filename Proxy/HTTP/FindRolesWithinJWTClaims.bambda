@@ -4,6 +4,11 @@
  * @author Trikster
  **/
 
+if (!requestResponse.hasResponse())
+{
+    return false;
+}
+
 var body = requestResponse.response().bodyToString().trim();
 
 if (requestResponse.response().hasHeader("authorization")) {
