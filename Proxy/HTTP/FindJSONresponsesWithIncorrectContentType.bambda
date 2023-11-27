@@ -6,7 +6,7 @@
  * @author albinowax
  **/
 
-var contentType = requestResponse.response().headerValue("Content-Type");
+var contentType = requestResponse.hasResponse() ? requestResponse.response().headerValue("Content-Type") : null;
 
 if (contentType != null && !contentType.contains("application/json")) {
  String body = requestResponse.response().bodyToString().trim();
