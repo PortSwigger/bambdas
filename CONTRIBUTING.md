@@ -16,9 +16,11 @@ Please note that we have a code of conduct. Please follow it in all your interac
 
 1. Please make sure the Bambda is syntactically valid.
 2. Please make sure the Bambda is formatted correctly.
+   - Ensure that there is a JavaDoc style comment describing the Bambda containing an appropriate @author tag. For an example see [this bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/FilterOnCookieValue.bambda) 
    - Indentation is four spaces, not tabs.
-3. Please make sure the Bambda is optimized.
-4. Please avoid excessive use of comments.
+   - Ensure that the filename uses camel casing.
+4. Please make sure the Bambda is optimized.
+5. Please avoid excessive use of comments.
    - Use of appropriately named variables should mean that your Bambda is self-documenting.
 
 
