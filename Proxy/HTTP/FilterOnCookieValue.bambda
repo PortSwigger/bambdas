@@ -1,0 +1,16 @@
+/**
+ * Filters Proxy HTTP history for requests with a specific Cookie value.
+ *
+ * @author LostCoder
+ **/
+
+if (requestResponse.request().hasParameter("foo", HttpParameterType.COOKIE)) {
+	var cookieValue = requestResponse
+		.request()
+		.parameter("foo", HttpParameterType.COOKIE)
+		.value();
+
+	return cookieValue.contains("1337");
+}
+
+return false;
