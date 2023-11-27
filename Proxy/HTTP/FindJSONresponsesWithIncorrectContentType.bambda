@@ -1,0 +1,17 @@
+/**
+ * Finds JSON responses with wrong Content-Type
+ *
+ * The content is probably json but the content type is not application/json
+ *
+ * @author albinowax
+ **/
+
+var contentType = requestResponse.response().headerValue("Content-Type");
+
+if (contentType != null && !contentType.contains("application/json")) {
+ String body = requestResponse.response().bodyToString().trim();
+
+ return body.startsWith( "{" ) || body.startsWith( "[" );
+}
+
+return false;
