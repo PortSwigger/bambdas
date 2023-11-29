@@ -24,6 +24,8 @@ jobs:
         run: |
           [ $(sha256sum BambdaChecker.jar | awk '{ print $1 }') = '80a0af46f3b9b053c9624c6cc5f2be08fdcdc759064d177f3acd55ff98b85fb9' ]
           java -jar BambdaChecker.jar
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
           git add .
           git commit -m "Update README.md files" || true
           git push || true
