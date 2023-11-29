@@ -66,9 +66,3 @@ if (requestResponse.response().hasHeader("authorization")) {
 return false;
 
 ```
-## [FilterOnSpecificHighlightColor.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/FilterOnSpecificHighlightColor.bambda)
-### Shows requests/responses highlighted with a specific color
-#### Author: [Nick Coblentz ](https://github.com/ncoblentz)
-```java
-return requestResponse.annotations().highlightColor().equals(HighlightColor.CYAN);
-```
