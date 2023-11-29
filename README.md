@@ -11,4 +11,3 @@ Online documentation for Proxy HTTP Bambdas can be found [here](https://portswig
 
 ## Community submissions
 Please issue a pull request and follow the process outlined [here](https://github.com/PortSwigger/Bambdas/blob/main/CONTRIBUTING.md).
-
