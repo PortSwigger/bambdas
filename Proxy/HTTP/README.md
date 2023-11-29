@@ -16,6 +16,13 @@ if (requestResponse.request().hasParameter("foo", HttpParameterType.COOKIE)) {
 return false;
 
 ```
+## [FilterOutOptionsRequests.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/FilterOutOptionsRequests.bambda)
+### Filter out OPTIONS requests.
+#### Author: Trikster
+```java
+return !requestResponse.request().method().equals("OPTIONS");
+
+```
 ## [FindJSONresponsesWithIncorrectContentType.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/FindJSONresponsesWithIncorrectContentType.bambda)
 ### Finds JSON responses with wrong Content-Type  The content is probably json but the content type is not application/json
 #### Author: albinowax
