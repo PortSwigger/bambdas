@@ -1,0 +1,7 @@
+/**
+ * Filter out OPTIONS requests.
+ *
+ * @author Trikster
+ **/
+
+return !requestResponse.request().method().equals("OPTIONS");
