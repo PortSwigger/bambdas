@@ -42,27 +42,5 @@ return false;
 ### Find role within JWT claims
 #### Author: Trikster
 ```java
-if (!requestResponse.hasResponse())
-{
-    return false;
-}
-
-var body = requestResponse.response().bodyToString().trim();
-
-if (requestResponse.response().hasHeader("authorization")) {
-    var authValue = requestResponse.response().headerValue("authorization");
-
-    if (authValue.startsWith("Bearer ey")) {
-        var tokens = authValue.split("\\.");
-
-        if (tokens.length == 3) {
-            var decodedClaims = utilities().base64Utils().decode(tokens[1], Base64DecodingOptions.URL).toString();
-
-            return decodedClaims.toLowerCase().contains("role");
-        }
-    }
-}
-
-return false;
-
+return requestResponse.annotations().highlightColor().equals(HighlightColor.CYAN);
 ```
