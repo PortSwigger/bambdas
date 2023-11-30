@@ -21,6 +21,13 @@ if (requestResponse.request().hasParameter("foo", HttpParameterType.COOKIE)) {
 return false;
 
 ```
+## [FilterOnSpecificHighlightColor.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/FilterOnSpecificHighlightColor.bambda)
+### Filters requests/responses for specific highlight colors
+#### Author: Nick Coblentz (https://github.com/ncoblentz)
+```java
+return requestResponse.annotations().highlightColor().equals(HighlightColor.CYAN);
+
+```
 ## [FilterOutOptionsRequests.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/FilterOutOptionsRequests.bambda)
 ### Filter out OPTIONS requests.
 #### Author: Trikster
