@@ -1,12 +1,8 @@
 /**
  * Filters requests/responses for specific highlight colors
  *
- * @author [Nick Coblentz](https://github.com/ncoblentz)
+ * @author Nick Coblentz (https://github.com/ncoblentz)
  * 
- 
- **/
-
-/* 
  * You can currently filter requests/responses that are highlighted, but you can't ask Burp to show you requests/responses highlighted with a particular color only. If you use a specific color to categorize requests/responses for role-based authorization testing, todo lists, or identifying a particular browser tab/window then its helpful to be able to see only those requests/resposnse you are interested in. The following Bambda snippet lets you choose the color(s) you want to see. The available colors are:
  * Options:
  * - HighlightColor.BLUE;
@@ -19,6 +15,6 @@
  * - HighlightColor.PINK;
  * - HighlightColor.RED;
  * - HighlightColor.YELLOW;
- */
+ **/
 
  return requestResponse.annotations().highlightColor().equals(HighlightColor.CYAN);
