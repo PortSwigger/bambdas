@@ -44,7 +44,8 @@ java -jar BambdaChecker-1.1.jar validateonly
 1. Please make sure the Bambda is syntactically valid.
 2. Please make sure the Bambda is formatted correctly.
    - Ensure that there is a JavaDoc style comment describing the Bambda containing an appropriate @author tag. For an example see [this bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/FilterOnCookieValue.bambda).
-   - Your description should be relatively short and preceed the author tag. Longer details can be added after the author tag. These will remain in the Bambda, but will not be included in the generated markdown.
+   - You may provide a link to your GitHub profile in the format `@author <author_name> (https://github.com/<author_profile>)`. Links must not be obscured.
+   - Your description should be relatively short and precede the author tag. Longer details can be added after the author tag. These will remain in the Bambda, but will not be included in the generated markdown.
    - Indentation is four spaces, not tabs.
    - Ensure that the filename uses camel casing.
 3. Please make sure the Bambda is optimized.
