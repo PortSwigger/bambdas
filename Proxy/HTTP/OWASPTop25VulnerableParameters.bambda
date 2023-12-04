@@ -1,7 +1,6 @@
 /**
  * Filters Proxy HTTP history for requests with vulnerable parameters based on the OWASP Top 25
- * Author: Tur24Tur
- * GitHub: @BugBountyzip BugBountyzip (https://github.com/BugBountyzip)
+ * @author Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
  **/
 
 // Define the vulnerable parameters as a Set based on OWASP Top 25
