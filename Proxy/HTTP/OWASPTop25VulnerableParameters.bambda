@@ -4,45 +4,43 @@
  * GitHub: @BugBountyzip BugBountyzip (https://github.com/BugBountyzip)
  **/
 
-// Lists of vulnerable parameters based on OWASP Top 25
-String[] ssrfParams = {"dest=", "redirect=", "uri=", "path=", "continue=", "url=", "window=", "next=", "data=", "reference=", "site=", "html=", "val=", "validate=", "domain=", "callback=", "return=", "page=", "feed=", "host=", "port=", "to=", "out=", "view=", "dir="};
-String[] sqlParams = {"id=", "page=", "report=", "dir=", "search=", "category=", "file=", "class", "url=", "news=", "item=", "menu=", "lang=", "name=", "ref=", "title=", "view=", "topic=", "thread=", "type=", "date=", "form=", "main=", "nav=", "region="};
-String[] xssParams = {"q=", "s=", "search=", "id=", "lang=", "keyword=", "query=", "page=", "keywords=", "year=", "view=", "email=", "type=", "name=", "p=", "month=", "image=", "list_type=", "url=", "terms=", "categoryid=", "key=", "l=", "begindate=", "enddate="};
-String[] lfiParams = {"cat=", "dir=", "action=", "board=", "date=", "detail=", "file=", "download=", "path", "folder=", "prefix=", "include=", "page=", "inc=", "locate=", "show=", "doc=", "site=", "type=", "view=", "content=", "document=", "layout=", "mod=", "conf="};
-String[] orParams = {"next=", "url=", "target=", "rurl=", "dest=", "destination=", "redir=", "redirect_uri", "redirect_url=", "redirect=", "out=", "view=", "to=", "image_url=", "go=", "return=", "returnTo=", "return_to=", "checkout_url=", "continue=", "return_path="};
-String[] rceParams = {"cmd=", "exec=", "command=", "execute=", "ping=", "query=", "jump=", "code", "reg=", "do=", "func=", "arg=", "option=", "load=", "process=", "step=", "read=", "feature=", "exe=", "module=", "payload=", "run=", "print="};
+// Define the vulnerable parameters as a Set based on OWASP Top 25
+Set<String> parameterNames = Set.of(
+    // SSRF parameters
+    "dest", "redirect", "uri", "continue", "url", "window", "data",
+    "reference", "site", "html", "val", "validate", "domain", "callback", "return",
+    "page", "feed", "host", "port", "to", "out", "dir",
+    // SQL injection parameters
+    "id", "select", "report", "search", "category", "file", "class", "news",
+    "item", "menu", "ref", "title", "topic", "thread",
+    "form", "main", "nav", "region",
+    // XSS parameters
+    "q", "s", "lang", "keyword", "keywords", "year", "email",
+    "type", "name", "p", "month", "image", "list_type", "terms", "categoryid", "key",
+    "l", "begindate", "enddate",
+    // LFI parameters
+    "cat", "action", "board", "date", "detail", "download", "path", "folder",
+    "prefix", "include", "inc", "locate", "show", "doc", "view",
+    "content", "document", "layout", "mod", "conf",
+    // Open Redirect parameters
+    "next", "target", "rurl", "destination", "redir", "redirect_uri",
+    "redirect_url", "image_url", "go",
+    "returnTo", "return_to", "checkout_url", "return_path",
+    // RCE parameters
+    "cmd", "exec", "command", "execute", "ping", "query", "jump", "code", "reg", "do",
+    "func", "arg", "option", "load", "process", "step", "read", "feature", "exe",
+    "module", "payload", "run", "print"
+);
 
+// Get the request object
+var request = requestResponse.request();
 
-// Main logic of the Bambda
-if (requestResponse.request().url() != null) {
-    String requestUrl = requestResponse.request().url();
-    String requestBody = requestResponse.request().bodyToString();
-	
-// Consolidate all parameter lists into a single array for easier processing
-    String[][] allParams = {ssrfParams, sqlParams, xssParams, lfiParams, orParams, rceParams};
-
-// Extract the query string from the URL (if any)
-    int queryStart = requestUrl.indexOf("?");
-    String queryString = "";
-    if (queryStart != -1 && queryStart < requestUrl.length() - 1) {
-        queryString = requestUrl.substring(queryStart + 1);
-    }
-	
-// Combine and split the query string and request body into individual parameters
-    String[] allInputParams = (queryString + "&" + requestBody).split("&");
-
-    // Check each parameter against the lists of vulnerable parameters
-    for (String inputParam : allInputParams) {
-        for (String[] paramArray : allParams) {
-            for (String param : paramArray) {
-                if (inputParam.startsWith(param)) {
-                    return true; 
-                }
-            }
-        }
+// Iterate through each parameter name and check if it exists in the request URL or body
+for (String param : parameterNames) {
+    if (request.hasParameter(param, HttpParameterType.URL) || 
+        request.hasParameter(param, HttpParameterType.BODY)) {
+        return true;
     }
 }
 
 return false;
-
-
