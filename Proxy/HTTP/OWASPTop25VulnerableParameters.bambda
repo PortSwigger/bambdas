@@ -1,0 +1,45 @@
+/**
+ * Filters Proxy HTTP history for requests with vulnerable parameters based on the OWASP Top 25
+ * @author Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
+ **/
+
+// Define the vulnerable parameters as a Set based on OWASP Top 25
+Set<String> parameterNames = Set.of(
+    // SSRF parameters
+    "dest", "redirect", "uri", "continue", "url", "window", "data",
+    "reference", "site", "html", "val", "validate", "domain", "callback", "return",
+    "page", "feed", "host", "port", "to", "out", "dir",
+    // SQL injection parameters
+    "id", "select", "report", "search", "category", "file", "class", "news",
+    "item", "menu", "ref", "title", "topic", "thread",
+    "form", "main", "nav", "region",
+    // XSS parameters
+    "q", "s", "lang", "keyword", "keywords", "year", "email",
+    "type", "name", "p", "month", "image", "list_type", "terms", "categoryid", "key",
+    "l", "begindate", "enddate",
+    // LFI parameters
+    "cat", "action", "board", "date", "detail", "download", "path", "folder",
+    "prefix", "include", "inc", "locate", "show", "doc", "view",
+    "content", "document", "layout", "mod", "conf",
+    // Open Redirect parameters
+    "next", "target", "rurl", "destination", "redir", "redirect_uri",
+    "redirect_url", "image_url", "go",
+    "returnTo", "return_to", "checkout_url", "return_path",
+    // RCE parameters
+    "cmd", "exec", "command", "execute", "ping", "query", "jump", "code", "reg", "do",
+    "func", "arg", "option", "load", "process", "step", "read", "feature", "exe",
+    "module", "payload", "run", "print"
+);
+
+// Get the request object
+var request = requestResponse.request();
+
+// Iterate through each parameter name and check if it exists in the request URL or body
+for (String param : parameterNames) {
+    if (request.hasParameter(param, HttpParameterType.URL) || 
+        request.hasParameter(param, HttpParameterType.BODY)) {
+        return true;
+    }
+}
+
+return false;
