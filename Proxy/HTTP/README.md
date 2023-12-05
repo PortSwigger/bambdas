@@ -78,6 +78,26 @@ if (requestResponse.response().hasHeader("authorization")) {
 return false;
 
 ```
+## [HighlightUnencryptedHTTP.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/HighlightUnencryptedHTTP.bambda)
+### Bambda Script to Highlight Unencrypted HTTP Traffic Filters Proxy HTTP history for unencrypted (non-HTTPS) requests.
+#### Author: Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
+```java
+// Get the request object from the requestResponse
+var request = requestResponse.request();
+
+// Extract the URL from the request
+var requestUrl = request.url();
+
+// Check if the request URL starts with "http://"
+if (requestUrl.startsWith("http://")) {
+    // URL is unencrypted, return true to highlight this request
+    return true;
+}
+
+// URL is encrypted or does not match the criteria, return false
+return false;
+
+```
 ## [OWASPTop25VulnerableParameters.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/OWASPTop25VulnerableParameters.bambda)
 ### Filters Proxy HTTP history for requests with vulnerable parameters based on the OWASP Top 25
 #### Author: Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
