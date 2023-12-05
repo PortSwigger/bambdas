@@ -124,7 +124,7 @@ for (String param : parameterNames) {
 return false;
 
 ```
-## [HighlightUnencryptedHTTP.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/OWASPTop25VulnerableParameters.bambda](https://github.com/BugBountyzip/bambdas_updates/blob/main/Proxy/HTTP/HighlightUnencryptedHTTP.bambda))
+## [HighlightUnencryptedHTTP.bambda](https://github.com/BugBountyzip/bambdas_updates/blob/main/Proxy/HTTP/HighlightUnencryptedHTTP.bambda)
 ### Highlight Unencrypted HTTP Traffic
 #### Author: Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
 ```java
