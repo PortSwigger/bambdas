@@ -1,0 +1,26 @@
+name: Run Bambda Checker Manually
+
+on: [workflow_dispatch]
+
+jobs:
+  update_readmes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: main
+          ssh-key: ${{secrets.ACTION_PRIVKEY}}
+      - uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'oracle'
+
+      - name: Validate Bambdas & update READMEs
+        run: |
+          [ $(sha256sum BambdaChecker-1.1.jar | awk '{ print $1 }') = '21805c494ccea16158081855326810e3715034900a1cd18d9e2b9ab7f108de57' ]
+          java -jar BambdaChecker-1.1.jar
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add .
+          git commit -m "Update README.md files" || true
+          git push || true
