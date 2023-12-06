@@ -1,0 +1,47 @@
+/**
+ * Script to Filter Out Email Addresses in Responses and Highlight Them if Found
+ * Author: Tur24Tur
+ * GitHub: @BugBountyzip (https://github.com/BugBountyzip)
+ **/
+
+boolean manualColorHighlightEnabled = true;
+
+// Set of file extensions to ignore
+Set<String> ignoredExtensions = Set.of("mp4", "mp3", "png", "gif", "jpg", "jpeg", "css", "pdf");
+
+if (!requestResponse.hasResponse()) {
+    return false;
+}
+
+// Retrieve the URL from the request part of the requestResponse object
+String requestUrl = requestResponse.request().url().toString();
+
+
+for (String ext : ignoredExtensions) {
+    // Check if the URL ends with any of the ignored file extensions
+    if (requestUrl.toLowerCase().endsWith("." + ext)) {
+        return false; 
+    }
+}
+
+// Extract the response body as a string and remove any leading and trailing whitespace
+var body = requestResponse.response().bodyToString().trim();
+
+
+String emailRegexPattern = "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.(?!jpeg|png|jpg|gif|webp)[A-Z|a-z]{2,7}\\b";
+Pattern emailPattern = Pattern.compile(emailRegexPattern);
+
+// Create a matcher to find email addresses in the response body
+Matcher emailMatcher = emailPattern.matcher(body);
+if (emailMatcher.find()) { 
+    if (manualColorHighlightEnabled) { 
+
+        requestResponse.annotations().setHighlightColor(HighlightColor.GREEN);
+        // Add a note indicating that an email was found
+        requestResponse.annotations().setNotes("Email Found!: " + emailMatcher.group());
+    }
+    return true; 
+}
+
+
+return false;
