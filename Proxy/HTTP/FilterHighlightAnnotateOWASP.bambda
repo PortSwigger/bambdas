@@ -2,7 +2,7 @@
 * @author Shain Lakin (https://github.com/flamebarke/SkittlesBambda)
 * Filters Proxy HTTP history for requests with vulnerable parameters based on the OWASP Top 25
 * using the parameter arrays written by Tur24Tur / BugBountyzip (https://github.com/BugBountyzip).
-* This version includes colour highlighting for each class of vulnerability along with
+* Implements colour highlighting for each class of vulnerability along with
 * automatic note annotations detailing the parameter to test and class of vulnerability.
 **/
 
