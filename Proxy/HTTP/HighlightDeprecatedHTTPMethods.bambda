@@ -1,8 +1,7 @@
 /**
  * Bambda Script to Filter and Highlight Requests Using Deprecated HTTP Methods
  * Highlights requests using less common or deprecated HTTP methods like TRACE or CONNECT.
- * Author: Tur24Tur
- * GitHub: @BugBountyzip (https://github.com/BugBountyzip)
+ * @author Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
  **/
 
 boolean manualColorHighlightEnabled = true;
