@@ -2,34 +2,27 @@
  * Bambda Script to Highlight Responses with Developer Notes
  * This script identifies and highlights HTTP responses containing developer notes in HTML, JavaScript, or other files.
  * It differentiates the types of files and highlights them accordingly: green for HTML, yellow for JavaScript, and blue for other types.
- * Author: Tur24Tur
- * GitHub: @BugBountyzip (https://github.com/BugBountyzip)
+ * @author Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
  **/
 
 boolean manualColorHighlightEnabled = true;
-Set<String> ignoredExtensions = Set.of("mp4", "mp3", "png", "gif", "jpg", "jpeg", "css", "pdf");
 
-if (!requestResponse.hasResponse()) {
+// Ensure there is a response and it is not null
+if (!requestResponse.hasResponse() || requestResponse.response() == null) {
     return false;
 }
 
-String requestUrl = requestResponse.request().url().toString();
-String fileExtension = requestUrl.substring(requestUrl.lastIndexOf('.') + 1).toLowerCase();
-
-if (ignoredExtensions.contains(fileExtension)) {
-    return false;
-}
-
-String contentType = requestResponse.response().headerValue("Content-Type");
-boolean isHtml = contentType != null && contentType.toLowerCase().contains("text/html");
-boolean isJavaScript = contentType != null && contentType.toLowerCase().contains("application/javascript");
+// Use mimeType() for content type detection
+MimeType responseType = requestResponse.response().mimeType();
+boolean isHtml = responseType == MimeType.HTML;
+boolean isJavaScript = responseType == MimeType.SCRIPT;
 boolean foundDeveloperNotes = false;
 StringBuilder notesBuilder = new StringBuilder();
-HighlightColor highlightColor = HighlightColor.BLUE; // Default color
+HighlightColor highlightColor = HighlightColor.BLUE; // Default color for other types
 
-if (isHtml || fileExtension.equals("html") || fileExtension.equals("htm")) {
+if (isHtml) {
     highlightColor = HighlightColor.GREEN;
-} else if (isJavaScript || fileExtension.equals("js")) {
+} else if (isJavaScript) {
     highlightColor = HighlightColor.YELLOW;
 }
 
@@ -43,10 +36,16 @@ for (String pattern : commentPatterns) {
     while (matcher.find()) {
         foundDeveloperNotes = true;
         if (manualColorHighlightEnabled) {
+            String note = matcher.group();
+            // Limit the note length to 250 characters to avoid excessively long notes
+            if (note.length() > 250) {
+                note = note.substring(0, 250) + "...";
+            }
+
             if (notesBuilder.length() > 0) {
                 notesBuilder.append("; ");
             }
-            notesBuilder.append("Developer note found: ").append(matcher.group());
+            notesBuilder.append("Developer note found: ").append(note);
         }
     }
 }
@@ -59,3 +58,4 @@ if (foundDeveloperNotes) {
 }
 
 return foundDeveloperNotes;
+
