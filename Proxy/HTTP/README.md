@@ -112,6 +112,32 @@ if (contentType != null && !contentType.contains("application/json")) {
 return false;
 
 ```
+## [HighlightDeprecatedHTTPMethods.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/HighlightDeprecatedHTTPMethods.bambda)
+### Filters and highlights requests using less common or deprecated HTTP methods like TRACE or CONNECT.
+#### Author: Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
+```java
+boolean manualColorHighlightEnabled = true;
+
+// Define the set of deprecated or less common HTTP methods
+Set<String> deprecatedMethods = Set.of("TRACE", "CONNECT");
+
+String requestMethod = requestResponse.request().method();
+
+// Check if the request method is in the set of deprecated methods
+if (deprecatedMethods.contains(requestMethod)) {
+    if (manualColorHighlightEnabled) {
+        // Set the highlight color to RED
+        requestResponse.annotations().setHighlightColor(HighlightColor.RED);
+
+        // Optionally, add a note to the request/response
+        requestResponse.annotations().setNotes("Deprecated method used: " + requestMethod);
+    }
+    return true;
+}
+
+return false;
+
+```
 ## [HighlightUnencryptedHTTP.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/HighlightUnencryptedHTTP.bambda)
 ### Bambda Script to Highlight Unencrypted HTTP Traffic Filters Proxy HTTP history for unencrypted (non-HTTPS) requests.
 #### Author: Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
