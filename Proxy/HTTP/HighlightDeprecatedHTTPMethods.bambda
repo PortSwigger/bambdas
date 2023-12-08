@@ -1,5 +1,5 @@
 /**
- * Highlights requests using less common or deprecated HTTP methods like TRACE or CONNECT.
+ * Filters and highlights requests using less common or deprecated HTTP methods like TRACE or CONNECT.
  * @author Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
  **/
 
