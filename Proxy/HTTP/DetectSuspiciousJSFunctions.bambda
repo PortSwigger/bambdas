@@ -1,19 +1,18 @@
 /**
  * Bambda Script to Detect and Highlight Suspicious JavaScript Functions
- * It identifies a range of suspicious JavaScript functions often associated with unsafe practices or vulnerabilities, such as 'eval()', 'setTimeout()', and 'document.write()'.
- * Upon detection, responses are highlighted in red, and notes are appended to indicate the specific functions found.
- * Author: Tur24Tur
- * GitHub: @BugBountyzip (https://github.com/BugBountyzip)
+  @author Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
+  It identifies a range of suspicious JavaScript functions often associated with unsafe practices or vulnerabilities.
+ * Upon detection, responses are highlighted in red and notes are appended, if enabled.
  **/
 
-boolean manualColorHighlightEnabled = true;
+boolean enableManualAnnotations = true;
 
-// Ensure there is a response and it is not null
-if (!requestResponse.hasResponse() || requestResponse.response() == null) {
+// Ensure there is a response
+if (!requestResponse.hasResponse()) {
     return false;
 }
 
-// Check the Content-Type header
+// Check the Content-Type header for JavaScript
 String contentType = requestResponse.response().headerValue("Content-Type");
 if (contentType == null || !contentType.toLowerCase().contains("application/javascript")) {
     return false;
@@ -51,20 +50,18 @@ for (String function : suspiciousFunctions) {
     Matcher matcher = pattern.matcher(responseBody);
     if (matcher.find()) {
         foundSuspiciousFunction = true;
-        if (manualColorHighlightEnabled) {
-            // Append detected functions to notes
+        if (enableManualAnnotations) {
             if (notesBuilder.length() > 0) {
                 notesBuilder.append(", ");
             }
-            notesBuilder.append(function.split("\\\\")[0]); // Include only the function name in the note
+            notesBuilder.append(function); // Append the complete function signature
         }
     }
 }
 
-if (foundSuspiciousFunction) {
-    // Set the highlight color to RED and add notes
+if (foundSuspiciousFunction && enableManualAnnotations) {
     requestResponse.annotations().setHighlightColor(HighlightColor.RED);
-    if (manualColorHighlightEnabled && notesBuilder.length() > 0) {
+    if (notesBuilder.length() > 0) {
         requestResponse.annotations().setNotes("Suspicious JS functions detected: " + notesBuilder.toString());
     }
 }
