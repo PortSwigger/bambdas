@@ -8,7 +8,7 @@
 boolean manualColorHighlightEnabled = true;
 
 // Ensure there is a response and it is not null
-if (!requestResponse.hasResponse() || requestResponse.response() == null) {
+if (!requestResponse.hasResponse()) {
     return false;
 }
 
@@ -27,7 +27,7 @@ StringBuilder notesBuilder = new StringBuilder();
 HighlightColor highlightColor = isHtml ? HighlightColor.GREEN : HighlightColor.YELLOW;
 
 String responseBody = requestResponse.response().bodyToString();
-String[] commentPatterns = isHtml ? new String[]{"<!--(?!\\[if).*?(?<!\\])-->"} : new String[]{"/[*][*](.*?)[*][*]/"};
+String[] commentPatterns = isHtml ? new String[]{"<!--(?!\\[if).*?(?<!\\])-->"} : new String[]{"/\\*\\*(.*?)\\*\\*/"};
 
 
 for (String pattern : commentPatterns) {
