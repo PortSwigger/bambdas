@@ -1,7 +1,6 @@
 /**
  * Script to Filter Out Email Addresses in Responses and Highlight Them if Found
- * Author: Tur24Tur
- * GitHub: @BugBountyzip (https://github.com/BugBountyzip)
+ * @author Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
  **/
 
 boolean manualColorHighlightEnabled = true;
