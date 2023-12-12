@@ -1,0 +1,71 @@
+/**
+ * Multi Filter Bambda 
+ * Filters Proxy HTTP history based on user-defined partial match criteria.
+ * Author: Tur24Tur
+ * GitHub: @BugBountyzip (https://github.com/BugBountyzip)
+ **/
+
+// Multi filters are designed to narrow down your results.
+// Leave a field empty or use '*' to apply no filter for that criteria.
+// - 'hostFilter': Partial match for the host. Example: "portswigger.net" matches "sub.portswigger.net"
+// - 'pathFilter': Partial match for the path. Example: "admin" matches "/admin/settings" and "/user/admin/dashboard"
+// - 'statusCodeFilter': Full match for the status code. Leave empty or specify a specific code like "404"
+// - 'methodFilter': Full match for the HTTP method. Example: "GET", "POST"
+// - 'requestBodyFilter': Partial match for request body content. Example: "username=Wiener"
+// - 'responseBodyFilter': Partial match for response body content. Example: "book" matches responses containing the word "book"
+// - 'mimeTypeFilter': Partial match for MIME type in the response. Example: "application/javascript"
+// - 'notesFilter': Filter for specific notes content. Example: "critical" matches notes containing the word "critical"
+
+// User-defined criteria for partial matching
+String hostFilter = "*"; // Partial match for host
+String pathFilter = "*"; // Partial match for path
+String statusCodeFilter = "*"; // Full match for status code
+String methodFilter = "*"; // Full match for method
+String requestBodyFilter = "*"; // Partial match for request body content
+String responseBodyFilter = "*"; // Partial match for response body content
+String mimeTypeFilter = "*"; // MIME type filter for response content-type
+String notesFilter = "*"; // Filter for specific notes content
+
+// Main logic of the Bambda
+if (requestResponse.request().url() != null && requestResponse.hasResponse()) {
+    var request = requestResponse.request();
+    var response = requestResponse.response();
+    String requestUrl = request.url().toLowerCase();
+    String method = request.method();
+    int statusCode = response.statusCode();
+    String responseBody = response.bodyToString().toLowerCase();
+    String contentType = response.headerValue("Content-Type");
+
+    // Extract host and path from URL
+    String[] urlParts = requestUrl.split("/", 4);
+    String host = urlParts.length > 2 ? urlParts[2] : "";
+    String path = urlParts.length > 3 ? "/" + urlParts[3].split("\\?")[0] : "";
+
+    // Apply filters
+    if ((!("*".equals(hostFilter) || hostFilter.isEmpty()) && !host.contains(hostFilter.toLowerCase())) ||
+        (!("*".equals(pathFilter) || pathFilter.isEmpty()) && !path.contains(pathFilter.toLowerCase())) ||
+        (!("*".equals(statusCodeFilter) || statusCodeFilter.isEmpty()) && statusCode != Integer.parseInt(statusCodeFilter)) ||
+        (!("*".equals(methodFilter) || methodFilter.isEmpty()) && !method.equals(methodFilter)) ||
+        (!("*".equals(requestBodyFilter) || requestBodyFilter.isEmpty()) && !request.bodyToString().toLowerCase().contains(requestBodyFilter.toLowerCase())) ||
+        (!("*".equals(responseBodyFilter) || responseBodyFilter.isEmpty()) && !responseBody.contains(responseBodyFilter.toLowerCase())) ||
+        (contentType != null && !("*".equals(mimeTypeFilter) || mimeTypeFilter.isEmpty()) && !contentType.toLowerCase().contains(mimeTypeFilter))) {
+        return false;
+    }
+
+    // Notes filter
+    if (requestResponse.annotations().hasNotes()) {
+        String notes = requestResponse.annotations().notes();
+        if (!notes.contains(notesFilter)) {
+            return false; // Notes do not contain the specified filter
+        }
+    } else {
+        return false; // No notes found
+    }
+
+    // All conditions are met, highlight in yellow
+    requestResponse.annotations().setHighlightColor(HighlightColor.YELLOW);
+    return true;
+}
+
+// No conditions are met
+return false;
