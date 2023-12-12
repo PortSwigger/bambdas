@@ -138,6 +138,66 @@ if (deprecatedMethods.contains(requestMethod)) {
 return false;
 
 ```
+## [HighlightResponsesWithDeveloperNotes.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/HighlightResponsesWithDeveloperNotes.bambda)
+### Bambda Script to Highlight Responses with Developer Notes This script identifies and highlights HTTP responses containing developer notes in HTML and JavaScript files. It highlights HTML responses in green and JavaScript responses in yellow.
+#### Author: Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
+```java
+boolean manualColorHighlightEnabled = true;
+
+// Ensure there is a response and it is not null
+if (!requestResponse.hasResponse()) {
+    return false;
+}
+
+// Use mimeType() for content type detection
+MimeType responseType = requestResponse.response().mimeType();
+boolean isHtml = responseType == MimeType.HTML;
+boolean isJavaScript = responseType == MimeType.SCRIPT;
+
+// Process only HTML and JavaScript responses
+if (!isHtml && !isJavaScript) {
+    return false;
+}
+
+boolean foundDeveloperNotes = false;
+StringBuilder notesBuilder = new StringBuilder();
+HighlightColor highlightColor = isHtml ? HighlightColor.GREEN : HighlightColor.YELLOW;
+
+String responseBody = requestResponse.response().bodyToString();
+String[] commentPatterns = isHtml ? new String[]{"<!--(?!\\[if).*?(?<!\\])-->"} : new String[]{"/\\*\\*(.*?)\\*\\*/"};
+
+
+for (String pattern : commentPatterns) {
+    Pattern regexPattern = Pattern.compile(pattern, Pattern.DOTALL);
+    Matcher matcher = regexPattern.matcher(responseBody);
+
+    while (matcher.find()) {
+        foundDeveloperNotes = true;
+        if (manualColorHighlightEnabled) {
+            String note = matcher.group();
+            // Limit the note length to 250 characters
+            if (note.length() > 250) {
+                note = note.substring(0, 250) + "...";
+            }
+
+            if (notesBuilder.length() > 0) {
+                notesBuilder.append("; ");
+            }
+            notesBuilder.append("Developer note found: ").append(note);
+        }
+    }
+}
+
+if (foundDeveloperNotes) {
+    requestResponse.annotations().setHighlightColor(highlightColor);
+    if (manualColorHighlightEnabled && notesBuilder.length() > 0) {
+        requestResponse.annotations().setNotes(notesBuilder.toString());
+    }
+}
+
+return foundDeveloperNotes;
+
+```
 ## [HighlightUnencryptedHTTP.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/HighlightUnencryptedHTTP.bambda)
 ### Bambda Script to Highlight Unencrypted HTTP Traffic Filters Proxy HTTP history for unencrypted (non-HTTPS) requests.
 #### Author: Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
