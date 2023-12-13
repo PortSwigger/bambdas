@@ -1,9 +1,23 @@
 /**
  * Finds responses with multiple HTML closing tags.
  * 
- * @author albinowax
+ * @author albinowax & PortSwiggerWiener
  **/
 
-return requestResponse.response().statedMimeType() == MimeType.HTML &&
-       utilities().byteUtils().countMatches(
-       requestResponse.response().body().getBytes(), "</html>".getBytes()) > 1;
+// Main logic of the Bambda
+if (requestResponse.request().url() != null && requestResponse.hasResponse()) {
+    // Check if the response has HTML content type and multiple </html> tags
+    if (requestResponse.response().statedMimeType() == MimeType.HTML &&
+        utilities().byteUtils().countMatches(requestResponse.response().body().getBytes(), "</html>".getBytes()) > 1) {
+
+        // Add a note indicating that multiple </html> tags were detected
+        requestResponse.annotations().setNotes("Multiple </html> tags detected");
+
+        // Highlight the request/response and return true to indicate that the condition was met
+        requestResponse.annotations().setHighlightColor(HighlightColor.YELLOW);
+        return true;
+    }
+}
+
+// Return false if no multiple </html> tags were found or other conditions are not met
+return false;
