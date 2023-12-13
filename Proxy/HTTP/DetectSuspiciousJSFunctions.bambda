@@ -1,0 +1,69 @@
+/**
+ * Bambda Script to Detect and Highlight Suspicious JavaScript Functions
+  @author Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
+  It identifies a range of suspicious JavaScript functions often associated with unsafe practices or vulnerabilities.
+ * Upon detection, responses are highlighted in red and notes are appended, if enabled.
+ **/
+
+boolean enableManualAnnotations = true;
+
+// Ensure there is a response
+if (!requestResponse.hasResponse()) {
+    return false;
+}
+
+// Check the Content-Type header for JavaScript
+String contentType = requestResponse.response().headerValue("Content-Type");
+if (contentType == null || !contentType.toLowerCase().contains("application/javascript")) {
+    return false;
+}
+
+String responseBody = requestResponse.response().bodyToString();
+boolean foundSuspiciousFunction = false;
+StringBuilder notesBuilder = new StringBuilder();
+
+// Expanded list of suspicious JavaScript functions
+String[] suspiciousFunctions = {
+    "eval\\(",                 // Executes a string as code
+    "setTimeout\\(",           // Can execute strings as code if used improperly
+    "setInterval\\(",          // Similar to setTimeout, can execute strings as code
+    "document\\.write\\(",     // Can overwrite entire document
+    "innerHTML",               // Can introduce XSS vulnerabilities if used with untrusted content
+    "document\\.createElement\\(",  // Safe, but part of dynamic content generation which can be risky
+    "document\\.execCommand\\(",   // Deprecated, was used to execute certain commands
+    "document\\.domain",       // Altering the document.domain can be risky
+    "window\\.location\\.href",    // Can be used for redirects which might be used in phishing
+    "document\\.cookie",       // Accessing cookies can be sensitive
+    "document\\.URL",          // Can be used to extract URL information
+    "document\\.referrer",     // Can be used to check where the request came from
+    "window\\.open\\(",        // Opening a new window or tab, potential for misuse
+    "document\\.body\\.innerHTML", // Specific case of innerHTML, also risky
+    "element\\.setAttribute\\(",   // If used improperly, can set risky attributes like 'onclick'
+    "element\\.outerHTML",         // Similar risks to innerHTML
+    "XMLHttpRequest\\(",           // Can be used for sending/receiving data, potential for misuse
+    "fetch\\(",                    // Modern way to make network requests, potential for misuse
+    "navigator\\.sendBeacon\\("    // Used to send analytics and tracking data
+};
+
+for (String function : suspiciousFunctions) {
+    Pattern pattern = Pattern.compile(function);
+    Matcher matcher = pattern.matcher(responseBody);
+    if (matcher.find()) {
+        foundSuspiciousFunction = true;
+        if (enableManualAnnotations) {
+            if (notesBuilder.length() > 0) {
+                notesBuilder.append(", ");
+            }
+            notesBuilder.append(function); // Append the complete function signature
+        }
+    }
+}
+
+if (foundSuspiciousFunction && enableManualAnnotations) {
+    requestResponse.annotations().setHighlightColor(HighlightColor.RED);
+    if (notesBuilder.length() > 0) {
+        requestResponse.annotations().setNotes("Suspicious JS functions detected: " + notesBuilder.toString());
+    }
+}
+
+return foundSuspiciousFunction;
