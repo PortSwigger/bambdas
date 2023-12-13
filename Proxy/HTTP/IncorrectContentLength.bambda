@@ -4,6 +4,10 @@
  * @author albinowax
  **/
 
+if (!requestResponse.hasResponse()) {
+    return false;
+}
+
 int realContentLength = requestResponse.response().body().length();
 int declaredContentLength = Integer.parseInt(requestResponse.response().headerValue("Content-Length"));
 
