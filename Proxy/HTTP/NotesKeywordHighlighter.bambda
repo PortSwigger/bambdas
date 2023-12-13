@@ -8,21 +8,24 @@
 
 // User-defined keyword for filtering notes
 String keyword = "High"; // Replace "High" with your desired keyword
+boolean caseSensitive = true; // Set to true for case-sensitive search false for case-insensitive PortSwiggerWiener  <3
 
-// Main logic of the Bambda
-if (requestResponse.request().url() != null && requestResponse.hasResponse()) {
-    // Check if there are any notes for the HTTP request and response
-    if (requestResponse.annotations().hasNotes()) {
-        // Retrieve the notes
-        String notes = requestResponse.annotations().notes();
+// Check if there's a response and the response has notes
+if (requestResponse.hasResponse() && requestResponse.annotations().hasNotes()) {
+    // Retrieve the notes
+    String notes = requestResponse.annotations().notes();
 
-        // Check if the notes contain the specified keyword
-        if (notes.contains(keyword)) {
-            
-            requestResponse.annotations().setHighlightColor(HighlightColor.YELLOW);
-            return true;
-        }
+    // Adjust for case sensitivity
+    String processedNotes = caseSensitive ? notes : notes.toLowerCase();
+    String processedKeyword = caseSensitive ? keyword : keyword.toLowerCase();
+
+    // Check if the notes contain the specified keyword
+    if (processedNotes.contains(processedKeyword)) {
+        // If keyword is found, set highlight color and return true
+        requestResponse.annotations().setHighlightColor(HighlightColor.YELLOW);
+        return true;
     }
 }
 
+// If the keyword is not found or there are no notes, return false
 return false;
