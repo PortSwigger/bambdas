@@ -5,6 +5,121 @@ Please do not manually edit this file, or include any changes to this file in pu
 -->
 # Proxy HTTP
 Documentation: [Filtering the HTTP history with Bambdas](https://portswigger.net/burp/documentation/desktop/tools/proxy/http-history/bambdas)
+## [DetectSuspiciousJSFunctions.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/DetectSuspiciousJSFunctions.bambda)
+### Bambda Script to Detect and Highlight Suspicious JavaScript Functions
+#### Author: Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
+```java
+boolean enableManualAnnotations = true;
+
+// Ensure there is a response
+if (!requestResponse.hasResponse()) {
+    return false;
+}
+
+// Check the Content-Type header for JavaScript
+String contentType = requestResponse.response().headerValue("Content-Type");
+if (contentType == null || !contentType.toLowerCase().contains("application/javascript")) {
+    return false;
+}
+
+String responseBody = requestResponse.response().bodyToString();
+boolean foundSuspiciousFunction = false;
+StringBuilder notesBuilder = new StringBuilder();
+
+// Expanded list of suspicious JavaScript functions
+String[] suspiciousFunctions = {
+    "eval\\(",                 // Executes a string as code
+    "setTimeout\\(",           // Can execute strings as code if used improperly
+    "setInterval\\(",          // Similar to setTimeout, can execute strings as code
+    "document\\.write\\(",     // Can overwrite entire document
+    "innerHTML",               // Can introduce XSS vulnerabilities if used with untrusted content
+    "document\\.createElement\\(",  // Safe, but part of dynamic content generation which can be risky
+    "document\\.execCommand\\(",   // Deprecated, was used to execute certain commands
+    "document\\.domain",       // Altering the document.domain can be risky
+    "window\\.location\\.href",    // Can be used for redirects which might be used in phishing
+    "document\\.cookie",       // Accessing cookies can be sensitive
+    "document\\.URL",          // Can be used to extract URL information
+    "document\\.referrer",     // Can be used to check where the request came from
+    "window\\.open\\(",        // Opening a new window or tab, potential for misuse
+    "document\\.body\\.innerHTML", // Specific case of innerHTML, also risky
+    "element\\.setAttribute\\(",   // If used improperly, can set risky attributes like 'onclick'
+    "element\\.outerHTML",         // Similar risks to innerHTML
+    "XMLHttpRequest\\(",           // Can be used for sending/receiving data, potential for misuse
+    "fetch\\(",                    // Modern way to make network requests, potential for misuse
+    "navigator\\.sendBeacon\\("    // Used to send analytics and tracking data
+};
+
+for (String function : suspiciousFunctions) {
+    Pattern pattern = Pattern.compile(function);
+    Matcher matcher = pattern.matcher(responseBody);
+    if (matcher.find()) {
+        foundSuspiciousFunction = true;
+        if (enableManualAnnotations) {
+            if (notesBuilder.length() > 0) {
+                notesBuilder.append(", ");
+            }
+            notesBuilder.append(function); // Append the complete function signature
+        }
+    }
+}
+
+if (foundSuspiciousFunction && enableManualAnnotations) {
+    requestResponse.annotations().setHighlightColor(HighlightColor.RED);
+    if (notesBuilder.length() > 0) {
+        requestResponse.annotations().setNotes("Suspicious JS functions detected: " + notesBuilder.toString());
+    }
+}
+
+return foundSuspiciousFunction;
+
+```
+## [EmailHighlighter.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/EmailHighlighter.bambda)
+### Script to Filter Out Email Addresses in Responses and Highlight Them if Found
+#### Author: Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
+```java
+boolean manualColorHighlightEnabled = true;
+
+// Set of file extensions to ignore
+Set<String> ignoredExtensions = Set.of("mp4", "mp3", "png", "gif", "jpg", "jpeg", "css", "pdf");
+
+if (!requestResponse.hasResponse()) {
+    return false;
+}
+
+// Retrieve the URL from the request part of the requestResponse object
+String requestUrl = requestResponse.request().url().toString();
+
+
+for (String ext : ignoredExtensions) {
+    // Check if the URL ends with any of the ignored file extensions
+    if (requestUrl.toLowerCase().endsWith("." + ext)) {
+        return false;
+    }
+}
+
+// Extract the response body as a string and remove any leading and trailing whitespace
+var body = requestResponse.response().bodyToString().trim();
+
+
+String emailRegexPattern = "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.(?!jpeg|png|jpg|gif|webp)[A-Z|a-z]{2,7}\\b";
+Pattern emailPattern = Pattern.compile(emailRegexPattern);
+
+// Create a matcher to find email addresses in the response body
+Matcher emailMatcher = emailPattern.matcher(body);
+if (emailMatcher.find()) {
+    if (manualColorHighlightEnabled) {
+
+        requestResponse.annotations().setHighlightColor(HighlightColor.GREEN);
+        // Add a note indicating that an email was found
+        requestResponse.annotations().setNotes("Email Found!: " + emailMatcher.group());
+    }
+    return true;
+}
+
+
+return false;
+
+```
 ## [FilterHighlightAnnotateOWASP.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/FilterHighlightAnnotateOWASP.bambda)
 ### Filters Proxy HTTP history for requests with vulnerable parameters based on the OWASP Top 25 using the parameter arrays written by Tur24Tur / BugBountyzip (https://github.com/BugBountyzip).
 #### Author: Shain Lakin (https://github.com/flamebarke/SkittlesBambda)
@@ -107,6 +222,38 @@ if (contentType != null && !contentType.contains("application/json")) {
  String body = requestResponse.response().bodyToString().trim();
 
  return body.startsWith( "{" ) || body.startsWith( "[" );
+}
+
+return false;
+
+```
+## [GraphQlEndpoints.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/GraphQlEndpoints.bambda)
+### Finds GraphQL endpoints with a 'query' parameter containing a newline.
+#### Author: Gareth Hayes
+```java
+var req = requestResponse.request();
+
+if (!req.hasParameters()) {
+	return false;
+}
+
+var types = new HttpParameterType[] {
+    HttpParameterType.JSON, HttpParameterType.BODY, HttpParameterType.URL
+};
+
+for (HttpParameterType type : types) {
+    if (req.hasParameter("query", type)) {
+        var value = req.parameterValue("query", type);
+        if (type == HttpParameterType.JSON) {
+	        if (value.contains("\\n")) {
+                return true;
+            }
+        } else {
+            if (value.toLowerCase().contains("%0a")) {
+                return true;
+            }
+        }
+    }
 }
 
 return false;
@@ -215,6 +362,102 @@ if (requestUrl.startsWith("http://")) {
 }
 
 // URL is encrypted or does not match the criteria, return false
+return false;
+
+```
+## [IncorrectContentLength.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/IncorrectContentLength.bambda)
+### Finds responses whose body length do not match their stated Content-Length header.
+#### Author: albinowax
+```java
+int realContentLength = requestResponse.response().body().length();
+int declaredContentLength = Integer.parseInt(requestResponse.response().headerValue("Content-Length"));
+
+return declaredContentLength != realContentLength;
+
+```
+## [JSONPForCSPBypass.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/JSONPForCSPBypass.bambda)
+### JSONP for CSP bypass.
+#### Author: Gareth Hayes
+```java
+var req = requestResponse.request();
+var res = requestResponse.response();
+var paramRegex = Pattern.compile("^[a-zA-Z][.\\w]{4,}$");
+
+if (res == null || res.body().length() == 0) return false;
+
+if (!req.hasParameters()) return false;
+
+var body = res.bodyToString().trim();
+var params = req.parameters();
+
+for (var param : params) {
+    var value = param.value();
+    if (param.type() != HttpParameterType.URL) continue;
+    if (paramRegex.matcher(value).find()) {
+        var start = "(?:^|[^\\w'\".])";
+        var end = "\\s*[(]";
+        var callbackRegex = Pattern.compile(start + Pattern.quote(value) + end);
+
+    	if (callbackRegex.matcher(body).find()) return true;
+    }
+}
+
+return false;
+
+```
+## [LargeRedirectResponses.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/LargeRedirectResponses.bambda)
+### Flags redirect responses with a body over 1000 bytes.
+#### Author: albinowax
+```java
+return requestResponse.hasResponse() &&
+       requestResponse.response().statusCode() <= 399 &&
+       requestResponse.response().statusCode() >= 300 &&
+       requestResponse.response().body().length() > 1000;
+
+```
+## [MalformedHttpHeader.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/MalformedHttpHeader.bambda)
+### Finds malformed HTTP headers containing spaces within their names.
+#### Author: albinowax
+```java
+return requestResponse.response().headers().stream()
+    .anyMatch(e -> e.name().contains(" "));
+
+```
+## [MultipleHtmlTags.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/MultipleHtmlTags.bambda)
+### Finds responses with multiple HTML closing tags.
+#### Author: albinowax
+```java
+return requestResponse.response().statedMimeType() == MimeType.HTML &&
+       utilities().byteUtils().countMatches(
+       requestResponse.response().body().getBytes(), "</html>".getBytes()) > 1;
+
+```
+## [NotesKeywordHighlighter.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/NotesKeywordHighlighter.bambda)
+### Finds entries with notes containing a specified keyword
+#### Author: Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
+```java
+// User-defined keyword for filtering notes
+String keyword = "High"; // Replace "High" with your desired keyword
+boolean caseSensitive = true; // Set to true for case-sensitive search false for case-insensitive PortSwiggerWiener  <3
+
+// Check if there's a response and the response has notes
+if (requestResponse.annotations().hasNotes()) {
+    // Retrieve the notes
+    String notes = requestResponse.annotations().notes();
+
+    // Adjust for case sensitivity
+    String processedNotes = caseSensitive ? notes : notes.toLowerCase();
+    String processedKeyword = caseSensitive ? keyword : keyword.toLowerCase();
+
+    // Check if the notes contain the specified keyword
+    if (processedNotes.contains(processedKeyword)) {
+        // If keyword is found, set highlight color and return true
+        requestResponse.annotations().setHighlightColor(HighlightColor.YELLOW);
+        return true;
+    }
+}
+
+// If the keyword is not found or there are no notes, return false
 return false;
 
 ```
