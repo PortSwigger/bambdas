@@ -1,0 +1,9 @@
+/**
+ * Finds responses with multiple HTML closing tags.
+ * 
+ * @author albinowax
+ **/
+
+return requestResponse.response().statedMimeType() == MimeType.HTML &&
+       utilities().byteUtils().countMatches(
+       requestResponse.response().body().getBytes(), "</html>".getBytes()) > 1;

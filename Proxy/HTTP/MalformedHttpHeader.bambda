@@ -1,0 +1,8 @@
+/**
+ * Finds malformed HTTP headers containing spaces within their names.
+ * 
+ * @author albinowax
+ **/
+
+return requestResponse.response().headers().stream()
+    .anyMatch(e -> e.name().contains(" "));

@@ -1,0 +1,10 @@
+/**
+ * Finds responses whose body length do not match their stated Content-Length header.
+ * 
+ * @author albinowax
+ **/
+
+int realContentLength = requestResponse.response().body().length();
+int declaredContentLength = Integer.parseInt(requestResponse.response().headerValue("Content-Length"));
+
+return declaredContentLength != realContentLength;
