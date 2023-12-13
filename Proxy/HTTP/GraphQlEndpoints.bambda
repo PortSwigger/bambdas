@@ -1,0 +1,32 @@
+/**
+ * Finds GraphQL endpoints with a 'query' parameter containing a newline.
+ * 
+ * @author Gareth Hayes
+ **/
+
+var req = requestResponse.request();
+
+if (!req.hasParameters()) {
+	return false;
+}
+
+var types = new HttpParameterType[] {
+    HttpParameterType.JSON, HttpParameterType.BODY, HttpParameterType.URL
+};
+
+for (HttpParameterType type : types) {
+    if (req.hasParameter("query", type)) {
+        var value = req.parameterValue("query", type);
+        if (type == HttpParameterType.JSON) {
+	        if (value.contains("\\n")) {
+                return true;
+            }
+        } else {
+            if (value.toLowerCase().contains("%0a")) {
+                return true;
+            }
+        }
+    }
+}
+
+return false;

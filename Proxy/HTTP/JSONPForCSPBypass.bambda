@@ -1,0 +1,32 @@
+/**
+ * JSONP for CSP bypass.
+ * 
+ * @author Gareth Hayes
+ * 
+ * Finds scripts on the site that you can control because the CSP allows "same site" script resources.
+ **/
+
+var req = requestResponse.request();
+var res = requestResponse.response();
+var paramRegex = Pattern.compile("^[a-zA-Z][.\\w]{4,}$");
+
+if (res == null || res.body().length() == 0) return false;
+
+if (!req.hasParameters()) return false;
+
+var body = res.bodyToString().trim();
+var params = req.parameters();
+
+for (var param : params) {
+    var value = param.value();
+    if (param.type() != HttpParameterType.URL) continue;
+    if (paramRegex.matcher(value).find()) {
+        var start = "(?:^|[^\\w'\".])";
+        var end = "\\s*[(]";
+        var callbackRegex = Pattern.compile(start + Pattern.quote(value) + end);
+
+    	if (callbackRegex.matcher(body).find()) return true;
+    }
+}
+
+return false;
