@@ -1,10 +1,33 @@
 /**
  * Finds responses whose body length do not match their stated Content-Length header.
  * 
- * @author albinowax
+ * @author albinowax & PortSwiggerWiener  <3
  **/
 
-int realContentLength = requestResponse.response().body().length();
-int declaredContentLength = Integer.parseInt(requestResponse.response().headerValue("Content-Length"));
 
-return declaredContentLength != realContentLength;
+if (requestResponse.request().url() != null && requestResponse.hasResponse()) {
+    HttpResponse response = requestResponse.response();
+
+    // Check if Content-Length header is present
+    String contentLengthHeader = response.headerValue("Content-Length");
+    if (contentLengthHeader != null) {
+        try {
+            int declaredContentLength = Integer.parseInt(contentLengthHeader);
+            int realContentLength = response.body().length();
+
+            // Check for mismatch between declared and actual content length
+            if (declaredContentLength != realContentLength) {
+                // Mismatch found, highlight and return true
+                requestResponse.annotations().setHighlightColor(HighlightColor.YELLOW);
+                requestResponse.annotations().setNotes("Content-Length mismatch detected");
+                return true;
+            }
+        } catch (NumberFormatException e) {
+            // Handle potential number format exception
+            e.printStackTrace();
+        }
+    }
+}
+
+// No Content-Length mismatch found or no Content-Length header
+return false;
