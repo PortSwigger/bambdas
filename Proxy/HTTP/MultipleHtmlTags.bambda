@@ -4,6 +4,7 @@
  * @author albinowax
  **/
 
-return requestResponse.response().statedMimeType() == MimeType.HTML &&
+return requestResponse.hasResponse() &&
+       requestResponse.response().statedMimeType() == MimeType.HTML &&
        utilities().byteUtils().countMatches(
        requestResponse.response().body().getBytes(), "</html>".getBytes()) > 1;
