@@ -1,0 +1,8 @@
+/**
+ * Finds slow responses.
+ * @author ps-porpoise
+**/
+var delta = requestResponse.timingData().timeBetweenRequestSentAndStartOfResponse();
+var threshold = Duration.ofSeconds(3);
+
+return delta != null && delta.toMillis() >= threshold.toMillis();
