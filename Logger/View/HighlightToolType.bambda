@@ -1,5 +1,5 @@
 /**
- * Highlights responses according to their tool type.
+ * Highlights messages according to their tool type.
  * @author ps-porpoise
 **/
 var highlights = Map.of(
