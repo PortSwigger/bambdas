@@ -369,6 +369,10 @@ return false;
 ### Finds responses whose body length do not match their stated Content-Length header.
 #### Author: albinowax
 ```java
+if (!requestResponse.hasResponse() || requestResponse.request().method().equals("HEAD")) {
+    return false;
+}
+
 int realContentLength = requestResponse.response().body().length();
 int declaredContentLength = Integer.parseInt(requestResponse.response().headerValue("Content-Length"));
 
@@ -427,7 +431,8 @@ return requestResponse.response().headers().stream()
 ### Finds responses with multiple HTML closing tags.
 #### Author: albinowax
 ```java
-return requestResponse.response().statedMimeType() == MimeType.HTML &&
+return requestResponse.hasResponse() &&
+       requestResponse.response().statedMimeType() == MimeType.HTML &&
        utilities().byteUtils().countMatches(
        requestResponse.response().body().getBytes(), "</html>".getBytes()) > 1;
 
