@@ -4,7 +4,7 @@
  * @author albinowax
  **/
 
-if (!requestResponse.hasResponse() || requestResponse.request().method() == "HEAD") {
+if (!requestResponse.hasResponse() || requestResponse.request().method().equal("HEAD")) {
     return false;
 }
 
