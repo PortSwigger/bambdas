@@ -10,79 +10,47 @@
 
 
 boolean manualColorHighlightEnabled = true;
-String scanType = "Balanced"; // Can be 'Balanced', 'Deep', 'Custom'
-// For 'Custom' scan type, enter your regex between the quotes. Do not include the brackets.
-// Example: String customRegex = "your_regex_here";
-String customRegex = "[Your custom regex here]"; // User-defined custom regex for 'Custom' scan type
+String scanType = "Deep"; // Can be 'High', 'Deep', 'Custom'
+String customRegex = "[Your custom regex here]"; // User-defined custom regex
 Set<String> uniqueEndpoints = new HashSet<>();
-// Define words that, if found in endpoints, will mark the note as high importance (red color)
-// Add or remove words as needed. Words added here will be highlighted in red in the final notes.
-String[] highValueWords = {"debug", "admin", "test", "config"};
 
-if (!requestResponse.hasResponse() || requestResponse.response() == null) {
+if (!requestResponse.hasResponse()) {
     return false;
 }
 
 MimeType responseType = requestResponse.response().mimeType();
-boolean isHtml = responseType == MimeType.HTML;
 boolean isJavaScript = responseType == MimeType.SCRIPT;
 
-if (!isHtml && !isJavaScript) {
+if (!isJavaScript) {
     return false;
 }
 
 Pattern regexPattern;
 switch (scanType) {
-    case "Balanced":
-        // 'Balanced' scan type: Accurate for most use cases, but might miss some endpoints
+    case "High":
         regexPattern = Pattern.compile("(?<=(\"|'|`))\\/[a-zA-Z0-9_:?&=/\\-#.]*(?=(\"|'|`))", Pattern.DOTALL);
         break;
     case "Deep":
-        // 'Deep' scan type: More extensive but may include false positives
         regexPattern = Pattern.compile("(?<=(\"|'|`))[^\"'`]*\\/[a-zA-Z0-9_:?&=/\\-#.]*(?=(\"|'|`))", Pattern.DOTALL);
         break;
     case "Custom":
-        // 'Custom' scan type: Use the regex defined in 'customRegex'
         regexPattern = Pattern.compile(customRegex, Pattern.DOTALL);
         break;
-    case "Keys and Secrets":
-        // 'Keys and Secrets' scan type: Feature for detecting secrets and keys (coming soon)
-        System.out.println("Keys and Secrets scan type - Coming soon!");
-        return false;
     default:
-        // Exit if scanType is invalid
         return false; 
 }
-
-boolean foundItems = false;
-boolean highValueWordFound = false;
-StringBuilder notesBuilder = new StringBuilder();
-HighlightColor highlightColor = isHtml ? HighlightColor.GREEN : HighlightColor.YELLOW;
 
 String responseBody = requestResponse.response().bodyToString();
 Matcher matcher = regexPattern.matcher(responseBody);
 
 while (matcher.find()) {
     String item = matcher.group();
-    for (String word : highValueWords) {
-        if (Pattern.compile("\\b" + Pattern.quote(word) + "\\b").matcher(item).find()) {
-            highValueWordFound = true;
-            break;
-        }
-    }
-
-    if (!item.equals("/") && !item.equals("//") && !item.matches(".*\\.(css|png|gif|svg|woff2|jpeg|jpg|ico|bmp|woff)$") && uniqueEndpoints.add(item)) {
-        foundItems = true;
-        if (manualColorHighlightEnabled) {
-            notesBuilder.append(item).append("\n");
-        }
+    if (!item.equals("/") && !item.equals("//") && !item.matches(".*\\.(css|png|gif|svg|woff2|jpeg|jpg|ico|bmp|woff)$")) {
+        uniqueEndpoints.add(item);
     }
 }
 
-
-
-String YourFolderPath = "C:\\Users\\XYZ\\Desktop";
-String dataFilePath = YourFolderPath + "\\Data.txt";
+String dataFilePath = "C:\\Users\\admin\\Dropbox\\devkit12nkk3.txt";
 
 // Write endpoints to the file
 try (BufferedWriter writer = new BufferedWriter(new FileWriter(dataFilePath, true))) {
@@ -97,23 +65,48 @@ try (BufferedWriter writer = new BufferedWriter(new FileWriter(dataFilePath, tru
 
 // Read the file, remove duplicates and empty lines, and rewrite
 try {
-    BufferedReader reader = new BufferedReader(new FileReader(dataFilePath));
     Set<String> lines = new LinkedHashSet<>();
-    String line;
-    while ((line = reader.readLine()) != null) {
-        if (!line.trim().isEmpty()) {
-            lines.add(line);
+    try (BufferedReader reader = new BufferedReader(new FileReader(dataFilePath))) {
+        String line;
+        while ((line = reader.readLine()) != null) {
+            if (!line.trim().isEmpty()) {
+                lines.add(line);
+            }
         }
     }
-    reader.close();
 
-    BufferedWriter writer = new BufferedWriter(new FileWriter(dataFilePath));
-    for (String uniqueLine : lines) {
-        writer.write(uniqueLine + "\n");
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(dataFilePath))) {
+        for (String uniqueLine : lines) {
+            writer.write(uniqueLine + "\n");
+        }
     }
-    writer.close();
 } catch (IOException e) {
     e.printStackTrace();
+}
+
+boolean foundItems = !uniqueEndpoints.isEmpty();
+boolean highValueWordFound = false;
+StringBuilder notesBuilder = new StringBuilder();
+String[] highValueWords = {"debug", "admin", "test", "config"};
+
+// Check for high-value words and append notes
+for (String item : uniqueEndpoints) {
+    for (String word : highValueWords) {
+        if (item.contains(word)) {
+            highValueWordFound = true;
+            notesBuilder.append(item).append("\n");
+            break;
+        }
+    }
+}
+
+// Set the appropriate highlight color
+if (foundItems && manualColorHighlightEnabled) {
+    HighlightColor highlightColor = highValueWordFound ? HighlightColor.RED : HighlightColor.YELLOW;
+    requestResponse.annotations().setHighlightColor(highlightColor);
+    if (notesBuilder.length() > 0) {
+        requestResponse.annotations().setNotes(notesBuilder.toString().trim());
+    }
 }
 
 return foundItems;
