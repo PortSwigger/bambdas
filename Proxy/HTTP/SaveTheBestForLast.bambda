@@ -50,7 +50,7 @@ while (matcher.find()) {
     }
 }
 
-String dataFilePath = "C:\\Users\\admin\\Dropbox\\devkit12nkk3.txt";
+String dataFilePath = "C:\\Users\\Your\\Path\\File.txt";
 
 // Write endpoints to the file
 try (BufferedWriter writer = new BufferedWriter(new FileWriter(dataFilePath, true))) {
