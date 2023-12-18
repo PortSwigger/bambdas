@@ -1,0 +1,12 @@
+/**
+ * Finds responses which contain the hostname.
+ *
+ * Useful to identify possible attack surface for host header injection and
+ * web cache poisioning attacks.
+ *
+ * @author emanuelduss
+ **/
+
+var hostname = requestResponse.request().headerValue("Host");
+
+return requestResponse.hasResponse() && requestResponse.response().contains(hostname, false);
