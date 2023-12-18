@@ -5,6 +5,36 @@ Please do not manually edit this file, or include any changes to this file in pu
 -->
 # Proxy HTTP
 Documentation: [Filtering the HTTP history with Bambdas](https://portswigger.net/burp/documentation/desktop/tools/proxy/http-history/bambdas)
+## [AnnotateSoapRequests.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/AnnotateSoapRequests.bambda)
+### This script populates elements of the SOAP request in the "Notes" column of Burp's Proxy History. You can expand upon the capture groups by editing the RegEx pattern.
+#### Author: Nick Coblentz (https://github.com/ncoblentz)
+```java
+// Only applies to in-scope requests, feel free to remove this part of the if statement if you want it to apply to all requests
+if(requestResponse.request().isInScope()
+	&& !requestResponse.annotations().hasNotes() //don't apply it if notes are already present
+	&& requestResponse.request().hasHeader("Content-Type")
+	&& requestResponse.request().headerValue("Content-Type").contains("soap+xml")) //look for soap requests
+{
+    StringBuilder builder = new StringBuilder();
+	if(requestResponse.request().bodyToString().contains("<s:Body"))
+    {
+        //Currently looks for the tag just after body and for any usernames in the ws-security header. You can add more of your own here.
+        Matcher m = Pattern.compile("<(?:[a-zA-Z0-9]+:)?Username>([^<]+)</(?:[a-zA-Z0-9]+:)*Username>|<(?:[a-zA-Z0-9]+:)*Body[^>]*><([^ ]+)",Pattern.CASE_INSENSITIVE).matcher(requestResponse.request().bodyToString());
+
+        while(m.find() && m.groupCount()>0) {
+            for(int i=1;i<=m.groupCount();i++) {
+                if(m.group(i)!=null)
+	                builder.append(m.group(i)+" ");
+            }
+        }
+        requestResponse.annotations().setNotes(builder.toString());
+    }
+}
+
+// Put your typical filters here, this one doesn't actually filter anything
+return true;
+
+```
 ## [DetectSuspiciousJSFunctions.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/DetectSuspiciousJSFunctions.bambda)
 ### Bambda Script to Detect and Highlight Suspicious JavaScript Functions
 #### Author: Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
@@ -363,6 +393,15 @@ if (requestUrl.startsWith("http://")) {
 
 // URL is encrypted or does not match the criteria, return false
 return false;
+
+```
+## [HostnameInResponse.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/HostnameInResponse.bambda)
+### Finds responses which contain the hostname.  Useful to identify possible attack surface for host header injection and web cache poisioning attacks.
+#### Author: emanuelduss
+```java
+var hostname = requestResponse.request().headerValue("Host");
+
+return requestResponse.hasResponse() && requestResponse.response().contains(hostname, false);
 
 ```
 ## [IncorrectContentLength.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/IncorrectContentLength.bambda)
