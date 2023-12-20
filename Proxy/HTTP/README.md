@@ -375,6 +375,48 @@ if (foundDeveloperNotes) {
 return foundDeveloperNotes;
 
 ```
+## [HighlightTrackerServices.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/HighlightTrackerServices.bambda)
+### HighlightTrackerServices: Burp Suite Bambda for Identifying Tracking Services FilterOut Burp Suite history to detect and analyze tracking services from web requests
+#### Author: Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
+```java
+// Define hash sets for hosts, paths, and parameters
+Set<String> trackedHosts = new HashSet<>(Arrays.asList("www.gstatic.com", "events.statsigapi.net", "ingesteer.services-prod.nsvcs.net", "js-eu1.hs-analytics.net", "static.hotjar.com", "forms-eu1.hscollectedforms.net", "www.google-analytics.com", "www.googletagmanager.com", "static.xx.fbcdn.net", "stats.g.doubleclick.net", "collector.github.com"));
+Set<String> trackedPaths = new HashSet<>(Arrays.asList("/logging/v1", "/track"));
+Set<String> trackedParameters = new HashSet<>(Arrays.asList("logs", "log"));
+
+// Main logic of the Bambda
+var request = requestResponse.request();
+String requestUrl = request.url().toLowerCase();
+
+// Extract host and path from URL
+String[] urlParts = requestUrl.split("/", 4);
+String host = urlParts.length > 2 ? urlParts[2] : "";
+String path = urlParts.length > 3 ? "/" + urlParts[3].split("\\?")[0] : "";
+
+// Check for tracked host
+if (trackedHosts.contains(host)) {
+    requestResponse.annotations().setHighlightColor(HighlightColor.RED);
+    return true;
+}
+
+// Check for tracked path
+if (trackedPaths.contains(path)) {
+    requestResponse.annotations().setHighlightColor(HighlightColor.RED);
+    return true;
+}
+
+// Check for tracked parameters
+var parameters = request.parameters();
+for (HttpParameter param : parameters) {
+    if (trackedParameters.contains(param.name().toLowerCase()) || trackedParameters.contains(param.value().toLowerCase())) {
+        requestResponse.annotations().setHighlightColor(HighlightColor.RED);
+        return true;
+    }
+}
+
+return false;
+
+```
 ## [HighlightUnencryptedHTTP.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/HighlightUnencryptedHTTP.bambda)
 ### Bambda Script to Highlight Unencrypted HTTP Traffic Filters Proxy HTTP history for unencrypted (non-HTTPS) requests.
 #### Author: Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
