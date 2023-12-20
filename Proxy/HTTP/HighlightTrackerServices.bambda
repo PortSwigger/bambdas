@@ -1,5 +1,5 @@
 /**
- * WhoSpyOnMe: Burp Suite Bambda for Identifying Tracking Services
+ * HighlightTrackerServices: Burp Suite Bambda for Identifying Tracking Services
  * FilterOut Burp Suite history to detect and analyze tracking services from web requests
  * @author Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
  **/
