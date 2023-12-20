@@ -52,6 +52,7 @@ java -jar BambdaChecker-1.1.jar validateonly
 4. Please avoid excessive use of comments.
    - Use of appropriately named variables should mean that your Bambda is self-documenting.
 5. Please ensure that your submission does not modify or include any additional markdown files.
+6. Bambdas that attempt to reimplement *Burp Suite Professional* functionality will not be accepted.
 
 ## Code of Conduct
 Please ensure that you are familar with and respect our [code of conduct](https://github.com/PortSwigger/bambdas/blob/main/CODE_OF_CONDUCT.md).
