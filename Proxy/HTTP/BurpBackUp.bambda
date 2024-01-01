@@ -1,0 +1,176 @@
+/**
+ * BurpBackup Script for Extracting Endpoints, Parameters, and Hosts from Burp Suite History
+ * 
+ * @author Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
+ * This script efficiently extracts and categorizes unique endpoints, parameters, and hosts
+ * from HTTP requests captured in Burp Suite. It allows adjusting the path to save the extracted
+ * data on your local machine. To save files on cloud services like Dropbox or OneDrive, ensure
+ * the respective client is installed and logged in on your machine, as the script utilizes local
+ * synchronization folders for cloud storage.
+ * The script creates organized logs for endpoints, parameters, and hosts, and generates a dynamic
+ * HTML report with statistical insights. It's designed to enhance productivity in security analysis
+ * and team-based data sharing.
+ **/
+
+
+
+var request = requestResponse.request();
+var requestHeaders = request.headers();
+var requestUrl = request.url();
+var requestBody = request.bodyToString();
+var contentType = request.headerValue("Content-Type");
+
+// regular expression
+var queryParamsPattern = Pattern.compile("[?&]([^=]+)="); // For URL query parameters
+var jsonParamsPattern = Pattern.compile("\"([^\"]+)\":"); // For JSON property names
+var hostPattern = Pattern.compile("^Host: (.+)$", Pattern.MULTILINE); // For Host headers
+
+var date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy_MM_dd"));
+var dropboxFolderPath = "C:\\Users\\TurJohn\\Dropbox"; // Set your Own path.
+var newFolderName = "BurpBox_" + date;
+var newFolderPath = dropboxFolderPath + "\\" + newFolderName; 
+
+// Files for endpoints + parameters + hosts, and statistics
+var endpointsFile = new File(newFolderPath + "\\All_endpoints.txt");
+var parametersFile = new File(newFolderPath + "\\All_parameters.txt");
+var hostsFile = new File(newFolderPath + "\\All_Hosts.txt");
+var statsFile = new File(newFolderPath + "\\Statistics.html");
+
+// /Create folder and files/
+new File(newFolderPath).mkdirs();
+endpointsFile.createNewFile();
+parametersFile.createNewFile();
+hostsFile.createNewFile();
+statsFile.createNewFile();
+
+// initialize sets to store unique values
+var uniqueEndpoints = new HashSet<String>();
+var uniqueParameters = new HashSet<String>();
+var uniqueHosts = new HashSet<String>();
+
+// read existing data into sets
+try (var reader = new BufferedReader(new FileReader(endpointsFile))) {
+    String line;
+    while ((line = reader.readLine()) != null) {
+        uniqueEndpoints.add(line);
+    }
+} catch (IOException e) {
+    e.printStackTrace();
+}
+
+try (var reader = new BufferedReader(new FileReader(parametersFile))) {
+    String line;
+    while ((line = reader.readLine()) != null) {
+        uniqueParameters.add(line);
+    }
+} catch (IOException e) {
+    e.printStackTrace();
+}
+
+try (var reader = new BufferedReader(new FileReader(hostsFile))) {
+    String line;
+    while ((line = reader.readLine()) != null) {
+        uniqueHosts.add(line);
+    }
+} catch (IOException e) {
+    e.printStackTrace();
+}
+
+// Write statistics to html file with enhanced Styling AND typing effect
+try (var writer = new BufferedWriter(new FileWriter(statsFile))) {
+    LocalDate currentDate = LocalDate.now(); // Get current date
+
+    writer.write("<!DOCTYPE html><html><head><title>Statistics</title>");
+    writer.write("<style>");
+    // Updated color scheme with orange tones and increased font size for stats
+    writer.write(":root { --color1: #ff7e5f; --color2: #feb47b; --color3: #ff6a00; --color4: #ffd194; }");
+    writer.write("body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(45deg, var(--color1), var(--color2), var(--color3), var(--color4)); color: white; text-align: center; padding-top: 20vh; background-size: 400% 400%; animation: gradientShift 15s ease infinite; }");
+    writer.write("@keyframes gradientShift { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;}}");
+    writer.write(".stats { font-size: 30px; margin-bottom: 30px; }"); // Increased font size
+    writer.write("</style></head><body>");
+    writer.write("<div id='stats' class='stats'></div>");
+    // Adding the date at the end of the stats
+    writer.write("<div style='margin-top: 30px;'>Generated at " + currentDate + "</div>");
+    writer.write("<script>");
+    // Original JavaScript function
+    writer.write("function typeResponse(responseText, elementId) {");
+    writer.write("  let index = 0;");
+    writer.write("  let fullText = '';");
+    writer.write("  const typingInterval = setInterval(() => {");
+    writer.write("    if (index < responseText.length) {");
+    writer.write("      fullText += responseText.charAt(index);");
+    writer.write("      document.getElementById(elementId).innerHTML = fullText;");
+    writer.write("      index++;");
+    writer.write("    } else {");
+    writer.write("      clearInterval(typingInterval);");
+    writer.write("      document.getElementById(elementId).innerHTML += '<br>Thank you for using Burp Box v1';");
+    writer.write("    }");
+    writer.write("  }, 27);");
+    writer.write("}");
+    // Original statistics text with dynamic content
+    writer.write("const statsText = 'Unique Parameters Found: " + uniqueParameters.size() + "<br>' +" +
+                 "'Unique Hosts Found: " + uniqueHosts.size() + "<br>' +" +
+                 "'Unique Endpoints Found: " + uniqueEndpoints.size() + "';");
+    writer.write("typeResponse(statsText, 'stats');");
+    writer.write("</script></body></html>");
+} catch (IOException e) {
+    e.printStackTrace();
+}
+
+
+
+
+
+
+// Write unique data to files
+try (var endpointsWriter = new BufferedWriter(new FileWriter(endpointsFile, true));
+     var parametersWriter = new BufferedWriter(new FileWriter(parametersFile, true));
+     var hostsWriter = new BufferedWriter(new FileWriter(hostsFile, true))) {
+    
+    // Extract and save unique endpoints
+    var endpoint = requestUrl.replaceAll("^[^:]+://[^/]+", "").split("\\?", 2)[0];
+    if (uniqueEndpoints.add(endpoint)) {
+        endpointsWriter.write(endpoint);
+        endpointsWriter.newLine();
+    }
+
+    // Extract and save unique parameter names from URL query
+    Matcher queryMatcher = queryParamsPattern.matcher(requestUrl);
+    while (queryMatcher.find()) {
+        String paramName = queryMatcher.group(1);
+        if (uniqueParameters.add(paramName)) {
+            parametersWriter.write(paramName);
+            parametersWriter.newLine();
+        }
+    }
+
+    // Extract and save unique host names
+    StringBuilder headersStringBuilder = new StringBuilder();
+    for (var header : requestHeaders) {
+        headersStringBuilder.append(header.toString()).append("\n");
+    }
+    Matcher hostMatcher = hostPattern.matcher(headersStringBuilder.toString());
+    while (hostMatcher.find()) {
+        String hostName = hostMatcher.group(1);
+        if (uniqueHosts.add(hostName)) {
+            hostsWriter.write(hostName);
+            hostsWriter.newLine();
+        }
+    }
+
+    // Handling JSON body if content type is JSON
+    if (contentType != null && contentType.contains("application/json")) {
+        Matcher jsonMatcher = jsonParamsPattern.matcher(requestBody);
+        while (jsonMatcher.find()) {
+            String jsonPropName = jsonMatcher.group(1);
+            if (uniqueParameters.add(jsonPropName)) {
+                parametersWriter.write(jsonPropName);
+                parametersWriter.newLine();
+            }
+        }
+    }
+} catch (IOException e) {
+    e.printStackTrace();
+}
+
+return true;
