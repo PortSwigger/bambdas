@@ -103,7 +103,7 @@ try (var writer = new BufferedWriter(new FileWriter(statsFile))) {
     writer.write("      index++;");
     writer.write("    } else {");
     writer.write("      clearInterval(typingInterval);");
-    writer.write("      document.getElementById(elementId).innerHTML += '<br>Thank you for using Burp Box v1';");
+    writer.write("      document.getElementById(elementId).innerHTML += '<br>Thank you for using BurpBackUp v1';");
     writer.write("    }");
     writer.write("  }, 27);");
     writer.write("}");
