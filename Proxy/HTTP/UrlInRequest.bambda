@@ -1,0 +1,24 @@
+/**
+ * Finds requests containing URLs.
+ *
+ * Useful to identify possible attack surface for SSRF.
+ *
+ * @author emanuelduss
+ **/
+
+HttpRequest request = requestResponse.request();
+HttpResponse response = requestResponse.response();
+
+if (request.hasParameters()){
+    for (ParsedHttpParameter parameter : request.parameters()){
+        String parameterValue = parameter.value();
+        if (parameter.value().contains("http://") || 
+            parameter.value().contains(utilities().urlUtils().encode("http://")) ||
+            parameter.value().contains("https://") || 
+            parameter.value().contains(utilities().urlUtils().encode("https://"))){
+            return true;
+        }
+    }
+}
+
+return false;
