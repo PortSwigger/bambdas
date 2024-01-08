@@ -7,15 +7,14 @@
  **/
 
 HttpRequest request = requestResponse.request();
-HttpResponse response = requestResponse.response();
 
 if (request.hasParameters()){
     for (ParsedHttpParameter parameter : request.parameters()){
         String parameterValue = parameter.value();
-        if (parameter.value().contains("http://") || 
-            parameter.value().contains(utilities().urlUtils().encode("http://")) ||
-            parameter.value().contains("https://") || 
-            parameter.value().contains(utilities().urlUtils().encode("https://"))){
+        if (parameterValue.contains("http://") ||
+            parameterValue.contains(utilities().urlUtils().encode("http://")) ||
+            parameterValue.contains("https://") ||
+            parameterValue.contains(utilities().urlUtils().encode("https://"))){
             return true;
         }
     }
