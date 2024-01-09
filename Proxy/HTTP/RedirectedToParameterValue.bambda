@@ -14,7 +14,7 @@ if (!requestResponse.hasResponse()){
 HttpRequest request = requestResponse.request();
 HttpResponse response = requestResponse.response();
 
-if (request.hasParameters() && response.isStatusCodeClass(StatusCodeClass.CLASS_3XX_REDIRECTION)){
+if (request.hasParameters() && response.isStatusCodeClass(StatusCodeClass.CLASS_3XX_REDIRECTION) && response.hasHeader("Location")){
     for (ParsedHttpParameter parameter : request.parameters()){
         String parameterValue = parameter.value();
         if (response.hasHeader("Location", parameterValue) ||
