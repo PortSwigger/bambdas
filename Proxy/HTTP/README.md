@@ -593,3 +593,99 @@ for (String param : parameterNames) {
 return false;
 
 ```
+## [RedirectedToParameterValue.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/RedirectedToParameterValue.bambda)
+### Finds responses which redirect to locations provided as GET parameters.  Useful to identify possible attack surface for open redirects. This can be used for phishing, CSP bypasses or OAuth token stealing.
+#### Author: emanuelduss
+```java
+if (!requestResponse.hasResponse()){
+    return false;
+}
+
+HttpRequest request = requestResponse.request();
+HttpResponse response = requestResponse.response();
+
+if (request.hasParameters() && response.isStatusCodeClass(StatusCodeClass.CLASS_3XX_REDIRECTION) && response.hasHeader("Location")){
+    for (ParsedHttpParameter parameter : request.parameters()){
+        String parameterValue = parameter.value();
+        if (response.hasHeader("Location", parameterValue) ||
+            response.hasHeader("Location", utilities().urlUtils().encode(parameterValue)) ||
+            response.hasHeader("Location", utilities().urlUtils().decode(parameterValue))){
+            return true;
+        }
+    }
+}
+
+return false;
+
+```
+## [ReflectedParameters.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/ReflectedParameters.bambda)
+### Finds responses which reflect parameter names and values.  Useful to identify possible attack surface for XSS, SSTI, header injection, open redirects or similar.
+#### Author: emanuelduss
+```java
+// Configure to your needs
+int minimumParameterNameLength = 2;
+int minimumParameterValueLength = 3;
+boolean matchCaseSensitive = true;
+Set<String> excludedStrings = Set.of("true", "false", "null");
+Set<HttpParameterType> excludedParameterTypes = Set.of(HttpParameterType.COOKIE); // e.g. HttpParameterType.COOKIE
+
+if (!requestResponse.hasResponse()){
+    return false;
+}
+
+HttpRequest request = requestResponse.request();
+HttpResponse response = requestResponse.response();
+
+// Check query, b/c parameters without values are not treated as parameters
+String query = request.path().replace(request.pathWithoutQuery() + "?", "");
+if (query.length() >= minimumParameterValueLength && !excludedStrings.contains(query)){
+    if (response.contains(query, matchCaseSensitive) || response.contains(utilities().urlUtils().decode(query), matchCaseSensitive)){
+        return true;
+    }
+}
+
+if (request.hasParameters()){
+    for (ParsedHttpParameter parameter : request.parameters()){
+        HttpParameterType parameterType = parameter.type();
+        if (excludedParameterTypes.contains(parameter.type())){
+            continue;
+        }
+
+        String parameterName = parameter.name();
+        if (parameterName.length() >= minimumParameterNameLength && ! excludedStrings.contains(parameterName) &&
+            (response.contains(parameterName, matchCaseSensitive) || response.contains(utilities().urlUtils().decode(parameterName), matchCaseSensitive))){
+            return true;
+        }
+
+        String parameterValue = parameter.value();
+        if (parameterValue.length() >= minimumParameterValueLength && ! excludedStrings.contains(parameterValue) &&
+            (response.contains(parameterValue, matchCaseSensitive) || response.contains(utilities().urlUtils().decode(parameterValue), matchCaseSensitive))){
+            return true;
+        }
+    }
+}
+
+return false;
+
+```
+## [UrlInParameter.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/UrlInParameter.bambda)
+### Finds requests containing URLs.  Useful to identify possible attack surface for SSRF.
+#### Author: emanuelduss
+```java
+HttpRequest request = requestResponse.request();
+
+if (request.hasParameters()){
+    for (ParsedHttpParameter parameter : request.parameters()){
+        String parameterValue = parameter.value();
+        if (parameterValue.contains("http://") ||
+            parameterValue.contains(utilities().urlUtils().encode("http://")) ||
+            parameterValue.contains("https://") ||
+            parameterValue.contains(utilities().urlUtils().encode("https://"))){
+            return true;
+        }
+    }
+}
+
+return false;
+
+```
