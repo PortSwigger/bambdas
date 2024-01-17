@@ -1,6 +1,6 @@
 /**
  * Bambda ChatGPT-Enhanced Endpoint Guesser
- * Author: Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
+ * Author: Tur24Tur & CoreyD97 / BugBountyzip (https://github.com/BugBountyzip)
  * This script leverages ChatGPT to intelligently guess endpoints.
  */
 
@@ -11,52 +11,58 @@ if (requestResponse.request().url() != null && requestResponse.hasResponse()) {
         String notes = requestResponse.annotations().notes();
 
         if (notes.contains("aaa")) {
-            String requestUrl = requestResponse.request().url().toLowerCase();
-
-            // Extract the path from the URL
-            String path = requestUrl.replaceAll("^[^:]+://[^/]+", "").split("\\?", 2)[0];
+            // Use pathWithoutQuery() to get the path part of the URL without the query string By CoreyD97
+            String path = requestResponse.request().pathWithoutQuery();
 
             // Construct the curl command with headers
             String command = "curl https://api.openai.com/v1/chat/completions -H \"Content-Type: application/json\" -H \"Authorization: Bearer XYZ\" -d \"{\\\"model\\\": \\\"gpt-3.5-turbo\\\", \\\"messages\\\": [{\\\"role\\\": \\\"user\\\", \\\"content\\\": \\\"Based on the specified path in an HTTP request, please guess 50 potential endpoints. " + path + "\\\"}], \\\"temperature\\\": 0.7}\"";
 
             // Write the command to a file
-            try (BufferedWriter commandWriter = new BufferedWriter(new FileWriter("C:\\Users\\User\\Path\\httpRequest.txt"))) {
+            try (BufferedWriter commandWriter = new BufferedWriter(new FileWriter("C:\\Users\\User\\XYZ\\httpRequest.txt"))) {
                 commandWriter.write(command);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
 
             // Execute the curl command using cmd
             ProcessBuilder processBuilder = new ProcessBuilder("cmd", "/c", command);
             processBuilder.redirectErrorStream(true);
-            Process process = processBuilder.start();
+            Process process = null;
+            try {
+                process = processBuilder.start();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
-            
+            // Read the output from the command
+            StringBuilder output = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    output.append(line).append("\n");
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
+            // Extract the JSON part of the response
+            String jsonResponse = output.toString();
+            String contentMarker = "\"content\": \"";
+            int contentStart = jsonResponse.indexOf(contentMarker);
+            if (contentStart != -1) {
+                contentStart += contentMarker.length();
+                int contentEnd = jsonResponse.indexOf("\"", contentStart);
+                if (contentEnd != -1) {
+                    String content = jsonResponse.substring(contentStart, contentEnd).replace("\\n", "\n");
 
-// Read the output from the command
-StringBuilder output = new StringBuilder();
-try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-    String line;
-    while ((line = reader.readLine()) != null) {
-        output.append(line).append("\n");
-    }
-}
-
-// Extract the JSON part of the response
-String jsonResponse = output.toString();
-String contentMarker = "\"content\": \"";
-int contentStart = jsonResponse.indexOf(contentMarker);
-if (contentStart != -1) {
-    contentStart += contentMarker.length();
-    int contentEnd = jsonResponse.indexOf("\"", contentStart);
-    if (contentEnd != -1) {
-        String content = jsonResponse.substring(contentStart, contentEnd).replace("\\n", "\n");
-
-        // Write the endpoints to a file
-        try (BufferedWriter endpointWriter = new BufferedWriter(new FileWriter("C:\\Users\\User\\Path\\endpoints.txt"))) {
-            endpointWriter.write(content);
-        }
-    }
-}
+                    // Write the endpoints to a file
+                    try (BufferedWriter endpointWriter = new BufferedWriter(new FileWriter("C:\\Users\\User\\XYZ\\endpoints.txt"))) {
+                        endpointWriter.write(content);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
 
             // Highlight the request/response in yellow
             requestResponse.annotations().setHighlightColor(HighlightColor.YELLOW);
