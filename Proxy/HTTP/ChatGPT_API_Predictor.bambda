@@ -1,0 +1,68 @@
+/**
+ * Bambda ChatGPT-Enhanced Endpoint Guesser
+ * Author: Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
+ * This script leverages ChatGPT to intelligently guess endpoints.
+ */
+
+
+// Main logic of the Bambda
+if (requestResponse.request().url() != null && requestResponse.hasResponse()) {
+    if (requestResponse.annotations().hasNotes()) {
+        String notes = requestResponse.annotations().notes();
+
+        if (notes.contains("aaa")) {
+            String requestUrl = requestResponse.request().url().toLowerCase();
+
+            // Extract the path from the URL
+            String path = requestUrl.replaceAll("^[^:]+://[^/]+", "").split("\\?", 2)[0];
+
+            // Construct the curl command with headers
+            String command = "curl https://api.openai.com/v1/chat/completions -H \"Content-Type: application/json\" -H \"Authorization: Bearer XYZ\" -d \"{\\\"model\\\": \\\"gpt-3.5-turbo\\\", \\\"messages\\\": [{\\\"role\\\": \\\"user\\\", \\\"content\\\": \\\"Based on the specified path in an HTTP request, please guess 50 potential endpoints. " + path + "\\\"}], \\\"temperature\\\": 0.7}\"";
+
+            // Write the command to a file
+            try (BufferedWriter commandWriter = new BufferedWriter(new FileWriter("C:\\Users\\User\\Path\\httpRequest.txt"))) {
+                commandWriter.write(command);
+            }
+
+            // Execute the curl command using cmd
+            ProcessBuilder processBuilder = new ProcessBuilder("cmd", "/c", command);
+            processBuilder.redirectErrorStream(true);
+            Process process = processBuilder.start();
+
+            
+
+
+// Read the output from the command
+StringBuilder output = new StringBuilder();
+try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+    String line;
+    while ((line = reader.readLine()) != null) {
+        output.append(line).append("\n");
+    }
+}
+
+// Extract the JSON part of the response
+String jsonResponse = output.toString();
+String contentMarker = "\"content\": \"";
+int contentStart = jsonResponse.indexOf(contentMarker);
+if (contentStart != -1) {
+    contentStart += contentMarker.length();
+    int contentEnd = jsonResponse.indexOf("\"", contentStart);
+    if (contentEnd != -1) {
+        String content = jsonResponse.substring(contentStart, contentEnd).replace("\\n", "\n");
+
+        // Write the endpoints to a file
+        try (BufferedWriter endpointWriter = new BufferedWriter(new FileWriter("C:\\Users\\User\\Path\\endpoints.txt"))) {
+            endpointWriter.write(content);
+        }
+    }
+}
+
+            // Highlight the request/response in yellow
+            requestResponse.annotations().setHighlightColor(HighlightColor.YELLOW);
+            return true;
+        }
+    }
+}
+
+return false;
