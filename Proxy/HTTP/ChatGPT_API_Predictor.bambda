@@ -1,31 +1,47 @@
 /**
  * Bambda ChatGPT-Enhanced Endpoint Guesser
- * Author: Tur24Tur & CoreyD97 / BugBountyzip (https://github.com/BugBountyzip)
+ * Author: Tur24Tur & CoreyD97 & JaveleyQAQ / BugBountyzip (https://github.com/BugBountyzip)
  * This script leverages ChatGPT to intelligently guess endpoints.
  */
-
-
 // Main logic of the Bambda
 if (requestResponse.request().url() != null && requestResponse.hasResponse()) {
     if (requestResponse.annotations().hasNotes()) {
         String notes = requestResponse.annotations().notes();
 
         if (notes.contains("aaa")) {
-            // Use pathWithoutQuery() to get the path part of the URL without the query string By CoreyD97
+            // Use pathWithoutQuery() to get the path part of the URL without the query string
             String path = requestResponse.request().pathWithoutQuery();
 
             // Construct the curl command with headers
             String command = "curl https://api.openai.com/v1/chat/completions -H \"Content-Type: application/json\" -H \"Authorization: Bearer XYZ\" -d \"{\\\"model\\\": \\\"gpt-3.5-turbo\\\", \\\"messages\\\": [{\\\"role\\\": \\\"user\\\", \\\"content\\\": \\\"Based on the specified path in an HTTP request, please guess 50 potential endpoints. " + path + "\\\"}], \\\"temperature\\\": 0.7}\"";
 
+            // Determine the operating system By JaveleyQAQ
+            String os = System.getProperty("os.name").toLowerCase();
+            String[] commandArray;
+            String filePath;
+            String endpointsPath;
+
+            if (os.contains("win")) {
+                // Windows command and paths
+                commandArray = new String[]{"cmd", "/c", command};
+                filePath = "C:\\Users\\User\\Path\\httpRequest.txt"; // Corrected path
+                endpointsPath = "C:\\Users\\User\\Path\\endpoints.txt"; // Corrected path
+            } else {
+                // Unix/Linux/macOS command and paths
+                commandArray = new String[]{"/bin/bash", "-c", command};
+                filePath = "/home/kali/Desktop/httpRequest.txt"; // Path for Linux/macOS
+                endpointsPath = "/home/kali/Desktop/endpoints.txt"; // Path for Linux/macOS
+            }
+
             // Write the command to a file
-            try (BufferedWriter commandWriter = new BufferedWriter(new FileWriter("C:\\Users\\User\\XYZ\\httpRequest.txt"))) {
+            try (BufferedWriter commandWriter = new BufferedWriter(new FileWriter(filePath))) {
                 commandWriter.write(command);
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
-            // Execute the curl command using cmd
-            ProcessBuilder processBuilder = new ProcessBuilder("cmd", "/c", command);
+            // Execute the curl command using the appropriate shell
+            ProcessBuilder processBuilder = new ProcessBuilder(commandArray);
             processBuilder.redirectErrorStream(true);
             Process process = null;
             try {
@@ -56,7 +72,7 @@ if (requestResponse.request().url() != null && requestResponse.hasResponse()) {
                     String content = jsonResponse.substring(contentStart, contentEnd).replace("\\n", "\n");
 
                     // Write the endpoints to a file
-                    try (BufferedWriter endpointWriter = new BufferedWriter(new FileWriter("C:\\Users\\User\\XYZ\\endpoints.txt"))) {
+                    try (BufferedWriter endpointWriter = new BufferedWriter(new FileWriter(endpointsPath))) {
                         endpointWriter.write(content);
                     } catch (IOException e) {
                         e.printStackTrace();
