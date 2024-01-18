@@ -9,7 +9,7 @@ if (requestResponse.request().url() != null && requestResponse.hasResponse()) {
         String notes = requestResponse.annotations().notes();
 
         if (notes.contains("aaa")) {
-            // Use pathWithoutQuery() to get the path part of the URL without the query string
+            // Use pathWithoutQuery() to get the path part of the URL without the query string By CoreyD97
             String path = requestResponse.request().pathWithoutQuery();
 
             // Construct the curl command with headers
