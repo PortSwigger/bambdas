@@ -5,6 +5,7 @@ Developed both by PortSwigger and the community with 🧡
 
 ## Bambda Categories
 - [Proxy HTTP filters](https://github.com/PortSwigger/bambdas/tree/main/Proxy/HTTP)
+- [Proxy WebSocket filters](https://github.com/PortSwigger/bambdas/tree/main/Proxy/WS)
 
 ## Documentation & Resources
 Online documentation for Proxy HTTP Bambdas can be found [here](https://portswigger.net/burp/documentation/desktop/tools/proxy/http-history/bambdas).
