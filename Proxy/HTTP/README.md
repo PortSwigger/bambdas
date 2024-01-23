@@ -668,6 +668,33 @@ if (request.hasParameters()){
 return false;
 
 ```
+## [ShowRequestsBetweenDates.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/ShowRequestsBetweenDates.bambda)
+### Shows Requests/Responses before, after, or between specified dates
+#### Author: Nick Coblentz (https://github.com/ncoblentz)
+```java
+//The current configuration looks for requests/responses between January 19th, 2024 10:00AM US Central Time and January 19th, 2024 10:10AM US Central Time
+//Change the date/time to the values you desire and your local timezone (https://docs.oracle.com/javase/8/docs/api/java/time/ZoneId.html#SHORT_IDS)
+//The script accounts for 'null' values. Replace the before or after variables with null to search just before or just after a certain date/time.
+
+ZonedDateTime requestsAfterThisDate = ZonedDateTime.of(LocalDateTime.of(2024, 1, 19, 10, 0), ZoneId.of("America/Chicago")); // or null
+ZonedDateTime requestsBeforeThisDate = ZonedDateTime.of(LocalDateTime.of(2024, 1, 19, 10, 10), ZoneId.of("America/Chicago")); // or null
+
+boolean afterCheck = true;
+boolean beforeCheck = true;
+
+if (requestsAfterThisDate != null)
+{
+    afterCheck = requestResponse.time().isAfter(requestsAfterThisDate);
+}
+
+if (requestsBeforeThisDate != null)
+{
+    beforeCheck = requestResponse.time().isBefore(requestsBeforeThisDate);
+}
+
+return afterCheck && beforeCheck;
+
+```
 ## [UrlInParameter.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/UrlInParameter.bambda)
 ### Finds requests containing URLs.  Useful to identify possible attack surface for SSRF.
 #### Author: emanuelduss
