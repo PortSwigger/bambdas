@@ -4,6 +4,7 @@ Bambdas collection for Burp Suite Professional and Community.
 Developed both by PortSwigger and the community with 🧡
 
 ## Bambda Categories
+- [Logger view filters](https://github.com/PortSwigger/bambdas/tree/main/Logger/View)
 - [Proxy HTTP filters](https://github.com/PortSwigger/bambdas/tree/main/Proxy/HTTP)
 - [Proxy WebSocket filters](https://github.com/PortSwigger/bambdas/tree/main/Proxy/WS)
 
