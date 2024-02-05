@@ -1,0 +1,66 @@
+/**
+ * Filters authenticated 200 OK requests in Proxy HTTP history. See four config values below.
+ *
+ * @author joe-ds (https://github.com/joe-ds)
+ **/
+
+if (!requestResponse.hasResponse()) {
+    return false;
+}
+
+var configNoFilter = true;        // If set to false, won't show JS, GIF, JPG, PNG, CSS.
+var configNotInScopeOnly = true;  // If set to false, won't show out-of-scope items.
+var sessionCookieName = "";       // If given, will look for a cookie with that name.
+var sessionCookieValue = "";      // If given, will check if cookie with sessionCookieName has this value.
+
+var request = requestResponse.request();
+var response = requestResponse.response();
+var mimeType = requestResponse.mimeType();
+var path = requestResponse.request().pathWithoutQuery().toLowerCase();
+
+var inScope = requestResponse.request().isInScope();
+
+var isAuthorised = response.isStatusCodeClass(StatusCodeClass.CLASS_2XX_SUCCESS);
+var authHeader = request.hasHeader("Authorization");
+
+var sessionCookie = false;
+if (request.headerValue("Cookie") != null) {
+    if ((sessionCookieName.length() > 0) && (sessionCookieValue.length() > 0)) {
+        if (requestResponse.request().hasParameter(sessionCookieName, HttpParameterType.COOKIE)) {
+	        sessionCookie = requestResponse.request().parameter(sessionCookieName, HttpParameterType.COOKIE).value().equals(sessionCookieValue);
+        } else {
+            sessionCookie = false;
+        }
+    } else if (sessionCookieName.length() > 0) {
+        if (requestResponse.request().hasParameter(sessionCookieName, HttpParameterType.COOKIE)) {
+	        sessionCookie = true;
+        } else {
+            sessionCookie = false;
+        }
+    } else {
+        sessionCookie = false;
+    };
+} else {
+    sessionCookie = false;
+}
+
+var filterDenyList = mimeType != MimeType.CSS
+ && mimeType != MimeType.IMAGE_UNKNOWN
+ && mimeType != MimeType.IMAGE_JPEG
+ && mimeType != MimeType.IMAGE_GIF
+ && mimeType != MimeType.IMAGE_PNG
+ && mimeType != MimeType.IMAGE_BMP
+ && mimeType != MimeType.IMAGE_TIFF
+ && mimeType != MimeType.UNRECOGNIZED
+ && mimeType != MimeType.SOUND
+ && mimeType != MimeType.VIDEO
+ && mimeType != MimeType.FONT_WOFF
+ && mimeType != MimeType.FONT_WOFF2
+ && mimeType != MimeType.APPLICATION_UNKNOWN
+ && !path.endsWith(".js")
+ && !path.endsWith(".gif")
+ && !path.endsWith(".jpg")
+ && !path.endsWith(".png")
+ && !path.endsWith(".css");
+
+return isAuthorised && (authHeader || sessionCookie) && (configNoFilter || filterDenyList) && (configNotInScopeOnly || inScope);
