@@ -4,10 +4,14 @@
  * @author joe-ds (https://github.com/joe-ds)
  **/
 
+if (!requestResponse.hasResponse()) {
+    return false;
+}
+
 var request = requestResponse.request();
 var response = requestResponse.response();
 
-if (!response.isStatusCodeClass(StatusCodeClass.CLASS_2XX_SUCCESS) || !requestResponse.hasResponse()) {
+if (!response.isStatusCodeClass(StatusCodeClass.CLASS_2XX_SUCCESS)) {
     return false;
 }
 
@@ -16,7 +20,6 @@ var configNotInScopeOnly = true;  // If set to false, won't show out-of-scope it
 var sessionCookieName = "";       // If given, will look for a cookie with that name.
 var sessionCookieValue = "";      // If given, will check if cookie with sessionCookieName has this value.
 
-var inScope = request.isInScope();
 var authHeader = request.hasHeader("Authorization");
 
 boolean sessionCookie = request.headerValue("Cookie") != null
@@ -24,7 +27,7 @@ boolean sessionCookie = request.headerValue("Cookie") != null
                             && request.hasParameter(sessionCookieName, HttpParameterType.COOKIE) 
 			                && (sessionCookieValue.isEmpty() || sessionCookieValue.equals(request.parameter(sessionCookieName, HttpParameterType.COOKIE).value()));
 
-var path = requestResponse.request().pathWithoutQuery().toLowerCase();
+var path = request.pathWithoutQuery().toLowerCase();
 var mimeType = requestResponse.mimeType();
 var filterDenyList = mimeType != MimeType.CSS
  && mimeType != MimeType.IMAGE_UNKNOWN
@@ -45,4 +48,4 @@ var filterDenyList = mimeType != MimeType.CSS
  && !path.endsWith(".png")
  && !path.endsWith(".css");
 
-return (authHeader || sessionCookie) && (configNoFilter || filterDenyList) && (configNotInScopeOnly || inScope);
+return (authHeader || sessionCookie) && (configNoFilter || filterDenyList) && (configNotInScopeOnly || request.isInScope());
