@@ -4,6 +4,11 @@
  * @author joe-ds (https://github.com/joe-ds)
  **/
 
+var configNoFilter = true;        // If set to false, won't show JS, GIF, JPG, PNG, CSS.
+var configNotInScopeOnly = true;  // If set to false, won't show out-of-scope items.
+var sessionCookieName = "";       // If given, will look for a cookie with that name.
+var sessionCookieValue = "";      // If given, will check if cookie with sessionCookieName has this value.
+
 if (!requestResponse.hasResponse()) {
     return false;
 }
@@ -14,11 +19,6 @@ var response = requestResponse.response();
 if (!response.isStatusCodeClass(StatusCodeClass.CLASS_2XX_SUCCESS)) {
     return false;
 }
-
-var configNoFilter = true;        // If set to false, won't show JS, GIF, JPG, PNG, CSS.
-var configNotInScopeOnly = true;  // If set to false, won't show out-of-scope items.
-var sessionCookieName = "";       // If given, will look for a cookie with that name.
-var sessionCookieValue = "";      // If given, will check if cookie with sessionCookieName has this value.
 
 var authHeader = request.hasHeader("Authorization");
 
