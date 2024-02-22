@@ -1,0 +1,30 @@
+/**
+ * Highlight different listener port
+ * @author Bogo-6 (https://github.com/Bogo-6)
+ **/
+
+boolean manualColorHighlightEnabled = true;
+
+var colorMap = Map.of(
+    8080, HighlightColor.BLUE,
+    8082, HighlightColor.YELLOW
+);
+var notesMap = Map.of(
+    8080, "User 1", 
+    8082, "User 2"
+);
+
+
+var listenerPort = requestResponse.listenerPort();
+var color = colorMap.get(listenerPort);
+var notes = notesMap.get(listenerPort);
+
+if (manualColorHighlightEnabled && color != null) {
+    requestResponse.annotations().setHighlightColor(color);
+}
+
+if (manualColorHighlightEnabled && notes != null) {
+    requestResponse.annotations().setNotes(notes);
+}
+
+return color != null || notes != null;
