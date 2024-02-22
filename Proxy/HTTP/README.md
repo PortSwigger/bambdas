@@ -150,6 +150,57 @@ if (emailMatcher.find()) {
 return false;
 
 ```
+## [FilterAuthenticated.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/FilterAuthenticated.bambda)
+### Filters authenticated 200 OK requests in Proxy HTTP history. See four config values below.
+#### Author: joe-ds (https://github.com/joe-ds)
+```java
+var configNoFilter = true;        // If set to false, won't show JS, GIF, JPG, PNG, CSS.
+var configNotInScopeOnly = true;  // If set to false, won't show out-of-scope items.
+var sessionCookieName = "";       // If given, will look for a cookie with that name.
+var sessionCookieValue = "";      // If given, will check if cookie with sessionCookieName has this value.
+
+if (!requestResponse.hasResponse()) {
+    return false;
+}
+
+var request = requestResponse.request();
+var response = requestResponse.response();
+
+if (!response.isStatusCodeClass(StatusCodeClass.CLASS_2XX_SUCCESS)) {
+    return false;
+}
+
+var authHeader = request.hasHeader("Authorization");
+
+boolean sessionCookie = request.headerValue("Cookie") != null
+                            && !sessionCookieName.isEmpty()
+                            && request.hasParameter(sessionCookieName, HttpParameterType.COOKIE)
+			                && (sessionCookieValue.isEmpty() || sessionCookieValue.equals(request.parameter(sessionCookieName, HttpParameterType.COOKIE).value()));
+
+var path = request.pathWithoutQuery().toLowerCase();
+var mimeType = requestResponse.mimeType();
+var filterDenyList = mimeType != MimeType.CSS
+ && mimeType != MimeType.IMAGE_UNKNOWN
+ && mimeType != MimeType.IMAGE_JPEG
+ && mimeType != MimeType.IMAGE_GIF
+ && mimeType != MimeType.IMAGE_PNG
+ && mimeType != MimeType.IMAGE_BMP
+ && mimeType != MimeType.IMAGE_TIFF
+ && mimeType != MimeType.UNRECOGNIZED
+ && mimeType != MimeType.SOUND
+ && mimeType != MimeType.VIDEO
+ && mimeType != MimeType.FONT_WOFF
+ && mimeType != MimeType.FONT_WOFF2
+ && mimeType != MimeType.APPLICATION_UNKNOWN
+ && !path.endsWith(".js")
+ && !path.endsWith(".gif")
+ && !path.endsWith(".jpg")
+ && !path.endsWith(".png")
+ && !path.endsWith(".css");
+
+return (authHeader || sessionCookie) && (configNoFilter || filterDenyList) && (configNotInScopeOnly || request.isInScope());
+
+```
 ## [FilterHighlightAnnotateOWASP.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/FilterHighlightAnnotateOWASP.bambda)
 ### Filters Proxy HTTP history for requests with vulnerable parameters based on the OWASP Top 25 using the parameter arrays written by Tur24Tur / BugBountyzip (https://github.com/BugBountyzip).
 #### Author: Shain Lakin (https://github.com/flamebarke/SkittlesBambda)
@@ -313,6 +364,37 @@ if (deprecatedMethods.contains(requestMethod)) {
 }
 
 return false;
+
+```
+## [HighlightListenerPort.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/HighlightListenerPort.bambda)
+### Highlight different listener port
+#### Author: Bogo-6 (https://github.com/Bogo-6)
+```java
+boolean manualColorHighlightEnabled = true;
+
+var colorMap = Map.of(
+    8080, HighlightColor.BLUE,
+    8082, HighlightColor.YELLOW
+);
+var notesMap = Map.of(
+    8080, "User 1",
+    8082, "User 2"
+);
+
+
+var listenerPort = requestResponse.listenerPort();
+var color = colorMap.get(listenerPort);
+var notes = notesMap.get(listenerPort);
+
+if (manualColorHighlightEnabled && color != null) {
+    requestResponse.annotations().setHighlightColor(color);
+}
+
+if (manualColorHighlightEnabled && notes != null) {
+    requestResponse.annotations().setNotes(notes);
+}
+
+return color != null || notes != null;
 
 ```
 ## [HighlightResponsesWithDeveloperNotes.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/HighlightResponsesWithDeveloperNotes.bambda)
