@@ -5,27 +5,26 @@
 
 boolean manualColorHighlightEnabled = true;
 
+var colorMap = Map.of(
+    8080, HighlightColor.BLUE,
+    8082, HighlightColor.YELLOW
+);
+var notesMap = Map.of(
+    8080, "User 1", 
+    8082, "User 2"
+);
+
+
 var listenerPort = requestResponse.listenerPort();
+var color = colorMap.get(listenerPort);
+var notes = notesMap.get(listenerPort);
 
-
-if (listenerPort == 8080) {
-    if (manualColorHighlightEnabled){
-        requestResponse.annotations().setHighlightColor(HighlightColor.BLUE);
-
-        //Optionally, add a note to the request.
-        requestResponse.annotations().setNotes("User 1");
-    }
-    return true;
+if (manualColorHighlightEnabled && color != null) {
+    requestResponse.annotations().setHighlightColor(color);
 }
 
-if (listenerPort == 8082) {
-    if (manualColorHighlightEnabled){
-        requestResponse.annotations().setHighlightColor(HighlightColor.YELLOW);
-        
-        //Optionally, add a note to the request.
-        requestResponse.annotations().setNotes("User 2");
-    }
-    return true;
+if (manualColorHighlightEnabled && notes != null) {
+    requestResponse.annotations().setNotes(notes);
 }
 
-return false;
+return color != null || notes != null;
