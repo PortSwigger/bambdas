@@ -1,0 +1,31 @@
+/**
+ * Highlight different listener port
+ * @author Bogo-6 (https://github.com/Bogo-6)
+ **/
+
+boolean manualColorHighlightEnabled = true;
+
+var listenerPort = requestResponse.listenerPort();
+
+
+if (listenerPort == 8080) {
+    if (manualColorHighlightEnabled){
+        requestResponse.annotations().setHighlightColor(HighlightColor.BLUE);
+
+        //Optionally, add a note to the request.
+        requestResponse.annotations().setNotes("User 1");
+    }
+    return true;
+}
+
+if (listenerPort == 8082) {
+    if (manualColorHighlightEnabled){
+        requestResponse.annotations().setHighlightColor(HighlightColor.YELLOW);
+        
+        //Optionally, add a note to the request.
+        requestResponse.annotations().setNotes("User 2");
+    }
+    return true;
+}
+
+return false;
