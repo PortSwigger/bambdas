@@ -1,0 +1,56 @@
+/**
+ * Filter when an Authorization header is present, not empty and does not include a traditional bearer token (beginning with "ey")
+ *
+ * @author GangGreenTemperTatum (https://github.com/GangGreenTemperTatum)
+ **/
+
+var configNoFilter = true;
+var configNotInScopeOnly = true;
+var sessionCookieName = "";
+var sessionCookieValue = "";
+
+if (!requestResponse.hasResponse()) {
+    return false;
+}
+
+var request = requestResponse.request();
+var response = requestResponse.response();
+
+if (!response.isStatusCodeClass(StatusCodeClass.CLASS_2XX_SUCCESS)) {
+    return false;
+}
+
+var authHeader = request.hasHeader("Authorization");
+var authHeaderValue = authHeader ? request.headerValue("Authorization") : null;
+
+var excludeAuthorization = authHeader &&
+    authHeaderValue.toLowerCase().contains("bearer") &&
+    authHeaderValue.toLowerCase().contains("ey");
+
+var sessionCookie = request.headerValue("Cookie") != null &&
+    !sessionCookieName.isEmpty() &&
+    request.hasParameter(sessionCookieName, HttpParameterType.COOKIE) &&
+    (sessionCookieValue.isEmpty() || sessionCookieValue.equals(request.parameter(sessionCookieName, HttpParameterType.COOKIE).value()));
+
+var path = request.pathWithoutQuery().toLowerCase();
+var mimeType = requestResponse.mimeType();
+var filterDenyList = mimeType != MimeType.CSS &&
+    mimeType != MimeType.IMAGE_UNKNOWN &&
+    mimeType != MimeType.IMAGE_JPEG &&
+    mimeType != MimeType.IMAGE_GIF &&
+    mimeType != MimeType.IMAGE_PNG &&
+    mimeType != MimeType.IMAGE_BMP &&
+    mimeType != MimeType.IMAGE_TIFF &&
+    mimeType != MimeType.UNRECOGNIZED &&
+    mimeType != MimeType.SOUND &&
+    mimeType != MimeType.VIDEO &&
+    mimeType != MimeType.FONT_WOFF &&
+    mimeType != MimeType.FONT_WOFF2 &&
+    mimeType != MimeType.APPLICATION_UNKNOWN &&
+    !path.endsWith(".js") &&
+    !path.endsWith(".gif") &&
+    !path.endsWith(".jpg") &&
+    !path.endsWith(".png") &&
+    !path.endsWith(".css");
+
+return (authHeader && authHeaderValue != null && authHeaderValue.length() > 0 && !excludeAuthorization || sessionCookie) && (configNoFilter || filterDenyList) && (!configNotInScopeOnly || request.isInScope());
