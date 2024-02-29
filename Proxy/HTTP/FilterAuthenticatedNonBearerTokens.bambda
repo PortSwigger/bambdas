@@ -5,7 +5,7 @@
  **/
 
 var configNoFilter = true;
-var configNotInScopeOnly = true;
+var configInScopeOnly = false;
 var sessionCookieName = "";
 var sessionCookieValue = "";
 
@@ -53,4 +53,4 @@ var filterDenyList = mimeType != MimeType.CSS &&
     !path.endsWith(".png") &&
     !path.endsWith(".css");
 
-return (authHeader && authHeaderValue != null && authHeaderValue.length() > 0 && !excludeAuthorization || sessionCookie) && (configNoFilter || filterDenyList) && (!configNotInScopeOnly || request.isInScope());
+return (authHeader && authHeaderValue != null && authHeaderValue.length() > 0 && !excludeAuthorization || sessionCookie) && (configNoFilter || filterDenyList) && (!configInScopeOnly || request.isInScope());
