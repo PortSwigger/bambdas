@@ -21,16 +21,16 @@ if (!response.isStatusCodeClass(StatusCodeClass.CLASS_2XX_SUCCESS)) {
 }
 
 var authHeader = request.hasHeader("Authorization");
-var authHeaderValue = authHeader ? request.headerValue("Authorization") : null;
+var authHeaderValue = authHeader ? String.valueOf(request.headerValue("Authorization")).toLowerCase() : null;
 
 var excludeAuthorization = authHeader &&
-    authHeaderValue.toLowerCase().contains("bearer") &&
-    authHeaderValue.toLowerCase().contains("ey");
+    authHeaderValue.contains("bearer") &&
+    authHeaderValue.contains("ey");
 
 var sessionCookie = request.headerValue("Cookie") != null &&
     !sessionCookieName.isEmpty() &&
     request.hasParameter(sessionCookieName, HttpParameterType.COOKIE) &&
-    (sessionCookieValue.isEmpty() || sessionCookieValue.equals(request.parameter(sessionCookieName, HttpParameterType.COOKIE).value()));
+    (sessionCookieValue.isEmpty() || sessionCookieValue.equals(String.valueOf(request.parameter(sessionCookieName, HttpParameterType.COOKIE).value())));
 
 var path = request.pathWithoutQuery().toLowerCase();
 
