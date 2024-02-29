@@ -5,7 +5,7 @@
  **/
 
 var configNoFilter = true;
-var configInScopeOnly = false; // If set to false, won't show out-of-scope items
+var configInScopeOnly = true; // If set to true, won't show out-of-scope items
 var sessionCookieName = ""; // If given, will look for a cookie with that name.
 var sessionCookieValue = ""; // If given, will check if cookie with sessionCookieName has this value.
 
