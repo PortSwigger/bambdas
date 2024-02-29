@@ -5,9 +5,9 @@
  **/
 
 var configNoFilter = true;
-var configInScopeOnly = false;
-var sessionCookieName = "";
-var sessionCookieValue = "";
+var configInScopeOnly = false; // If set to false, won't show out-of-scope items
+var sessionCookieName = ""; // If given, will look for a cookie with that name.
+var sessionCookieValue = ""; // If given, will check if cookie with sessionCookieName has this value.
 
 if (!requestResponse.hasResponse()) {
     return false;
