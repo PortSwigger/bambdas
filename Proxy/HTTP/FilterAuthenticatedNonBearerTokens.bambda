@@ -12,7 +12,7 @@ var sessionCookieValue = ""; // If given, will check if cookie with sessionCooki
 var request = requestResponse.request();
 var response = requestResponse.response();
 
-if (!request.isInScope() || !response.isStatusCodeClass(StatusCodeClass.CLASS_2XX_SUCCESS) || !requestResponse.hasResponse()) {
+if (response == null || !request.isInScope() || !response.isStatusCodeClass(StatusCodeClass.CLASS_2XX_SUCCESS) || !requestResponse.hasResponse()) {
     return false;
 }
 
