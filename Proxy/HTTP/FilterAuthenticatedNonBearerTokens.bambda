@@ -4,7 +4,6 @@
  * @author GangGreenTemperTatum (https://github.com/GangGreenTemperTatum)
  **/
 
-var configNoFilter = true;
 var configInScopeOnly = true; // If set to true, won't show out-of-scope items
 var sessionCookieName = ""; // If given, will look for a cookie with that name.
 var sessionCookieValue = ""; // If given, will check if cookie with sessionCookieName has this value.
@@ -12,14 +11,22 @@ var sessionCookieValue = ""; // If given, will check if cookie with sessionCooki
 var request = requestResponse.request();
 var response = requestResponse.response();
 
-if (response == null || !request.isInScope() || !response.isStatusCodeClass(StatusCodeClass.CLASS_2XX_SUCCESS) || !requestResponse.hasResponse()) {
+if (configInScopeOnly && !request.isInScope()) {
     return false;
 }
 
-var authHeader = request.hasHeader("Authorization");
-var authHeaderValue = authHeader ? String.valueOf(request.headerValue("Authorization")).toLowerCase() : null;
+if (!requestResponse.hasResponse() || !response.isStatusCodeClass(StatusCodeClass.CLASS_2XX_SUCCESS)) {
+    return false;
+}
 
-var excludeAuthorization = authHeader &&
+var hasAuthHeader = request.hasHeader("Authorization");
+var authHeaderValue = hasAuthHeader ? String.valueOf(request.headerValue("Authorization")).toLowerCase() : null;
+
+if (!hasAuthHeader || (authHeaderValue == null || authHeaderValue.isEmpty())) {
+    return false;
+}
+
+var excludeAuthorization =
     authHeaderValue.contains("bearer") &&
     authHeaderValue.contains("ey");
 
@@ -28,6 +35,4 @@ var sessionCookie = request.headerValue("Cookie") != null &&
     request.hasParameter(sessionCookieName, HttpParameterType.COOKIE) &&
     (sessionCookieValue.isEmpty() || sessionCookieValue.equals(String.valueOf(request.parameter(sessionCookieName, HttpParameterType.COOKIE).value())));
 
-var path = request.pathWithoutQuery().toLowerCase();
-
-return (authHeader && authHeaderValue != null && authHeaderValue.length() > 0 && !excludeAuthorization || sessionCookie) && (configNoFilter) && (!configInScopeOnly || request.isInScope());
+return !excludeAuthorization || sessionCookie;
