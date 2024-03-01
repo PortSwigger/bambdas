@@ -201,6 +201,44 @@ var filterDenyList = mimeType != MimeType.CSS
 return (authHeader || sessionCookie) && (configNoFilter || filterDenyList) && (configNotInScopeOnly || request.isInScope());
 
 ```
+## [FilterAuthenticatedNonBearerTokens.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/FilterAuthenticatedNonBearerTokens.bambda)
+### Filter when an Authorization header is present, not empty and does not include a traditional bearer token (beginning with "ey")
+#### Author: GangGreenTemperTatum (https://github.com/GangGreenTemperTatum)
+```java
+var configInScopeOnly = true; // If set to true, won't show out-of-scope items
+var sessionCookieName = ""; // If given, will look for a cookie with that name.
+var sessionCookieValue = ""; // If given, will check if cookie with sessionCookieName has this value.
+
+var request = requestResponse.request();
+var response = requestResponse.response();
+
+if (configInScopeOnly && !request.isInScope()) {
+    return false;
+}
+
+if (!requestResponse.hasResponse() || !response.isStatusCodeClass(StatusCodeClass.CLASS_2XX_SUCCESS)) {
+    return false;
+}
+
+var hasAuthHeader = request.hasHeader("Authorization");
+var authHeaderValue = hasAuthHeader ? String.valueOf(request.headerValue("Authorization")).toLowerCase() : null;
+
+if (!hasAuthHeader || (authHeaderValue == null || authHeaderValue.isEmpty())) {
+    return false;
+}
+
+var excludeAuthorization =
+    authHeaderValue.contains("bearer") &&
+    authHeaderValue.contains("ey");
+
+var sessionCookie = request.headerValue("Cookie") != null &&
+    !sessionCookieName.isEmpty() &&
+    request.hasParameter(sessionCookieName, HttpParameterType.COOKIE) &&
+    (sessionCookieValue.isEmpty() || sessionCookieValue.equals(String.valueOf(request.parameter(sessionCookieName, HttpParameterType.COOKIE).value())));
+
+return !excludeAuthorization || sessionCookie;
+
+```
 ## [FilterHighlightAnnotateOWASP.bambda](https://github.com/PortSwigger/bambdas/blob/main/Proxy/HTTP/FilterHighlightAnnotateOWASP.bambda)
 ### Filters Proxy HTTP history for requests with vulnerable parameters based on the OWASP Top 25 using the parameter arrays written by Tur24Tur / BugBountyzip (https://github.com/BugBountyzip).
 #### Author: Shain Lakin (https://github.com/flamebarke/SkittlesBambda)
