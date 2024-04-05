@@ -5,7 +5,7 @@ Please do not manually edit this file, or include any changes to this file in pu
 -->
 # Logger View Filter
 Documentation: [Burp Logger view filter](https://portswigger.net/burp/documentation/desktop/tools/logger/filter-view#bambda-mode)
-## [HighlightToolType.bambda](https://github.com/PortSwigger/bambdas/blob/main/Logger/View/HighlightToolType.bambda)
+## [HighlightToolType.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Logger/View/HighlightToolType.bambda)
 ### Highlights messages according to their tool type.
 #### Author: ps-porpoise
 ```java
@@ -26,7 +26,7 @@ requestResponse.annotations().setHighlightColor(
 return true;
 
 ```
-## [SlowResponses.bambda](https://github.com/PortSwigger/bambdas/blob/main/Logger/View/SlowResponses.bambda)
+## [SlowResponses.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Logger/View/SlowResponses.bambda)
 ### Finds slow responses.
 #### Author: ps-porpoise
 ```java
