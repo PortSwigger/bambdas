@@ -1,0 +1,50 @@
+/**
+ * Bambda Script to Detect and Highlight Deprecated HTML Tags
+ * @author Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
+ * This script identifies deprecated HTML tags in HTTP responses.
+ * Upon detection, responses are highlighted in red and notes are appended, if enabled.
+ **/
+
+boolean enableManualAnnotations = true;
+
+// Ensure there is a response
+if (!requestResponse.hasResponse()) {
+    return false;
+}
+
+// Get the Content-Type header of the response
+String contentType = requestResponse.response().headerValue("Content-Type");
+if (contentType == null || !contentType.toLowerCase().contains("text/html")) {
+    // Ignore responses without a Content-Type header of text/html; charset=utf-8
+    return false;
+}
+
+String responseBody = requestResponse.response().bodyToString();
+boolean foundDeprecatedHTML = false;
+StringBuilder notesBuilder = new StringBuilder();
+
+// Expanded list of common deprecated HTML tags and attributes
+List<String> deprecatedHTML = Arrays.asList("applet", "basefont", "center", "dir", "font", "isindex", "menu", "strike", "u", "frame", "frameset", "marquee", "bgsound");
+
+for (String deprecatedTag : deprecatedHTML) {
+    Pattern pattern = Pattern.compile("<\\s*" + deprecatedTag + "(\\s|>).+?<\\/\\s*" + deprecatedTag + "\\s*>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    Matcher matcher = pattern.matcher(responseBody);
+    if (matcher.find()) {
+        foundDeprecatedHTML = true;
+        if (enableManualAnnotations) {
+            if (notesBuilder.length() > 0) {
+                notesBuilder.append(", ");
+            }
+            notesBuilder.append("Deprecated HTML detected: <").append(deprecatedTag).append(">");
+        }
+    }
+}
+
+if (foundDeprecatedHTML && enableManualAnnotations) {
+    requestResponse.annotations().setHighlightColor(HighlightColor.RED);
+    if (notesBuilder.length() > 0) {
+        requestResponse.annotations().setNotes(notesBuilder.toString());
+    }
+}
+
+return foundDeprecatedHTML;
