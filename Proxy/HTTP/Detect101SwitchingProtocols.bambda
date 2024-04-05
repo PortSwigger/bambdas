@@ -1,32 +1,8 @@
 /**
  * Bambda Script to Detect "101 Switching Protocols" in HTTP Response
-  @author Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
-  It identifies if the HTTP response status line contains "101 Switching Protocols".
- * Upon detection, responses are highlighted in red and notes are appended, if enabled.
+ * @author Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
+ * It identifies if the HTTP response status code is 101 (Switching Protocols).
  **/
 
-boolean enableManualAnnotations = true;
-
-// Ensure there is a response
-if (!requestResponse.hasResponse()) {
-    return false;
-}
-
-boolean foundSwitchingProtocols = false;
-
-// Get the entire response as a string
-String response = requestResponse.response().toString();
-
-// Get the first line of the response
-String firstLine = response.split("\n")[0];
-
-// Check if the first line contains "101 Switching Protocols"
-if (firstLine.contains("101 Switching Protocols")) {
-    foundSwitchingProtocols = true;
-    if (enableManualAnnotations) {
-        requestResponse.annotations().setHighlightColor(HighlightColor.RED);
-        requestResponse.annotations().setNotes("Detected '101 Switching Protocols' in response");
-    }
-}
-
-return foundSwitchingProtocols;
+// Ensure there is a response and check if the status code is 101
+return requestResponse.hasResponse() && requestResponse.response().statusCode() == 101;
