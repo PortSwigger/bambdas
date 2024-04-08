@@ -1,0 +1,8 @@
+/**
+ * Bambda Script to Detect "101 Switching Protocols" in HTTP Response
+ * @author Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
+ * It identifies if the HTTP response status code is 101 (Switching Protocols).
+ **/
+
+// Ensure there is a response and check if the status code is 101
+return requestResponse.hasResponse() && requestResponse.response().statusCode() == 101;
