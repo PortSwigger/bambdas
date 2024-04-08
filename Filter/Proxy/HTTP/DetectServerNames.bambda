@@ -1,0 +1,52 @@
+/**
+ * Bambda Script to Detect Specific Server Names in HTTP Response
+@author Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
+  It identifies if the 'Server' header of the HTTP response contains any of the specified server names.
+ * Upon detection, responses are highlighted in red and notes are appended, if enabled.
+ **/
+
+  boolean enableManualAnnotations = true;
+
+  // My list of server names to detect
+  List<String> serverNames = Arrays.asList(
+    "awselb", "Kestrel", "Apache", "Nginx", "Microsoft-IIS", "LiteSpeed", "Google Frontend", 
+    "GWS", "openresty", "IBM_HTTP_Server", "AmazonS3", "CloudFront", "AkamaiGHost", "Jetty", 
+    "Tengine", "lighttpd", "AOLserver", "ATS", "Boa", "Caddy", "Cherokee", "Caudium", "Hiawatha", 
+    "GlassFish", "H2O", "httpd", "Jigsaw", "LiteSpeed", "Mongrel", "NCSA HTTPd", "Netscape Enterprise", 
+    "Oracle iPlanet", "Pound", "Resin", "thttpd", "Tornado", "Varnish", "WebObjects", "Xitami", 
+    "Zope", "Werkzeug", "WebSTAR", "WebSEAL", "WebServerX", "WebtoB", "Squid", "Sun Java System Web Server", 
+    "Sun ONE Web Server", "Stronghold", "Zeus Web Server", "Zope", "Roxen", "RapidLogic", "Pramati", 
+    "Phusion Passenger", "Oracle Containers for J2EE", "Oracle-Application-Server-10g", "Oracle-Application-Server-11g", 
+    "Nostromo", "Novell-HTTP-Server", "NaviServer", "MochiWeb", "Microsoft-HTTPAPI", "Mbedthis-Appweb", 
+    "Lotus-Domino", "LiteSpeed", "Kangle", "Joost", "Jino", "IceWarp", "IBM_HTTP_Server", "GoAhead", 
+    "Flywheel", "EdgePrism", "DMS", "Cowboy", "CommuniGatePro", "CompaqHTTPServer", "CERN", "CauchoResin", 
+    "Caddy", "BarracudaHTTP", "BaseHTTP", "AllegroServe", "Abyss", "4D_WebSTAR_S", "4D_WebSTAR_D", 
+    "Yaws", "WDaemon", "Virtuoso", "UserLand", "TUX", "TwistedWeb", "TwistedWeb", "Thin", 
+    "Thttpd", "Tengine", "Swiki", "SurgeLDAP", "Sun-ONE-Web-Server", "Sun-ONE-Application-Server", 
+    "Sucuri/Cloudproxy", "SSWS", "SWS", "SW", "srv", "squid", "Spamfire", "SOMA", 
+    "Snap", "SmugMug", "SME Server", "Smart-4-Hosting", "Sioux", "SilverStream", "Silk", "Siemens Gigaset WLAN Camera"
+);
+
+  // Ensure there is a response
+  if (!requestResponse.hasResponse()) {
+      return false;
+  }
+
+  boolean foundServerName = false;
+
+  // Get the entire response as a string
+  String response = requestResponse.response().toString();
+
+  // Check if the 'Server' header contains any of the specified server names
+  for (String serverName : serverNames) {
+      if (response.contains("Server: " + serverName)) {
+          foundServerName = true;
+          if (enableManualAnnotations) {
+              requestResponse.annotations().setHighlightColor(HighlightColor.RED);
+              requestResponse.annotations().setNotes("Detected '" + serverName + "' in 'Server' header");
+          }
+          break;
+      }
+  }
+
+  return foundServerName;
