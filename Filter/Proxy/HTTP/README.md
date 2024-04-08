@@ -35,6 +35,14 @@ if(requestResponse.request().isInScope()
 return true;
 
 ```
+## [Detect101SwitchingProtocols.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/Detect101SwitchingProtocols.bambda)
+### Bambda Script to Detect "101 Switching Protocols" in HTTP Response
+#### Author: Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
+```java
+// Ensure there is a response and check if the status code is 101
+return requestResponse.hasResponse() && requestResponse.response().statusCode() == 101;
+
+```
 ## [DetectSuspiciousJSFunctions.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/DetectSuspiciousJSFunctions.bambda)
 ### Bambda Script to Detect and Highlight Suspicious JavaScript Functions
 #### Author: Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
