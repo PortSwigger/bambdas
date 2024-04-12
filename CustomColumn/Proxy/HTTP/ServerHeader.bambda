@@ -1,0 +1,8 @@
+/**
+ * Extracts the value of the Server header from the response
+ * @author agarri_fr
+ **/
+
+return requestResponse.hasResponse() && requestResponse.response().hasHeader("Server")
+  ? requestResponse.response().headerValue("Server")
+  : "";
