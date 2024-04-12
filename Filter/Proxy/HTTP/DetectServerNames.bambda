@@ -5,10 +5,8 @@
  * Upon detection, responses are highlighted in red and notes are appended, if enabled.
  **/
 
-  boolean enableManualAnnotations = true;
-
-  // My list of server names to detect
-  List<String> serverNames = Arrays.asList(
+// Convert the list of server names to a set for faster lookup
+Set<String> serverNames = new HashSet<>(Arrays.asList(
     "awselb", "Kestrel", "Apache", "Nginx", "Microsoft-IIS", "LiteSpeed", "Google Frontend", 
     "GWS", "openresty", "IBM_HTTP_Server", "AmazonS3", "CloudFront", "AkamaiGHost", "Jetty", 
     "Tengine", "lighttpd", "AOLserver", "ATS", "Boa", "Caddy", "Cherokee", "Caudium", "Hiawatha", 
@@ -24,29 +22,30 @@
     "Yaws", "WDaemon", "Virtuoso", "UserLand", "TUX", "TwistedWeb", "TwistedWeb", "Thin", 
     "Thttpd", "Tengine", "Swiki", "SurgeLDAP", "Sun-ONE-Web-Server", "Sun-ONE-Application-Server", 
     "Sucuri/Cloudproxy", "SSWS", "SWS", "SW", "srv", "squid", "Spamfire", "SOMA", 
-    "Snap", "SmugMug", "SME Server", "Smart-4-Hosting", "Sioux", "SilverStream", "Silk", "Siemens Gigaset WLAN Camera"
-);
+    "Snap", "SmugMug", "SME Server", "Smart-4-Hosting", "Sioux", "SilverStream", "Silk", "Siemens Gigaset WLAN Camera", // Additional server namesV2
+    "Traefik", "HAProxy", "Envoy", "Linkerd", "Istio", "Kong", "tyk", "nginx unit", "OpenLiteSpeed", "Node.js", "IIS Express", "Gunicorn", "uWSGI", "DMS"
+));
 
-  // Ensure there is a response
-  if (!requestResponse.hasResponse()) {
-      return false;
-  }
+// Ensure there is a response
+if (!requestResponse.hasResponse()) {
+    return false;
+}
 
-  boolean foundServerName = false;
+boolean foundServerName = false;
+boolean enableManualAnnotations = true; // Define this variable
 
-  // Get the entire response as a string
-  String response = requestResponse.response().toString();
+// Get the 'Server' header from the response
+String serverHeader = requestResponse.response().headerValue("Server");
 
-  // Check if the 'Server' header contains any of the specified server names
-  for (String serverName : serverNames) {
-      if (response.contains("Server: " + serverName)) {
-          foundServerName = true;
-          if (enableManualAnnotations) {
-              requestResponse.annotations().setHighlightColor(HighlightColor.RED);
-              requestResponse.annotations().setNotes("Detected '" + serverName + "' in 'Server' header");
-          }
-          break;
-      }
-  }
+// Check if the 'Server' header value is in the set of server names
+if (serverHeader != null && serverNames.contains(serverHeader)) {
+    foundServerName = true;
+    if (enableManualAnnotations) {
+        requestResponse.annotations().setHighlightColor(HighlightColor.RED);
+        requestResponse.annotations().setNotes("Detected '" + serverHeader + "' in 'Server' header");
+    }
+}
 
-  return foundServerName;
+return foundServerName;
+
+ 
