@@ -1,0 +1,14 @@
+/**
+ * Check the CORS vulnerability
+ * @author https://github.com/JaveleyQAQ/
+ **/
+
+if (requestResponse.hasResponse() && requestResponse.request().hasHeader("Origin") && requestResponse.response().hasHeader("Access-Control-Allow-Origin"))
+{  
+    var requestOrigin = requestResponse.request().headerValue("Origin");
+    var responseOrigin = requestResponse.response().headerValue("Access-Control-Allow-Origin");
+    return requestOrigin.equals(responseOrigin) ? Character.toString(0x2757).concat("CORS?") : responseOrigin;
+    
+} else {
+    return "";
+}
