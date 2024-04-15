@@ -5,6 +5,29 @@ Please do not manually edit this file, or include any changes to this file in pu
 -->
 # Proxy HTTP Custom Column
 Documentation: [Adding a custom column](https://portswigger.net/burp/documentation/desktop/tools/proxy/http-history#adding-a-custom-column)
+## [JWTAlgorithm.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomColumn/Proxy/HTTP/JWTAlgorithm.bambda)
+### Extracts the JWT alg value from JWT session Cookies
+#### Author: trikster
+```java
+if (!requestResponse.finalRequest().hasParameter("session", HttpParameterType.COOKIE)) {
+    return "";
+}
+
+var cookieValue = requestResponse.finalRequest().parameter("session", HttpParameterType.COOKIE).value();
+
+var jwtFrags = cookieValue.split("\\.");
+
+if (jwtFrags.length != 3 ) {
+    return "";
+}
+
+
+var headerJson = utilities().base64Utils().decode(jwtFrags[0], Base64DecodingOptions.URL);
+var matcher = Pattern.compile(".+?\"alg\":\"(\\w+)\".+").matcher(headerJson.toString());
+
+return matcher.matches() ? matcher.group(1) : "";
+
+```
 ## [ServerHeader.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomColumn/Proxy/HTTP/ServerHeader.bambda)
 ### Extracts the value of the Server header from the response
 #### Author: agarri_fr
