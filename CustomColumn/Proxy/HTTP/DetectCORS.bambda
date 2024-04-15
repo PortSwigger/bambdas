@@ -3,19 +3,12 @@
  * @author https://github.com/JaveleyQAQ/
  **/
 
-var hasResponse = requestResponse.hasResponse();
-var hasRequestOrigin = requestResponse.request().hasHeader("Origin");
-var hasResponseOrigin = requestResponse.hasResponse() && requestResponse.response().hasHeader("Access-Control-Allow-Origin");
-
-if (hasResponse && hasRequestOrigin && hasResponseOrigin) {
+if (requestResponse.hasResponse() && requestResponse.request().hasHeader("Origin") && requestResponse.response().hasHeader("Access-Control-Allow-Origin"))
+{  
     var requestOrigin = requestResponse.request().headerValue("Origin");
     var responseOrigin = requestResponse.response().headerValue("Access-Control-Allow-Origin");
+    return requestOrigin.equals(responseOrigin) ? Character.toString(0x2757).concat("CORS?") : responseOrigin;
     
-    if (requestOrigin.equals(responseOrigin)) {
-       return Character.toString(0x2757).concat("CORS?");
-    } else {
-        return responseOrigin;
-    }
 } else {
     return "";
 }
