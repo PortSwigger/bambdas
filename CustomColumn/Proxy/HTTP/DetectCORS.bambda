@@ -1,0 +1,21 @@
+/**
+ * Check the CORS vulnerability
+ * @author https://github.com/JaveleyQAQ/
+ **/
+
+var hasResponse = requestResponse.hasResponse();
+var hasRequestOrigin = requestResponse.request().hasHeader("Origin");
+var hasResponseOrigin = requestResponse.hasResponse() && requestResponse.response().hasHeader("Access-Control-Allow-Origin");
+
+if (hasResponse && hasRequestOrigin && hasResponseOrigin) {
+    var requestOrigin = requestResponse.request().headerValue("Origin");
+    var responseOrigin = requestResponse.response().headerValue("Access-Control-Allow-Origin");
+    
+    if (requestOrigin.equals(responseOrigin)) {
+       return Character.toString(0x2757).concat("CORS?");
+    } else {
+        return responseOrigin;
+    }
+} else {
+    return "";
+}
