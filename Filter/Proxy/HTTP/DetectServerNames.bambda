@@ -8,7 +8,7 @@
 // Configuration setting for manual annotations
 boolean enableManualAnnotations = true;
 
-Set<String> serverNames = new HashSet<>(Arrays.asList(
+Set<String> serverNames = Set.of(
     "awselb", "Kestrel", "Apache", "Nginx", "Microsoft-IIS", "LiteSpeed", "Google Frontend", 
     "GWS", "openresty", "IBM_HTTP_Server", "AmazonS3", "CloudFront", "AkamaiGHost", "Jetty", 
     "Tengine", "lighttpd", "AOLserver", "ATS", "Boa", "Caddy", "Cherokee", "Caudium", "Hiawatha", 
@@ -25,10 +25,7 @@ Set<String> serverNames = new HashSet<>(Arrays.asList(
     "Thttpd", "Swiki", "SurgeLDAP", "Sun-ONE-Web-Server", "Sun-ONE-Application-Server", 
     "Sucuri/Cloudproxy", "SSWS", "SWS", "SW", "srv", "squid", "Spamfire", "SOMA", 
     "Snap", "SmugMug", "SME Server", "Smart-4-Hosting", "Sioux", "SilverStream", "Silk", "Siemens Gigaset WLAN Camera"
-));
-
-// Convert HashSet to an Immutable Set
-Set<String> immutableServerNames = Set.copyOf(serverNames);
+);
 
 // Ensure there is a response
 if (!requestResponse.hasResponse()) {
