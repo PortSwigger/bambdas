@@ -1,0 +1,10 @@
+/**
+ * Extracts Referer request header.
+ *
+ * Useful to identify sensitive data leakage via Referer header like
+ * OIDC authorization codes.
+ *
+ * @author emanuelduss
+ **/
+
+return requestResponse.request().hasHeader("Referer") ? requestResponse.request().headerValue("Referer") : "";
