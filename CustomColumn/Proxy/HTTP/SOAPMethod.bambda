@@ -1,0 +1,26 @@
+/**
+ * Extracts the Method and an example value from a SOAP Request
+ * @author Nick Coblentz (https://github.com/ncoblentz)
+ *
+ * Currently extracts the soap method and the WS-Security Username field's value. 
+ * Assumes the body tag's namespace is "s" as in `<s:Body`, customize if your SOAP request tags don't match
+ * Customize by adding additional RegEx's to extract more content
+ **/
+
+if(requestResponse.request().hasHeader("Content-Type")
+    && requestResponse.request().headerValue("Content-Type").contains("soap+xml"))
+{
+    StringBuilder builder = new StringBuilder();
+    if(requestResponse.request().bodyToString().contains("<s:Body"))
+    {        
+        Matcher m = Pattern.compile("<(?:[a-zA-Z0-9]+:)?Username>([^<]+)</(?:[a-zA-Z0-9]+:)*Username>|<(?:[a-zA-Z0-9]+:)*Body[^>]*><([^ ]+)",Pattern.CASE_INSENSITIVE).matcher(requestResponse.request().bodyToString());
+        while(m.find() && m.groupCount()>0) {
+            for(int i=1;i<=m.groupCount();i++) {
+                if(m.group(i)!=null)
+                    builder.append(m.group(i)+" ");
+            }
+        }
+        return builder.toString();
+    }
+}
+return "";
