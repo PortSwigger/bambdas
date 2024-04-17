@@ -1,0 +1,22 @@
+/**
+ * Extracts the WCF SOAP Binary Method from the Request
+ * @author Nick Coblentz (https://github.com/ncoblentz)
+ * 
+ * You need to customize the `prefix` parameter below to match the namespace reflected for the application you are testing
+ **/
+
+if(requestResponse.request().hasHeader("Content-Type") && requestResponse.request().headerValue("Content-Type").equals("application/soap+msbin1")){
+    String body = requestResponse.request().bodyToString();
+    String prefix = "www.examplewebsite.com/xmlnamespace/";
+    int start = body.indexOf(prefix);
+    if(start>0)
+    {
+        int end = body.indexOf("@",start+prefix.length());
+        if(end>0)
+        {
+            return body.substring(start+prefix.length(), end);
+        }
+
+    }        
+}
+return "";
