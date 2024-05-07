@@ -43,6 +43,50 @@ return true;
 return requestResponse.hasResponse() && requestResponse.response().statusCode() == 101;
 
 ```
+## [DetectServerNames.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/DetectServerNames.bambda)
+### Bambda Script to Detect Specific Server Names in HTTP Response
+#### Author: Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
+```java
+// Configuration setting for manual annotations
+boolean enableManualAnnotations = true;
+
+Set<String> serverNames = Set.of(
+    "awselb", "Kestrel", "Apache", "Nginx", "Microsoft-IIS", "LiteSpeed", "Google Frontend",
+    "GWS", "openresty", "IBM_HTTP_Server", "AmazonS3", "CloudFront", "AkamaiGHost", "Jetty",
+    "Tengine", "lighttpd", "AOLserver", "ATS", "Boa", "Caddy", "Cherokee", "Caudium", "Hiawatha",
+    "GlassFish", "H2O", "httpd", "Jigsaw", "Mongrel", "NCSA HTTPd", "Netscape Enterprise",
+    "Oracle iPlanet", "Pound", "Resin", "thttpd", "Tornado", "Varnish", "WebObjects", "Xitami",
+    "Zope", "Werkzeug", "WebSTAR", "WebSEAL", "WebServerX", "WebtoB", "Squid", "Sun Java System Web Server",
+    "Sun ONE Web Server", "Stronghold", "Zeus Web Server", "Roxen", "RapidLogic", "Pramati",
+    "Phusion Passenger", "Oracle Containers for J2EE", "Oracle-Application-Server-10g", "Oracle-Application-Server-11g",
+    "Nostromo", "Novell-HTTP-Server", "NaviServer", "MochiWeb", "Microsoft-HTTPAPI", "Mbedthis-Appweb",
+    "Lotus-Domino", "Kangle", "Joost", "Jino", "IceWarp", "GoAhead",
+    "Flywheel", "EdgePrism", "DMS", "Cowboy", "CommuniGatePro", "CompaqHTTPServer", "CERN", "CauchoResin",
+    "BarracudaHTTP", "BaseHTTP", "AllegroServe", "Abyss", "4D_WebSTAR_S", "4D_WebSTAR_D",
+    "Yaws", "WDaemon", "Virtuoso", "UserLand", "TUX", "TwistedWeb", "Thin",
+    "Thttpd", "Swiki", "SurgeLDAP", "Sun-ONE-Web-Server", "Sun-ONE-Application-Server",
+    "Sucuri/Cloudproxy", "SSWS", "SWS", "SW", "srv", "squid", "Spamfire", "SOMA",
+    "Snap", "SmugMug", "SME Server", "Smart-4-Hosting", "Sioux", "SilverStream", "Silk", "Siemens Gigaset WLAN Camera"
+);
+
+// Ensure there is a response
+if (!requestResponse.hasResponse()) {
+    return false;
+}
+
+// Get the 'Server' header from the response
+String serverHeader = requestResponse.response().headerValue("Server");
+
+// Check if the 'Server' header value is in the set of server names
+boolean foundServerName = serverHeader != null && serverNames.contains(serverHeader);
+if (foundServerName && enableManualAnnotations) {
+    requestResponse.annotations().setHighlightColor(HighlightColor.RED);
+    requestResponse.annotations().setNotes("Detected '" + serverHeader + "' in 'Server' header");
+}
+
+return foundServerName;
+
+```
 ## [DetectSuspiciousJSFunctions.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/DetectSuspiciousJSFunctions.bambda)
 ### Bambda Script to Detect and Highlight Suspicious JavaScript Functions
 #### Author: Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)

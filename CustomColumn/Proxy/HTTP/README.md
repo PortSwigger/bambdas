@@ -5,6 +5,21 @@ Please do not manually edit this file, or include any changes to this file in pu
 -->
 # Proxy HTTP Custom Column
 Documentation: [Adding a custom column](https://portswigger.net/burp/documentation/desktop/tools/proxy/http-history#adding-a-custom-column)
+## [DetectCORS.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomColumn/Proxy/HTTP/DetectCORS.bambda)
+### Check the CORS vulnerability
+#### Author: https://github.com/JaveleyQAQ/
+```java
+if (requestResponse.hasResponse() && requestResponse.request().hasHeader("Origin") && requestResponse.response().hasHeader("Access-Control-Allow-Origin"))
+{
+    var requestOrigin = requestResponse.request().headerValue("Origin");
+    var responseOrigin = requestResponse.response().headerValue("Access-Control-Allow-Origin");
+    return requestOrigin.equals(responseOrigin) ? Character.toString(0x2757).concat("CORS?") : responseOrigin;
+
+} else {
+    return "";
+}
+
+```
 ## [JWTAlgorithm.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomColumn/Proxy/HTTP/JWTAlgorithm.bambda)
 ### Extracts the JWT alg value from JWT session Cookies
 #### Author: trikster
@@ -28,6 +43,36 @@ var matcher = Pattern.compile(".+?\"alg\":\"(\\w+)\".+").matcher(headerJson.toSt
 return matcher.matches() ? matcher.group(1) : "";
 
 ```
+## [Referer.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomColumn/Proxy/HTTP/Referer.bambda)
+### Extracts Referer request header.  Useful to identify sensitive data leakage via Referer header like OIDC authorization codes.
+#### Author: emanuelduss
+```java
+return requestResponse.request().hasHeader("Referer") ? requestResponse.request().headerValue("Referer") : "";
+
+```
+## [SOAPMethod.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomColumn/Proxy/HTTP/SOAPMethod.bambda)
+### Extracts the Method and an example value from a SOAP Request
+#### Author: Nick Coblentz (https://github.com/ncoblentz)
+```java
+if(requestResponse.request().hasHeader("Content-Type")
+    && requestResponse.request().headerValue("Content-Type").contains("soap+xml"))
+{
+    StringBuilder builder = new StringBuilder();
+    if(requestResponse.request().bodyToString().contains("<s:Body"))
+    {
+        Matcher m = Pattern.compile("<(?:[a-zA-Z0-9]+:)?Username>([^<]+)</(?:[a-zA-Z0-9]+:)*Username>|<(?:[a-zA-Z0-9]+:)*Body[^>]*><([^ ]+)",Pattern.CASE_INSENSITIVE).matcher(requestResponse.request().bodyToString());
+        while(m.find() && m.groupCount()>0) {
+            for(int i=1;i<=m.groupCount();i++) {
+                if(m.group(i)!=null)
+                    builder.append(m.group(i)+" ");
+            }
+        }
+        return builder.toString();
+    }
+}
+return "";
+
+```
 ## [ServerHeader.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomColumn/Proxy/HTTP/ServerHeader.bambda)
 ### Extracts the value of the Server header from the response
 #### Author: agarri_fr
@@ -35,5 +80,26 @@ return matcher.matches() ? matcher.group(1) : "";
 return requestResponse.hasResponse() && requestResponse.response().hasHeader("Server")
   ? requestResponse.response().headerValue("Server")
   : "";
+
+```
+## [WCFBinarySOAPMethod.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomColumn/Proxy/HTTP/WCFBinarySOAPMethod.bambda)
+### Extracts the WCF SOAP Binary Method from the Request
+#### Author: Nick Coblentz (https://github.com/ncoblentz)
+```java
+if(requestResponse.request().hasHeader("Content-Type") && requestResponse.request().headerValue("Content-Type").equals("application/soap+msbin1")){
+    String body = requestResponse.request().bodyToString();
+    String prefix = "www.examplewebsite.com/xmlnamespace/";
+    int start = body.indexOf(prefix);
+    if(start>0)
+    {
+        int end = body.indexOf("@",start+prefix.length());
+        if(end>0)
+        {
+            return body.substring(start+prefix.length(), end);
+        }
+
+    }
+}
+return "";
 
 ```
