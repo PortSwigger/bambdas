@@ -1,0 +1,33 @@
+/**
+ * Filters non-empty 200 response classes 
+ * 
+ * // Use `cat your-oas-api-spec-doc.json | jq -r '.components.schemas.[].properties? | keys? | .[]' | sort -u > json-wordlist.txt` to create a wordlist prior to attacking endpoints with paramminer
+ * 
+ * @author GangGreenTemperTatum (https://github.com/GangGreenTemperTatum)
+ **/
+
+var configNoFilter = false;        // if set to false, won't show JS, GIF, JPG, PNG, CSS.
+var configInScopeOnly = true;      // if set to true, won't show out-of-scope items
+var request = requestResponse.request(); // create a var for request
+var response = requestResponse.response(); // create a var for response
+
+if (configInScopeOnly && !request.isInScope()) {
+    return false;
+}
+
+if (response == null || !response.isStatusCodeClass(StatusCodeClass.CLASS_2XX_SUCCESS)) {
+    return false; // return only status codes of 2xx
+}
+
+// verify that the request is a POST, PUT, or PATCH
+if (!requestResponse.hasResponse() || request.method().equals("POST") || request.method().equals("PATCH") || request.method().equals("PUT")) {
+    // verify that the response is json
+    var contentType = response.headerValue("Content-Type");
+
+    // verify the content-type is json
+    if (contentType != null && contentType.contains("application/json")) {
+        return true;
+    }
+}
+
+return false; // This line ensures the method returns a boolean value
