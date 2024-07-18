@@ -22,7 +22,7 @@ Requirements: Java 17+
 
 In the top level directory of the folder containing your Bambdas, run the following command:
 ```
-java -jar BambdaChecker-1.2.jar
+java -jar BambdaChecker-1.3.jar
 ```
 
 Verify the output. To do this quickly, check the exit code is 0 for a valid run. 
@@ -32,7 +32,7 @@ This will also update or generate markdown files as appropriate. This is only fo
 If you only want to perform the validation check without affecting the markdown, then run:
 
 ```
-java -jar BambdaChecker-1.2.jar validateonly
+java -jar BambdaChecker-1.3.jar validateonly
 ```
 
 ### What it checks for
