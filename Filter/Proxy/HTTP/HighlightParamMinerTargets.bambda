@@ -1,7 +1,7 @@
 /**
- * Filters non-empty 200 response classes 
+ * Filters non-empty 200 json-based response classes which can be used to find easy routes to attack with the paramminer guess json params and a custom wordlist, ie:
  * 
- * // Use `cat your-oas-api-spec-doc.json | jq -r '.components.schemas.[].properties? | keys? | .[]' | sort -u > json-wordlist.txt` to create a wordlist prior to attacking endpoints with paramminer
+ // $ cat your-oas-api-spec-doc.json | jq -r '.components.schemas.[].properties? | keys? | .[]' | sort -u > json-wordlist.txt 
  * 
  * @author GangGreenTemperTatum (https://github.com/GangGreenTemperTatum)
  **/
