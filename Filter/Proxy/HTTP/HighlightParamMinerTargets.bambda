@@ -42,7 +42,7 @@ var response = requestResponse.response();
  // If filtering is not applied or the deny list conditions are met, proceed to check content type
  if (configNoFilter || filterDenyList) {
      // verify that the request is a POST, PUT, or PATCH and that the response is json
-     if (!requestResponse.hasResponse() || request.method().equals("POST") || request.method().equals("PATCH") || request.method().equals("PUT")) {
+     if (request.method().equals("POST") || request.method().equals("PATCH") || request.method().equals("PUT")) {
          var contentType = response.headerValue("Content-Type");
          // verify the content-type is json
          if (contentType != null && contentType.contains("application/json")) {
