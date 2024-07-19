@@ -8,17 +8,14 @@
 
  var configNoFilter = false;        // if set to false, won't show JS, GIF, JPG, PNG, CSS.
  var configInScopeOnly = true;      // if set to true, won't show out-of-scope items
- var request = requestResponse.request(); // create a var for request
- var response = requestResponse.response(); // create a var for response
- 
- // Early return conditions
- if (configInScopeOnly && !request.isInScope()) {
-     return false;
- }
- 
- if (response == null || !response.isStatusCodeClass(StatusCodeClass.CLASS_2XX_SUCCESS)) {
-     return false; // return only status codes of 2xx
- }
+
+ if (!requestResponse.hasResponse() || (configInScopeOnly && !requestResponse.request().isInScope()) || !requestResponse.response().isStatusCodeClass(StatusCodeClass.CLASS_2XX_SUCCESS))  
+{  
+    return false;  
+}  
+
+var request = requestResponse.request();  
+var response = requestResponse.response();  
  
  // Process path and mimeType for filtering
  var path = request.pathWithoutQuery().toLowerCase();
