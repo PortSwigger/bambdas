@@ -18,4 +18,3 @@
  
  // Return true only if both conditions are met
  return afterCheck && inScopeCheck;
- 
