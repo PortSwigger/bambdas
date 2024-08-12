@@ -487,6 +487,78 @@ if (manualColorHighlightEnabled && notes != null) {
 return color != null || notes != null;
 
 ```
+## [HighlightParamMinerTargets.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/HighlightParamMinerTargets.bambda)
+### Filters non-empty 200 json-based response classes which can be used to find easy routes to attack with the paramminer guess json params and a custom wordlist, ie:   // $ cat your-oas-api-spec-doc.json | jq -r '.components.schemas.[].properties? | keys? | .[]' | sort -u > json-wordlist.txt
+#### Author: GangGreenTemperTatum (https://github.com/GangGreenTemperTatum)
+```java
+var configNoFilter = false;        // if set to false, won't show JS, GIF, JPG, PNG, CSS.
+ var configInScopeOnly = true;      // if set to true, won't show out-of-scope items
+
+ if (!requestResponse.hasResponse() || (configInScopeOnly && !requestResponse.request().isInScope()) || !requestResponse.response().isStatusCodeClass(StatusCodeClass.CLASS_2XX_SUCCESS))
+{
+    return false;
+}
+
+var request = requestResponse.request();
+var response = requestResponse.response();
+
+ // Process path and mimeType for filtering
+ var path = request.pathWithoutQuery().toLowerCase();
+ var mimeType = requestResponse.mimeType();
+ var filterDenyList = mimeType != MimeType.CSS
+  && mimeType != MimeType.IMAGE_UNKNOWN
+  && mimeType != MimeType.IMAGE_JPEG
+  && mimeType != MimeType.IMAGE_GIF
+  && mimeType != MimeType.IMAGE_PNG
+  && mimeType != MimeType.IMAGE_BMP
+  && mimeType != MimeType.IMAGE_TIFF
+  && mimeType != MimeType.UNRECOGNIZED
+  && mimeType != MimeType.SOUND
+  && mimeType != MimeType.VIDEO
+  && mimeType != MimeType.FONT_WOFF
+  && mimeType != MimeType.FONT_WOFF2
+  && mimeType != MimeType.APPLICATION_UNKNOWN
+  && !path.endsWith(".js")
+  && !path.endsWith(".gif")
+  && !path.endsWith(".jpg")
+  && !path.endsWith(".png")
+  && !path.endsWith(".css");
+
+ // If filtering is not applied or the deny list conditions are met, proceed to check content type
+ if (configNoFilter || filterDenyList) {
+     // verify that the request is a POST, PUT, or PATCH and that the response is json
+     if (request.method().equals("POST") || request.method().equals("PATCH") || request.method().equals("PUT")) {
+         var contentType = response.headerValue("Content-Type");
+         // verify the content-type is json
+         if (contentType != null && contentType.contains("application/json")) {
+             return true;
+         }
+     }
+ }
+
+ return false; // Ensure method returns a boolean in all cases
+
+```
+## [HighlightPast48hrs.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/HighlightPast48hrs.bambda)
+### Filter the past 48 hours worth of in-scope proxy history
+#### Author: GangGreenTemperTatum (https://github.com/GangGreenTemperTatum)
+```java
+boolean configInScopeOnly = true; // Flag to filter only in-scope items
+
+ // Get current time and calculate 48 hours ago
+ ZonedDateTime now = ZonedDateTime.now();
+ ZonedDateTime fortyEightHoursAgo = now.minusHours(48);
+
+ // Check if the request time is within the last 48 hours
+ boolean afterCheck = requestResponse.time().isAfter(fortyEightHoursAgo);
+
+ // Check if the request is in scope
+ boolean inScopeCheck = !configInScopeOnly || requestResponse.request().isInScope();
+
+ // Return true only if both conditions are met
+ return afterCheck && inScopeCheck;
+
+```
 ## [HighlightResponsesWithDeveloperNotes.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/HighlightResponsesWithDeveloperNotes.bambda)
 ### Bambda Script to Highlight Responses with Developer Notes This script identifies and highlights HTTP responses containing developer notes in HTML and JavaScript files. It highlights HTML responses in green and JavaScript responses in yellow.
 #### Author: Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
