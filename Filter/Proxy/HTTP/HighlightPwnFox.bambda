@@ -4,14 +4,5 @@
  * @author GangGreenTemperTatum (https://github.com/GangGreenTemperTatum)
  **/
 
-var request = requestResponse.request();
-
-// Check if the request is in scope
-if (!request.isInScope()) {
-    return false;
-}
-
-// Check if the request has the "X-Pwnfox-Color" header
-var hasPwnfoxColorHeader = request.hasHeader("X-Pwnfox-Color");
-
-return hasPwnfoxColorHeader;
+ var request = requestResponse.request();
+ return request.isInScope() && request.hasHeader("X-Pwnfox-Color");
