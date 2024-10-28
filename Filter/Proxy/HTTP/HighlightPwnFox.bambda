@@ -1,0 +1,8 @@
+/**
+ * Filter requests in scope and containing the "X-Pwnfox-Color" header.
+ *
+ * @author GangGreenTemperTatum (https://github.com/GangGreenTemperTatum)
+ **/
+
+ var request = requestResponse.request();
+ return request.isInScope() && request.hasHeader("X-Pwnfox-Color");
