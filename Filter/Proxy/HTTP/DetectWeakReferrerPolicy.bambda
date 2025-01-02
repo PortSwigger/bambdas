@@ -1,0 +1,33 @@
+/**
+ * Bambda Script to Detect "Weak or Missing Referrer-Policy" Header in HTTP Response
+ * @author ctflearner
+ * This script checks if the HTTP response lacks the "Referrer-Policy" header or uses a weak policy, 
+ * such as "no-referrer-when-downgrade" or "unsafe-url". 
+ * It ensures there is a response and scans the headers for either the absence of the Referrer-Policy header 
+ * or the presence of policies that may expose sensitive referrer information.
+ **/
+
+
+if (!requestResponse.hasResponse()) {
+    return false;
+}
+
+Optional<HttpHeader> referrerPolicyHeader = Optional.ofNullable(
+    requestResponse.response().header("Referrer-Policy")
+);
+
+if (referrerPolicyHeader.isEmpty()) {
+    return true;
+}
+
+String headerValue = referrerPolicyHeader.get().value().toLowerCase(Locale.US).trim();
+
+// Check for weak referrer policies using a stream
+boolean hasWeakPolicy = requestResponse.response().headers().stream()
+    .filter(header -> header.name().equalsIgnoreCase("Referrer-Policy"))
+    .anyMatch(header -> {
+        String value = header.value().toLowerCase(Locale.US).trim(); // Include Locale for toLowerCase()
+        return value.equals("no-referrer-when-downgrade") || value.equals("unsafe-url");
+    });
+
+return headerValue.equals("no-referrer-when-downgrade") || headerValue.equals("unsafe-url") || hasWeakPolicy;
