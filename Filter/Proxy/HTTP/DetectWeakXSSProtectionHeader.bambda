@@ -10,18 +10,13 @@
  **/
 
 
-return requestResponse.hasResponse() && (
-    // Check for X-XSS-Protection: 0
-    requestResponse.response().headers().stream()
-        .anyMatch(header -> 
-            header.name().equalsIgnoreCase("X-XSS-Protection") && 
-            header.value().trim().equals("0")
-        ) ||
-    // Check for potentially weak X-XSS-Protection settings
-    requestResponse.response().headers().stream()
-        .anyMatch(header -> 
-            header.name().equalsIgnoreCase("X-XSS-Protection") && 
-            (header.value().trim().equals("1") || 
-             header.value().toLowerCase().contains("report="))
-        )
-);
+return requestResponse.hasResponse() && 
+       requestResponse.response().hasHeader("X-XSS-Protection") && 
+       requestResponse.response().headers().stream()
+           .filter(header -> header.name().equalsIgnoreCase("X-XSS-Protection"))
+           .anyMatch(header -> {
+               String value = header.value().trim();
+               return value.equals("0") || 
+                      value.equals("1") || 
+                      value.toLowerCase(Locale.US).contains("report=");
+           });
