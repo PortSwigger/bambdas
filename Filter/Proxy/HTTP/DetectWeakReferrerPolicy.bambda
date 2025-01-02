@@ -8,17 +8,26 @@
  **/
 
 
-return requestResponse.hasResponse() && (
-    // No Referrer-Policy header
-    requestResponse.response().headers().stream()
-        .noneMatch(header -> header.name().equalsIgnoreCase("Referrer-Policy")) ||
-    
-    // Check for potentially weak referrer policies
-    requestResponse.response().headers().stream()
-        .filter(header -> header.name().equalsIgnoreCase("Referrer-Policy"))
-        .anyMatch(header -> {
-            String value = header.value().toLowerCase().trim();
-            return value.equals("no-referrer-when-downgrade") ||
-                   value.equals("unsafe-url");
-        })
+if (!requestResponse.hasResponse()) {
+    return false;
+}
+
+Optional<HttpHeader> referrerPolicyHeader = Optional.ofNullable(
+    requestResponse.response().header("Referrer-Policy")
 );
+
+if (referrerPolicyHeader.isEmpty()) {
+    return true;
+}
+
+String headerValue = referrerPolicyHeader.get().value().toLowerCase(Locale.US).trim();
+
+// Check for weak referrer policies using a stream
+boolean hasWeakPolicy = requestResponse.response().headers().stream()
+    .filter(header -> header.name().equalsIgnoreCase("Referrer-Policy"))
+    .anyMatch(header -> {
+        String value = header.value().toLowerCase(Locale.US).trim(); // Include Locale for toLowerCase()
+        return value.equals("no-referrer-when-downgrade") || value.equals("unsafe-url");
+    });
+
+return headerValue.equals("no-referrer-when-downgrade") || headerValue.equals("unsafe-url") || hasWeakPolicy;
