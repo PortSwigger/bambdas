@@ -10,8 +10,7 @@
  **/
 
 
-return requestResponse.hasResponse() && 
-       requestResponse.response().hasHeader("X-XSS-Protection") && 
+return requestResponse.hasResponse() &&
        requestResponse.response().headers().stream()
            .filter(header -> header.name().equalsIgnoreCase("X-XSS-Protection"))
            .anyMatch(header -> {
