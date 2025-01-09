@@ -1,0 +1,21 @@
+/**
+ * Bambda Script to Detect "Weak or Misconfigured X-XSS-Protection" Header in HTTP Response
+ * @author ctflearner
+ * This script checks if the HTTP response contains a weak or misconfigured "X-XSS-Protection" header. 
+ * It identifies the following cases:
+ * 1. The header is set to "0", explicitly disabling XSS protection.
+ * 2. The header is set to "1" (minimal protection) or includes a "report=" directive, 
+ *    which may indicate insufficient or partial mitigation.
+ * The script ensures there is a response and scans the headers for these conditions.
+ **/
+
+
+return requestResponse.hasResponse() &&
+       requestResponse.response().headers().stream()
+           .filter(header -> header.name().equalsIgnoreCase("X-XSS-Protection"))
+           .anyMatch(header -> {
+               String value = header.value().trim();
+               return value.equals("0") || 
+                      value.equals("1") || 
+                      value.toLowerCase(Locale.US).contains("report=");
+           });
