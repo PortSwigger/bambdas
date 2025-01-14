@@ -1,10 +1,15 @@
-/**
- * Extracts Referer request header.
- *
- * Useful to identify sensitive data leakage via Referer header like
- * OIDC authorization codes.
- *
- * @author emanuelduss
- **/
+id: fa65ac11-a7ea-4cdf-8c53-6c14b508ad53
+name: Referer
+function: CUSTOM_COLUMN
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+   * Extracts Referer request header.
+   *
+   * Useful to identify sensitive data leakage via Referer header like
+   * OIDC authorization codes.
+   *
+   * @author emanuelduss
+   **/
 
-return requestResponse.request().hasHeader("Referer") ? requestResponse.request().headerValue("Referer") : "";
+  return requestResponse.request().hasHeader("Referer") ? requestResponse.request().headerValue("Referer") : "";

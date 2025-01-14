@@ -1,22 +1,27 @@
-/**
- * Extracts the JWT alg value from JWT session Cookies
- * @author trikster
- **/
+id: e9b0d6bf-b880-4e33-a563-b7f1fab95ac3
+name: JWT algorithm
+function: CUSTOM_COLUMN
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+   * Extracts the JWT alg value from JWT session Cookies
+   * @author trikster
+   **/
 
-if (!requestResponse.finalRequest().hasParameter("session", HttpParameterType.COOKIE)) {
-    return "";
-}
+  if (!requestResponse.finalRequest().hasParameter("session", HttpParameterType.COOKIE)) {
+      return "";
+  }
 
-var cookieValue = requestResponse.finalRequest().parameter("session", HttpParameterType.COOKIE).value();
+  var cookieValue = requestResponse.finalRequest().parameter("session", HttpParameterType.COOKIE).value();
 
-var jwtFrags = cookieValue.split("\\.");
+  var jwtFrags = cookieValue.split("\\.");
 
-if (jwtFrags.length != 3 ) {
-    return "";
-}
+  if (jwtFrags.length != 3 ) {
+      return "";
+  }
 
 
-var headerJson = utilities().base64Utils().decode(jwtFrags[0], Base64DecodingOptions.URL);
-var matcher = Pattern.compile(".+?\"alg\":\"(\\w+)\".+").matcher(headerJson.toString());
+  var headerJson = utilities().base64Utils().decode(jwtFrags[0], Base64DecodingOptions.URL);
+  var matcher = Pattern.compile(".+?\"alg\":\"(\\w+)\".+").matcher(headerJson.toString());
 
-return matcher.matches() ? matcher.group(1) : "";
+  return matcher.matches() ? matcher.group(1) : "";

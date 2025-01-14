@@ -1,8 +1,13 @@
-/**
- * Finds malformed HTTP headers containing spaces within their names.
- * 
- * @author albinowax
- **/
+id: a4151282-c206-b211-c415-58f768acb8c2
+name: Malformed http header
+function: VIEW_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+   * Finds malformed HTTP headers containing spaces within their names.
+   *
+   * @author albinowax
+   **/
 
-return requestResponse.response().headers().stream()
-    .anyMatch(e -> e.name().contains(" "));
+  return requestResponse.response().headers().stream()
+      .anyMatch(e -> e.name().contains(" "));

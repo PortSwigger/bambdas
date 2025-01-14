@@ -1,30 +1,35 @@
-/**
- * Highlight different listener port
- * @author Bogo-6 (https://github.com/Bogo-6)
- **/
+id: a624919d-c42c-59a4-7d50-e66696164225
+name: Highlight listener port
+function: CAPTURE_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+   * Highlight different listener port
+   * @author Bogo-6 (https://github.com/Bogo-6)
+   **/
 
-boolean manualColorHighlightEnabled = true;
+  boolean manualColorHighlightEnabled = true;
 
-var colorMap = Map.of(
-    8080, HighlightColor.BLUE,
-    8082, HighlightColor.YELLOW
-);
-var notesMap = Map.of(
-    8080, "User 1", 
-    8082, "User 2"
-);
+  var colorMap = Map.of(
+      8080, HighlightColor.BLUE,
+      8082, HighlightColor.YELLOW
+  );
+  var notesMap = Map.of(
+      8080, "User 1",
+      8082, "User 2"
+  );
 
 
-var listenerPort = requestResponse.listenerPort();
-var color = colorMap.get(listenerPort);
-var notes = notesMap.get(listenerPort);
+  var listenerPort = requestResponse.listenerPort();
+  var color = colorMap.get(listenerPort);
+  var notes = notesMap.get(listenerPort);
 
-if (manualColorHighlightEnabled && color != null) {
-    requestResponse.annotations().setHighlightColor(color);
-}
+  if (manualColorHighlightEnabled && color != null) {
+      requestResponse.annotations().setHighlightColor(color);
+  }
 
-if (manualColorHighlightEnabled && notes != null) {
-    requestResponse.annotations().setNotes(notes);
-}
+  if (manualColorHighlightEnabled && notes != null) {
+      requestResponse.annotations().setNotes(notes);
+  }
 
-return color != null || notes != null;
+  return color != null || notes != null;

@@ -1,28 +1,33 @@
-/**
- * Finds responses which redirect to locations provided as GET parameters.
- *
- * Useful to identify possible attack surface for open redirects. This can be
- * used for phishing, CSP bypasses or OAuth token stealing.
- *
- * @author emanuelduss
- **/
+id: 1a4d834d-b173-8764-9477-0ae79a30d30c
+name: Redirected to parameter value
+function: VIEW_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+   * Finds responses which redirect to locations provided as GET parameters.
+   *
+   * Useful to identify possible attack surface for open redirects. This can be
+   * used for phishing, CSP bypasses or OAuth token stealing.
+   *
+   * @author emanuelduss
+   **/
 
-if (!requestResponse.hasResponse()){
-    return false;
-}
+  if (!requestResponse.hasResponse()){
+      return false;
+  }
 
-HttpRequest request = requestResponse.request();
-HttpResponse response = requestResponse.response();
+  HttpRequest request = requestResponse.request();
+  HttpResponse response = requestResponse.response();
 
-if (request.hasParameters() && response.isStatusCodeClass(StatusCodeClass.CLASS_3XX_REDIRECTION) && response.hasHeader("Location")){
-    for (ParsedHttpParameter parameter : request.parameters()){
-        String parameterValue = parameter.value();
-        if (response.hasHeader("Location", parameterValue) ||
-            response.hasHeader("Location", utilities().urlUtils().encode(parameterValue)) ||
-            response.hasHeader("Location", utilities().urlUtils().decode(parameterValue))){
-            return true;
-        }
-    }
-}
+  if (request.hasParameters() && response.isStatusCodeClass(StatusCodeClass.CLASS_3XX_REDIRECTION) && response.hasHeader("Location")){
+      for (ParsedHttpParameter parameter : request.parameters()){
+          String parameterValue = parameter.value();
+          if (response.hasHeader("Location", parameterValue) ||
+              response.hasHeader("Location", utilities().urlUtils().encode(parameterValue)) ||
+              response.hasHeader("Location", utilities().urlUtils().decode(parameterValue))){
+              return true;
+          }
+      }
+  }
 
-return false;
+  return false;

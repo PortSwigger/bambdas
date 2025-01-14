@@ -1,23 +1,28 @@
-/**
- * Finds requests containing URLs.
- *
- * Useful to identify possible attack surface for SSRF.
- *
- * @author emanuelduss
- **/
+id: 98565827-30aa-5724-b18a-9176f45a8ee5
+name: Url in parameter
+function: VIEW_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+   * Finds requests containing URLs.
+   *
+   * Useful to identify possible attack surface for SSRF.
+   *
+   * @author emanuelduss
+   **/
 
-HttpRequest request = requestResponse.request();
+  HttpRequest request = requestResponse.request();
 
-if (request.hasParameters()){
-    for (ParsedHttpParameter parameter : request.parameters()){
-        String parameterValue = parameter.value();
-        if (parameterValue.contains("http://") ||
-            parameterValue.contains(utilities().urlUtils().encode("http://")) ||
-            parameterValue.contains("https://") ||
-            parameterValue.contains(utilities().urlUtils().encode("https://"))){
-            return true;
-        }
-    }
-}
+  if (request.hasParameters()){
+      for (ParsedHttpParameter parameter : request.parameters()){
+          String parameterValue = parameter.value();
+          if (parameterValue.contains("http://") ||
+              parameterValue.contains(utilities().urlUtils().encode("http://")) ||
+              parameterValue.contains("https://") ||
+              parameterValue.contains(utilities().urlUtils().encode("https://"))){
+              return true;
+          }
+      }
+  }
 
-return false;
+  return false;

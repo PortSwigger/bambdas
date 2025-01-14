@@ -1,7 +1,12 @@
-/**
- * Filter out OPTIONS requests.
- *
- * @author Trikster
- **/
+id: 64529ca7-6305-5232-d229-c32102ba0e49
+name: Filter out options requests
+function: CAPTURE_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+   * Filter out OPTIONS requests.
+   *
+   * @author Trikster
+   **/
 
-return !requestResponse.request().method().equals("OPTIONS");
+  return !requestResponse.request().method().equals("OPTIONS");

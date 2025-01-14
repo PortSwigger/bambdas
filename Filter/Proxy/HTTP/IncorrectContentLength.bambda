@@ -1,14 +1,19 @@
-/**
- * Finds responses whose body length do not match their stated Content-Length header.
- * 
- * @author albinowax
- **/
+id: 843554ad-1c84-4343-49bd-18736a2a7d56
+name: Incorrect content length
+function: VIEW_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+   * Finds responses whose body length do not match their stated Content-Length header.
+   *
+   * @author albinowax
+   **/
 
-if (!requestResponse.hasResponse() || requestResponse.request().method().equals("HEAD")) {
-    return false;
-}
+  if (!requestResponse.hasResponse() || requestResponse.request().method().equals("HEAD")) {
+      return false;
+  }
 
-int realContentLength = requestResponse.response().body().length();
-int declaredContentLength = Integer.parseInt(requestResponse.response().headerValue("Content-Length"));
+  int realContentLength = requestResponse.response().body().length();
+  int declaredContentLength = Integer.parseInt(requestResponse.response().headerValue("Content-Length"));
 
-return declaredContentLength != realContentLength;
+  return declaredContentLength != realContentLength;
