@@ -1,31 +1,36 @@
-/**
- * This script populates elements of the SOAP request in the "Notes" column of Burp's Proxy History. You can expand upon the capture groups by editing the RegEx pattern.
- *
- * @author Nick Coblentz (https://github.com/ncoblentz)
- * 
- **/
+id: 5f7997bf-8a61-4189-bcf0-00f679c580fd
+name: Annotate soap requests
+function: CAPTURE_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+   * This script populates elements of the SOAP request in the "Notes" column of Burp's Proxy History. You can expand upon the capture groups by editing the RegEx pattern.
+   *
+   * @author Nick Coblentz (https://github.com/ncoblentz)
+   *
+   **/
 
-// Only applies to in-scope requests, feel free to remove this part of the if statement if you want it to apply to all requests
-if(requestResponse.request().isInScope()
-	&& !requestResponse.annotations().hasNotes() //don't apply it if notes are already present
-	&& requestResponse.request().hasHeader("Content-Type")
-	&& requestResponse.request().headerValue("Content-Type").contains("soap+xml")) //look for soap requests
-{
-    StringBuilder builder = new StringBuilder();
-	if(requestResponse.request().bodyToString().contains("<s:Body"))
-    {
-        //Currently looks for the tag just after body and for any usernames in the ws-security header. You can add more of your own here.
-        Matcher m = Pattern.compile("<(?:[a-zA-Z0-9]+:)?Username>([^<]+)</(?:[a-zA-Z0-9]+:)*Username>|<(?:[a-zA-Z0-9]+:)*Body[^>]*><([^ ]+)",Pattern.CASE_INSENSITIVE).matcher(requestResponse.request().bodyToString());
+  // Only applies to in-scope requests, feel free to remove this part of the if statement if you want it to apply to all requests
+  if(requestResponse.request().isInScope()
+    && !requestResponse.annotations().hasNotes() //don't apply it if notes are already present
+    && requestResponse.request().hasHeader("Content-Type")
+    && requestResponse.request().headerValue("Content-Type").contains("soap+xml")) //look for soap requests
+  {
+      StringBuilder builder = new StringBuilder();
+    if(requestResponse.request().bodyToString().contains("<s:Body"))
+      {
+          //Currently looks for the tag just after body and for any usernames in the ws-security header. You can add more of your own here.
+          Matcher m = Pattern.compile("<(?:[a-zA-Z0-9]+:)?Username>([^<]+)</(?:[a-zA-Z0-9]+:)*Username>|<(?:[a-zA-Z0-9]+:)*Body[^>]*><([^ ]+)",Pattern.CASE_INSENSITIVE).matcher(requestResponse.request().bodyToString());
 
-        while(m.find() && m.groupCount()>0) {
-            for(int i=1;i<=m.groupCount();i++) {
-                if(m.group(i)!=null)
-	                builder.append(m.group(i)+" ");
-            }
-        }
-        requestResponse.annotations().setNotes(builder.toString());
-    }
-}
+          while(m.find() && m.groupCount()>0) {
+              for(int i=1;i<=m.groupCount();i++) {
+                  if(m.group(i)!=null)
+                    builder.append(m.group(i)+" ");
+              }
+          }
+          requestResponse.annotations().setNotes(builder.toString());
+      }
+  }
 
-// Put your typical filters here, this one doesn't actually filter anything
-return true;
+  // Put your typical filters here, this one doesn't actually filter anything
+  return true;

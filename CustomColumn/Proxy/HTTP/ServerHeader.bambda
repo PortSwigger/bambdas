@@ -1,8 +1,13 @@
-/**
- * Extracts the value of the Server header from the response
- * @author agarri_fr
- **/
+id: c46512f3-23a1-408c-beb2-d9f03df04fff
+name: Server header
+function: CUSTOM_COLUMN
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+   * Extracts the value of the Server header from the response
+   * @author agarri_fr
+   **/
 
-return requestResponse.hasResponse() && requestResponse.response().hasHeader("Server")
-  ? requestResponse.response().headerValue("Server")
-  : "";
+  return requestResponse.hasResponse() && requestResponse.response().hasHeader("Server")
+    ? requestResponse.response().headerValue("Server")
+    : "";

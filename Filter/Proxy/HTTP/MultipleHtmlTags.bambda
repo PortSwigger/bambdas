@@ -1,10 +1,15 @@
-/**
- * Finds responses with multiple HTML closing tags.
- * 
- * @author albinowax
- **/
+id: 5b2d48c9-b18d-2471-2219-eab10ffe669b
+name: Multiple html tags
+function: VIEW_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+   * Finds responses with multiple HTML closing tags.
+   *
+   * @author albinowax
+   **/
 
-return requestResponse.hasResponse() &&
-       requestResponse.response().statedMimeType() == MimeType.HTML &&
-       utilities().byteUtils().countMatches(
-       requestResponse.response().body().getBytes(), "</html>".getBytes()) > 1;
+  return requestResponse.hasResponse() &&
+         requestResponse.response().statedMimeType() == MimeType.HTML &&
+         utilities().byteUtils().countMatches(
+         requestResponse.response().body().getBytes(), "</html>".getBytes()) > 1;

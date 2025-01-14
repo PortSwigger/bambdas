@@ -1,20 +1,25 @@
-/**
- * Bambda Script to Highlight Unencrypted HTTP Traffic
- * Filters Proxy HTTP history for unencrypted (non-HTTPS) requests.
- * @author Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
- **/
+id: 1b68a476-a486-11aa-b6db-c2d54a1052b1
+name: Highlight unexcrypted HTTP
+function: CAPTURE_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+   * Bambda Script to Highlight Unencrypted HTTP Traffic
+   * Filters Proxy HTTP history for unencrypted (non-HTTPS) requests.
+   * @author Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
+   **/
 
-// Get the request object from the requestResponse
-var request = requestResponse.request();
+  // Get the request object from the requestResponse
+  var request = requestResponse.request();
 
-// Extract the URL from the request
-var requestUrl = request.url();
+  // Extract the URL from the request
+  var requestUrl = request.url();
 
-// Check if the request URL starts with "http://"
-if (requestUrl.startsWith("http://")) {
-    // URL is unencrypted, return true to highlight this request
-    return true;
-}
+  // Check if the request URL starts with "http://"
+  if (requestUrl.startsWith("http://")) {
+      // URL is unencrypted, return true to highlight this request
+      return true;
+  }
 
-// URL is encrypted or does not match the criteria, return false
-return false;
+  // URL is encrypted or does not match the criteria, return false
+  return false;

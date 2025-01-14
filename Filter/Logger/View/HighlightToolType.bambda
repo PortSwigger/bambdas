@@ -1,19 +1,24 @@
-/**
- * Highlights messages according to their tool type.
- * @author ps-porpoise
-**/
-var highlights = Map.of(
-        ToolType.TARGET,     HighlightColor.RED,
-        ToolType.PROXY,      HighlightColor.BLUE,
-        ToolType.INTRUDER,   HighlightColor.CYAN,
-        ToolType.REPEATER,   HighlightColor.MAGENTA,
-        ToolType.EXTENSIONS, HighlightColor.ORANGE,
-        ToolType.SCANNER,    HighlightColor.GREEN,
-        ToolType.SEQUENCER,  HighlightColor.PINK
-);
+id: 1bd27407-cbc7-46b2-9c49-71c95518c13e
+name: Highlight tool type
+function: VIEW_FILTER
+location: LOGGER
+source: |+
+  /**
+   * Highlights messages according to their tool type.
+   * @author ps-porpoise
+  **/
+  var highlights = Map.of(
+          ToolType.TARGET,     HighlightColor.RED,
+          ToolType.PROXY,      HighlightColor.BLUE,
+          ToolType.INTRUDER,   HighlightColor.CYAN,
+          ToolType.REPEATER,   HighlightColor.MAGENTA,
+          ToolType.EXTENSIONS, HighlightColor.ORANGE,
+          ToolType.SCANNER,    HighlightColor.GREEN,
+          ToolType.SEQUENCER,  HighlightColor.PINK
+  );
 
-requestResponse.annotations().setHighlightColor(
-        highlights.getOrDefault(requestResponse.toolSource().toolType(), HighlightColor.NONE)
-);
+  requestResponse.annotations().setHighlightColor(
+          highlights.getOrDefault(requestResponse.toolSource().toolType(), HighlightColor.NONE)
+  );
 
-return true;
+  return true;

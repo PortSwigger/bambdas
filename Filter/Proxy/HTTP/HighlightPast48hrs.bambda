@@ -1,20 +1,25 @@
-/**
- * Filter the past 48 hours worth of in-scope proxy history
- *
- * @author GangGreenTemperTatum (https://github.com/GangGreenTemperTatum)
- **/
+id: b3037b6b-db09-518b-025d-e690e910fccf
+name: Highlight past 48 hours
+function: VIEW_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+   * Filter the past 48 hours worth of in-scope proxy history
+   *
+   * @author GangGreenTemperTatum (https://github.com/GangGreenTemperTatum)
+   **/
 
- boolean configInScopeOnly = true; // Flag to filter only in-scope items
+   boolean configInScopeOnly = true; // Flag to filter only in-scope items
 
- // Get current time and calculate 48 hours ago
- ZonedDateTime now = ZonedDateTime.now();
- ZonedDateTime fortyEightHoursAgo = now.minusHours(48);
- 
- // Check if the request time is within the last 48 hours
- boolean afterCheck = requestResponse.time().isAfter(fortyEightHoursAgo);
- 
- // Check if the request is in scope
- boolean inScopeCheck = !configInScopeOnly || requestResponse.request().isInScope();
- 
- // Return true only if both conditions are met
- return afterCheck && inScopeCheck;
+   // Get current time and calculate 48 hours ago
+   ZonedDateTime now = ZonedDateTime.now();
+   ZonedDateTime fortyEightHoursAgo = now.minusHours(48);
+
+   // Check if the request time is within the last 48 hours
+   boolean afterCheck = requestResponse.time().isAfter(fortyEightHoursAgo);
+
+   // Check if the request is in scope
+   boolean inScopeCheck = !configInScopeOnly || requestResponse.request().isInScope();
+
+   // Return true only if both conditions are met
+   return afterCheck && inScopeCheck;

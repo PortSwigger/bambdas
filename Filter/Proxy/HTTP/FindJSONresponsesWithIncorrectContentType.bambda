@@ -1,17 +1,30 @@
-/**
- * Finds JSON responses with wrong Content-Type
- *
- * The content is probably json but the content type is not application/json
- *
- * @author albinowax
- **/
+id: 6620a595-520b-1ba2-2b20-5ea8568fdb89
+name: Filter JSON responses with incorrect content type
+function: CAPTURE_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+   * Filter out OPTIONS requests.
+   *
+   * @author Trikster
+   **/
 
-var contentType = requestResponse.hasResponse() ? requestResponse.response().headerValue("Content-Type") : null;
+  return !requestResponse.request().method().equals("OPTIONS");
 
-if (contentType != null && !contentType.contains("application/json")) {
- String body = requestResponse.response().bodyToString().trim();
+  /**
+   * Finds JSON responses with wrong Content-Type
+   *
+   * The content is probably json but the content type is not application/json
+   *
+   * @author albinowax
+   **/
 
- return body.startsWith( "{" ) || body.startsWith( "[" );
-}
+  var contentType = requestResponse.hasResponse() ? requestResponse.response().headerValue("Content-Type") : null;
 
-return false;
+  if (contentType != null && !contentType.contains("application/json")) {
+   String body = requestResponse.response().bodyToString().trim();
+
+   return body.startsWith( "{" ) || body.startsWith( "[" );
+  }
+
+  return false;

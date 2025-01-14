@@ -1,8 +1,13 @@
-/**
- * Finds slow responses.
- * @author ps-porpoise
-**/
-var delta = requestResponse.timingData().timeBetweenRequestSentAndStartOfResponse();
-var threshold = Duration.ofSeconds(3);
+id: 399a70a9-b52e-409b-8ff7-8df74e5a7bd2
+name: Slow responses
+function: VIEW_FILTER
+location: LOGGER
+source: |+
+  /**
+   * Finds slow responses.
+   * @author ps-porpoise
+  **/
+  var delta = requestResponse.timingData().timeBetweenRequestSentAndStartOfResponse();
+  var threshold = Duration.ofSeconds(3);
 
-return delta != null && delta.toMillis() >= threshold.toMillis();
+  return delta != null && delta.toMillis() >= threshold.toMillis();

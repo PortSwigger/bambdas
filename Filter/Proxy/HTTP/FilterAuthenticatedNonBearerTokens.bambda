@@ -1,38 +1,43 @@
-/**
- * Filter when an Authorization header is present, not empty and does not include a traditional bearer token (beginning with "ey")
- *
- * @author GangGreenTemperTatum (https://github.com/GangGreenTemperTatum)
- **/
+id: 6184d9b3-5803-a20a-bd05-3caae27f08f5
+name: Filtered authenticated non bearer tokens
+function: CAPTURE_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+   * Filter when an Authorization header is present, not empty and does not include a traditional bearer token (beginning with "ey")
+   *
+   * @author GangGreenTemperTatum (https://github.com/GangGreenTemperTatum)
+   **/
 
-var configInScopeOnly = true; // If set to true, won't show out-of-scope items
-var sessionCookieName = ""; // If given, will look for a cookie with that name.
-var sessionCookieValue = ""; // If given, will check if cookie with sessionCookieName has this value.
+  var configInScopeOnly = true; // If set to true, won't show out-of-scope items
+  var sessionCookieName = ""; // If given, will look for a cookie with that name.
+  var sessionCookieValue = ""; // If given, will check if cookie with sessionCookieName has this value.
 
-var request = requestResponse.request();
-var response = requestResponse.response();
+  var request = requestResponse.request();
+  var response = requestResponse.response();
 
-if (configInScopeOnly && !request.isInScope()) {
-    return false;
-}
+  if (configInScopeOnly && !request.isInScope()) {
+      return false;
+  }
 
-if (!requestResponse.hasResponse() || !response.isStatusCodeClass(StatusCodeClass.CLASS_2XX_SUCCESS)) {
-    return false;
-}
+  if (!requestResponse.hasResponse() || !response.isStatusCodeClass(StatusCodeClass.CLASS_2XX_SUCCESS)) {
+      return false;
+  }
 
-var hasAuthHeader = request.hasHeader("Authorization");
-var authHeaderValue = hasAuthHeader ? String.valueOf(request.headerValue("Authorization")).toLowerCase() : null;
+  var hasAuthHeader = request.hasHeader("Authorization");
+  var authHeaderValue = hasAuthHeader ? String.valueOf(request.headerValue("Authorization")).toLowerCase() : null;
 
-if (!hasAuthHeader || (authHeaderValue == null || authHeaderValue.isEmpty())) {
-    return false;
-}
+  if (!hasAuthHeader || (authHeaderValue == null || authHeaderValue.isEmpty())) {
+      return false;
+  }
 
-var excludeAuthorization =
-    authHeaderValue.contains("bearer") &&
-    authHeaderValue.contains("ey");
+  var excludeAuthorization =
+      authHeaderValue.contains("bearer") &&
+      authHeaderValue.contains("ey");
 
-var sessionCookie = request.headerValue("Cookie") != null &&
-    !sessionCookieName.isEmpty() &&
-    request.hasParameter(sessionCookieName, HttpParameterType.COOKIE) &&
-    (sessionCookieValue.isEmpty() || sessionCookieValue.equals(String.valueOf(request.parameter(sessionCookieName, HttpParameterType.COOKIE).value())));
+  var sessionCookie = request.headerValue("Cookie") != null &&
+      !sessionCookieName.isEmpty() &&
+      request.hasParameter(sessionCookieName, HttpParameterType.COOKIE) &&
+      (sessionCookieValue.isEmpty() || sessionCookieValue.equals(String.valueOf(request.parameter(sessionCookieName, HttpParameterType.COOKIE).value())));
 
-return !excludeAuthorization || sessionCookie;
+  return !excludeAuthorization || sessionCookie;

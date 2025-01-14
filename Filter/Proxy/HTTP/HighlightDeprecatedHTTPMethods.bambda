@@ -1,25 +1,30 @@
-/**
- * Filters and highlights requests using less common or deprecated HTTP methods like TRACE or CONNECT.
- * @author Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
- **/
+id: 1b602351-cb19-3604-40a9-2e1fa65d0881
+name: Highlight deprecated HTTP methods
+function: CAPTURE_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+   * Filters and highlights requests using less common or deprecated HTTP methods like TRACE or CONNECT.
+   * @author Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
+   **/
 
-boolean manualColorHighlightEnabled = true;
+  boolean manualColorHighlightEnabled = true;
 
-// Define the set of deprecated or less common HTTP methods
-Set<String> deprecatedMethods = Set.of("TRACE", "CONNECT");
+  // Define the set of deprecated or less common HTTP methods
+  Set<String> deprecatedMethods = Set.of("TRACE", "CONNECT");
 
-String requestMethod = requestResponse.request().method();
+  String requestMethod = requestResponse.request().method();
 
-// Check if the request method is in the set of deprecated methods
-if (deprecatedMethods.contains(requestMethod)) {
-    if (manualColorHighlightEnabled) {
-        // Set the highlight color to RED
-        requestResponse.annotations().setHighlightColor(HighlightColor.RED);
+  // Check if the request method is in the set of deprecated methods
+  if (deprecatedMethods.contains(requestMethod)) {
+      if (manualColorHighlightEnabled) {
+          // Set the highlight color to RED
+          requestResponse.annotations().setHighlightColor(HighlightColor.RED);
 
-        // Optionally, add a note to the request/response
-        requestResponse.annotations().setNotes("Deprecated method used: " + requestMethod);
-    }
-    return true;
-}
+          // Optionally, add a note to the request/response
+          requestResponse.annotations().setNotes("Deprecated method used: " + requestMethod);
+      }
+      return true;
+  }
 
-return false;
+  return false;
