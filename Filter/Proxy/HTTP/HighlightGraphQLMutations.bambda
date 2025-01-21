@@ -1,5 +1,5 @@
 /**
- * Bambda to highlight GrapQL Requests.
+ * Bambda to highlight GraphQL Requests.
  * @author drwetter (https://github.com/drwetter/)
  *
  * can be extended with an an embracing if-clause like
