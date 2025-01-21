@@ -1,0 +1,30 @@
+/**
+ * Bambda to highlight GrapQL Requests.
+ * @author drwetter (https://github.com/drwetter/)
+ *
+ * can be extended with an an embracing if-clause like
+ *     if (requestResponse.request().method().equals("POST")) {
+ *     }
+ **/
+
+// we don't want to generate a stack trace when this occurs
+if (!requestResponse.hasResponse()) {
+    return false;
+}
+
+// trim some chars just to be sure
+var body = requestResponse.request().bodyToString().trim();
+
+// written as regex so that it can be extended if needed
+String graphqlRegexPattern = "query\":\"mutation";
+Pattern graphqlPattern = Pattern.compile(graphqlRegexPattern);
+
+Matcher graphqlMatcher = graphqlPattern.matcher(body);
+if (graphqlMatcher.find()) {
+    requestResponse.annotations().setHighlightColor(HighlightColor.CYAN);
+    requestResponse.annotations().setNotes("mutation");
+}
+
+return true;
+
+// vim:tw=120:ts=4:sw=4:expandtab
