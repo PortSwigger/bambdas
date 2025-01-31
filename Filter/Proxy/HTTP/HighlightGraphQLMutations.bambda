@@ -7,12 +7,8 @@
  *     }
  **/
 
-// we don't want to generate a stack trace when this occurs
-if (!requestResponse.hasResponse()) {
-    return false;
-}
 
-// trim some chars just to be sure
+// trim some chars just to be sure. For parsing more e.g. JsonNode is better
 var body = requestResponse.request().bodyToString().trim();
 
 // written as regex so that it can be extended if needed
@@ -27,4 +23,3 @@ if (graphqlMatcher.find()) {
 
 return true;
 
-// vim:tw=120:ts=4:sw=4:expandtab
