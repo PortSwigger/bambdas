@@ -1,0 +1,25 @@
+/**
+ * Bambda to highlight GraphQL Requests.
+ * @author drwetter (https://github.com/drwetter/)
+ *
+ * can be extended with an an embracing if-clause like
+ *     if (requestResponse.request().method().equals("POST")) {
+ *     }
+ **/
+
+
+// trim some chars just to be sure. For parsing more e.g. JsonNode is better
+var body = requestResponse.request().bodyToString().trim();
+
+// written as regex so that it can be extended if needed
+String graphqlRegexPattern = "query\":\"mutation";
+Pattern graphqlPattern = Pattern.compile(graphqlRegexPattern);
+
+Matcher graphqlMatcher = graphqlPattern.matcher(body);
+if (graphqlMatcher.find()) {
+    requestResponse.annotations().setHighlightColor(HighlightColor.CYAN);
+    requestResponse.annotations().setNotes("mutation");
+}
+
+return true;
+
