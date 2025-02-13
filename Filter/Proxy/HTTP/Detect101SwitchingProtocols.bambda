@@ -1,6 +1,6 @@
 id: ff170e2b-dc47-4bc6-9cad-63f72e6e20c1
 name: Detect 101 switching protocols
-function: CAPTURE_FILTER
+function: VIEW_FILTER
 location: PROXY_HTTP_HISTORY
 source: |+
   /**

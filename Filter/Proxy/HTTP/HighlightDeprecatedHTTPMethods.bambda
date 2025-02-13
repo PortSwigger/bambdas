@@ -1,6 +1,6 @@
 id: 1b602351-cb19-3604-40a9-2e1fa65d0881
 name: Highlight deprecated HTTP methods
-function: CAPTURE_FILTER
+function: VIEW_FILTER
 location: PROXY_HTTP_HISTORY
 source: |+
   /**

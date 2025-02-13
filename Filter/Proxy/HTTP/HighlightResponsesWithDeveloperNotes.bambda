@@ -1,6 +1,6 @@
 id: 54834302-45dc-5021-375d-8c9a6174f101
 name: Highlight responses with developer notes
-function: CAPTURE_FILTER
+function: VIEW_FILTER
 location: PROXY_HTTP_HISTORY
 source: |+
   /**

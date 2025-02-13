@@ -1,6 +1,6 @@
 id: 66705efd-9034-4d48-929e-16fd4ba8c611
 name: Detect server names
-function: CAPTURE_FILTER
+function: VIEW_FILTER
 location: PROXY_HTTP_HISTORY
 source: |+
   /**

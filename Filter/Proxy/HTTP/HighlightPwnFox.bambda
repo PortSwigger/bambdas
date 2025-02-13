@@ -1,6 +1,6 @@
 id: 757d0906-9da7-474b-325c-b6a89bdc50c1
 name: Highlight pwn fox
-function: CAPTURE_FILTER
+function: VIEW_FILTER
 location: PROXY_HTTP_HISTORY
 source: |+
   /**

@@ -1,6 +1,6 @@
 id: 2a13a638-4374-6628-2423-3480532b22cf
 name: OWASP top 25 vulnerable parameters
-function: CAPTURE_FILTER
+function: VIEW_FILTER
 location: PROXY_HTTP_HISTORY
 source: |+
   /**

@@ -1,6 +1,6 @@
 id: 74c7c6cd-12d3-35a8-8b9b-f2641a331dcf
 name: Filter highlight annotate OWASP
-function: CAPTURE_FILTER
+function: VIEW_FILTER
 location: PROXY_HTTP_HISTORY
 source: |+
   /**

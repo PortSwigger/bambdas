@@ -1,6 +1,6 @@
 id: 22065105-d467-4b5a-b5d5-0085417353ac
 name: Notes keyword highlighter
-function: CAPTURE_FILTER
+function: VIEW_FILTER
 location: PROXY_HTTP_HISTORY
 source: |+
   /**

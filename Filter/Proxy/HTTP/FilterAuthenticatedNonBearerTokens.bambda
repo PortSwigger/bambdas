@@ -1,6 +1,6 @@
 id: 6184d9b3-5803-a20a-bd05-3caae27f08f5
 name: Filtered authenticated non bearer tokens
-function: CAPTURE_FILTER
+function: VIEW_FILTER
 location: PROXY_HTTP_HISTORY
 source: |+
   /**

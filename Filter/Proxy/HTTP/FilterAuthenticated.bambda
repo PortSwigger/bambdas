@@ -1,6 +1,6 @@
 id: 0ee2c12e-a051-44df-8aa6-543bc908daf1
 name: Filtered authenticated
-function: CAPTURE_FILTER
+function: VIEW_FILTER
 location: PROXY_HTTP_HISTORY
 source: |+
   /**

@@ -1,6 +1,6 @@
 id: 6620a595-520b-1ba2-2b20-5ea8568fdb89
 name: Filter JSON responses with incorrect content type
-function: CAPTURE_FILTER
+function: VIEW_FILTER
 location: PROXY_HTTP_HISTORY
 source: |+
   /**

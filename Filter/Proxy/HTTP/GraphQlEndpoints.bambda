@@ -1,6 +1,6 @@
 id: b7594dc1-8277-b289-d0b6-2c70485a7d0d
 name: Graph ql endpoints
-function: CAPTURE_FILTER
+function: VIEW_FILTER
 location: PROXY_HTTP_HISTORY
 source: |+
   /**
