@@ -1,6 +1,6 @@
 id: a624919d-c42c-59a4-7d50-e66696164225
 name: Highlight listener port
-function: CAPTURE_FILTER
+function: VIEW_FILTER
 location: PROXY_HTTP_HISTORY
 source: |+
   /**

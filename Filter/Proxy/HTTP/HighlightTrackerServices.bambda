@@ -1,6 +1,6 @@
 id: 193aab39-8235-a620-b8cd-2b9be43e372b
 name: Highlight tracker services
-function: CAPTURE_FILTER
+function: VIEW_FILTER
 location: PROXY_HTTP_HISTORY
 source: |+
   /**

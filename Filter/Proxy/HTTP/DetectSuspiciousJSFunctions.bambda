@@ -1,6 +1,6 @@
 id: 11accf52-56d6-4078-b805-a68031863d71
 name: Detect suspicious JS functions
-function: CAPTURE_FILTER
+function: VIEW_FILTER
 location: PROXY_HTTP_HISTORY
 source: |+
   /**

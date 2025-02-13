@@ -1,6 +1,6 @@
 id: 1b68a476-a486-11aa-b6db-c2d54a1052b1
 name: Highlight unexcrypted HTTP
-function: CAPTURE_FILTER
+function: VIEW_FILTER
 location: PROXY_HTTP_HISTORY
 source: |+
   /**

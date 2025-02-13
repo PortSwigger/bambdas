@@ -1,6 +1,6 @@
 id: 60238135-43dd-a723-aa68-c047edcda0cb
 name: Filter on specific highlight color
-function: CAPTURE_FILTER
+function: VIEW_FILTER
 location: PROXY_HTTP_HISTORY
 source: |+
   /**

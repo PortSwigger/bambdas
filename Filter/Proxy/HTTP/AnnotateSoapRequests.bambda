@@ -1,6 +1,6 @@
 id: 5f7997bf-8a61-4189-bcf0-00f679c580fd
 name: Annotate soap requests
-function: CAPTURE_FILTER
+function: VIEW_FILTER
 location: PROXY_HTTP_HISTORY
 source: |+
   /**

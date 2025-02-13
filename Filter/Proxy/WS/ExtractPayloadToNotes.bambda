@@ -1,6 +1,6 @@
 id: 2cd16426-d1b2-4b14-9afd-4ddb64ffca3a
 name: Extract payload to notes
-function: CAPTURE_FILTER
+function: VIEW_FILTER
 location: PROXY_WEBSOCKET
 source: |+
   /**

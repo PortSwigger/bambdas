@@ -1,6 +1,6 @@
 id: 16c3d20a-77b0-5222-524a-d652dbcd456e
 name: Highlight param miner targets
-function: CAPTURE_FILTER
+function: VIEW_FILTER
 location: PROXY_HTTP_HISTORY
 source: |+
   /**
