@@ -10,16 +10,13 @@
 
 
 
+boolean checkValue = true; // Change this to false if you only want to check for the presence of the header.
+
 return requestResponse.hasResponse() && (
-    // Check for Content-Security-Policy-Report-Only header
-    requestResponse.response().headers().stream()
-        .anyMatch(header -> 
-            header.name().equalsIgnoreCase("Content-Security-Policy-Report-Only")
-        ) &&
-    // Optional: Check if report-uri is specified
-    requestResponse.response().headers().stream()
-        .anyMatch(header -> 
-            header.name().equalsIgnoreCase("Content-Security-Policy-Report-Only") && 
-            header.value().toLowerCase().contains("report-uri")
-        )
+    requestResponse.response().hasHeader("Content-Security-Policy-Report-Only") &&
+    (!checkValue || requestResponse.response().headers().stream()
+        .filter(header -> header.name().equalsIgnoreCase("Content-Security-Policy-Report-Only"))
+        .anyMatch(header -> header.value().toLowerCase(Locale.US).contains("report-uri"))
+    )
 );
+
