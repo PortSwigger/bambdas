@@ -14,9 +14,7 @@ boolean checkValue = true; // Change this to false if you only want to check for
 
 return requestResponse.hasResponse() && (
     requestResponse.response().hasHeader("Content-Security-Policy-Report-Only") &&
-    (!checkValue || requestResponse.response().headers().stream()
-        .filter(header -> header.name().equalsIgnoreCase("Content-Security-Policy-Report-Only"))
-        .anyMatch(header -> header.value().toLowerCase(Locale.US).contains("report-uri"))
+    (!checkValue || 
+        requestResponse.response().header("Content-Security-Policy-Report-Only").value().toLowerCase(Locale.US).contains("report-uri")
     )
 );
-
