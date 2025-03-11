@@ -1,0 +1,60 @@
+/*
+	Remove packages you don't want to see in Http History
+
+	@Author y1shin
+*/
+
+var host = requestResponse.request().httpService().host();
+
+String[] excludeDomain = {
+	".*google.*",
+	".*freebuf.com",
+	".*googleapis.com",
+	".*firefox.com",
+	".*mozilla.*",
+	".*baidu.com",
+	".*gtimg.com",
+	".*github.com",
+	".*csdn.net",
+	".*aliyun.com",
+	".*adtidy.org",
+	".*qianxin.com",
+	".*immersivetranslate.com",
+	".*mozilla.com",
+	".*openjfx.cn",
+	".*feishu.cn",
+	".*grok.com",
+	".*map.qq.com",
+	".*mozilla.net",
+	".*qpic.cn",
+	".*amazonaws.com",
+	".*gstatic.com",
+	".*aliapp.org",
+	".*alicdn.com",
+	".*greasyfork.org",
+	".*sohu.com",
+	".*youtube.com",
+	".*piwik.pro",
+	".*googletagmanager.com",
+	".*doubleclick.net",
+	".*portswigger.net",
+	".*geetest.com",
+	".*licdn.com",
+	".*csdnimg.cn",
+	".*intercom.io",
+	".*tampermonkey.net",
+	".*chatgpt.com",
+	".*aliyun.com",
+	".*52pojie.cn",
+	".*bing.com",
+	".*darkreader.org",
+};
+boolean isExcluded = Arrays.stream(excludeDomain)
+    .map(Pattern::compile) 
+    .anyMatch(pattern -> pattern.matcher(host).find());
+if (isExcluded) {
+    return false;
+}
+return true;
+
+
