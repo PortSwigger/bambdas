@@ -1,5 +1,10 @@
 /*
-	Remove packages you don't want to see in Http History
+	Remove some unwanted packets in the process of catching packets, 
+	you can block out the corresponding domain name according to your own demand
+	For example, if you do not want to see any google request, use the regular ". *google.*", baidu is the same operation!
+	If you just don't want to see requests from firefox.com, then use ". *firefox.com"
+
+	Easy to understand, easy to modify
 
 	@Author y1shin
 */
