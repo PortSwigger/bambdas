@@ -1,0 +1,65 @@
+/*
+	Remove some unwanted packets in the process of catching packets, 
+	you can block out the corresponding domain name according to your own demand
+	For example, if you do not want to see any google request, use the regular ". *google.*", baidu is the same operation!
+	If you just don't want to see requests from firefox.com, then use ". *firefox.com"
+
+	Easy to understand, easy to modify
+
+	@Author y1shin
+*/
+
+var host = requestResponse.request().httpService().host();
+
+String[] excludeDomain = {
+	".*google.*",
+	".*freebuf.com",
+	".*googleapis.com",
+	".*firefox.com",
+	".*mozilla.*",
+	".*baidu.com",
+	".*gtimg.com",
+	".*github.com",
+	".*csdn.net",
+	".*aliyun.com",
+	".*adtidy.org",
+	".*qianxin.com",
+	".*immersivetranslate.com",
+	".*mozilla.com",
+	".*openjfx.cn",
+	".*feishu.cn",
+	".*grok.com",
+	".*map.qq.com",
+	".*mozilla.net",
+	".*qpic.cn",
+	".*amazonaws.com",
+	".*gstatic.com",
+	".*aliapp.org",
+	".*alicdn.com",
+	".*greasyfork.org",
+	".*sohu.com",
+	".*youtube.com",
+	".*piwik.pro",
+	".*googletagmanager.com",
+	".*doubleclick.net",
+	".*portswigger.net",
+	".*geetest.com",
+	".*licdn.com",
+	".*csdnimg.cn",
+	".*intercom.io",
+	".*tampermonkey.net",
+	".*chatgpt.com",
+	".*aliyun.com",
+	".*52pojie.cn",
+	".*bing.com",
+	".*darkreader.org",
+};
+boolean isExcluded = Arrays.stream(excludeDomain)
+    .map(Pattern::compile) 
+    .anyMatch(pattern -> pattern.matcher(host).find());
+if (isExcluded) {
+    return false;
+}
+return true;
+
+
