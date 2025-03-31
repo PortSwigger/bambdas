@@ -1,9 +1,14 @@
-/**
- * Bambda Script to Detect "403 Forbidden" in HTTP Response
- * @author ctflearner
- * This script identifies if the HTTP response status code is 403 (Forbidden).
- * It ensures there is a response and checks if the status code indicates access is denied.
- **/
+id: 46134280-efbc-4987-bb5e-ccaff7692b71
+name: Detect 403 forbidden
+function: VIEW_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+  * Bambda Script to Detect "403 Forbidden" in HTTP Response
+  * @author ctflearner
+  * This script identifies if the HTTP response status code is 403 (Forbidden).
+  * It ensures there is a response and checks if the status code indicates access is denied.
+  **/
 
 
-return requestResponse.hasResponse() && requestResponse.response().statusCode() == 403;
+  return requestResponse.hasResponse() && requestResponse.response().statusCode() == 403;

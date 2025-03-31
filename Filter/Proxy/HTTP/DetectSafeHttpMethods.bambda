@@ -1,17 +1,22 @@
-/**
- * Bambda Script to Detect "Safe or Typical HTTP Methods in Requests"
- * @author ctflearner
- * This script identifies HTTP requests that use typical or safe methods such as GET and POST, 
- * excluding less common or potentially unsafe methods like PUT, PATCH, DELETE, HEAD, OPTIONS, TRACE, and CONNECT.
- * It ensures that the HTTP method is not one of the excluded methods listed.
- **/
+id: 26259a90-f9ec-4b0c-af26-bb24a58969e9
+name: Detect safe http methods
+function: VIEW_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+  * Bambda Script to Detect "Safe or Typical HTTP Methods in Requests"
+  * @author ctflearner
+  * This script identifies HTTP requests that use typical or safe methods such as GET and POST, 
+  * excluding less common or potentially unsafe methods like PUT, PATCH, DELETE, HEAD, OPTIONS, TRACE, and CONNECT.
+  * It ensures that the HTTP method is not one of the excluded methods listed.
+  **/
 
 
 
-return !requestResponse.request().method().equals("PUT") && 
-                     !requestResponse.request().method().equals("PATCH") && 
-                     !requestResponse.request().method().equals("DELETE") && 
-                     !requestResponse.request().method().equals("HEAD") && 
-                     !requestResponse.request().method().equals("OPTIONS") && 
-                     !requestResponse.request().method().equals("TRACE") && 
-                     !requestResponse.request().method().equals("CONNECT");
+  return !requestResponse.request().method().equals("PUT") && 
+                      !requestResponse.request().method().equals("PATCH") && 
+                      !requestResponse.request().method().equals("DELETE") && 
+                      !requestResponse.request().method().equals("HEAD") && 
+                      !requestResponse.request().method().equals("OPTIONS") && 
+                      !requestResponse.request().method().equals("TRACE") && 
+                      !requestResponse.request().method().equals("CONNECT");
