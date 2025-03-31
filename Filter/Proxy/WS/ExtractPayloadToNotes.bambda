@@ -1,25 +1,30 @@
-/**
- * Extracts JSON elements from the WebSocket message and displays it in the "Notes" column of the WebSocket History tab
- *
- * @author Nick Coblentz (https://github.com/ncoblentz)
- * 
- **/
+id: 2cd16426-d1b2-4b14-9afd-4ddb64ffca3a
+name: Extract payload to notes
+function: VIEW_FILTER
+location: PROXY_WEBSOCKET
+source: |+
+  /**
+   * Extracts JSON elements from the WebSocket message and displays it in the "Notes" column of the WebSocket History tab
+   *
+   * @author Nick Coblentz (https://github.com/ncoblentz)
+   *
+   **/
 
-//The bambda will search for json elements with the following keys. The keys below are just examples. Add the keys you want to include here:
-List<String> terms = List.of("target","error");
+  //The bambda will search for json elements with the following keys. The keys below are just examples. Add the keys you want to include here:
+  List<String> terms = List.of("target","error");
 
-if (!message.annotations().hasNotes()) {
-  StringBuilder builder = new StringBuilder();
-  String payload = utilities().byteUtils().convertToString(message.payload().getBytes());  
-  terms.forEach(term -> {
-    Matcher m = Pattern.compile("\"" + term + "\":\"([^\"]+)\"", Pattern.CASE_INSENSITIVE).matcher(payload);
-    while (m.find() && m.groupCount() > 0) {
-      for (int i = 1; i <= m.groupCount(); i++) {
-        if (m.group(i) != null)
-          builder.append(term + ": " + m.group(i) + " ");
+  if (!message.annotations().hasNotes()) {
+    StringBuilder builder = new StringBuilder();
+    String payload = utilities().byteUtils().convertToString(message.payload().getBytes());
+    terms.forEach(term -> {
+      Matcher m = Pattern.compile("\"" + term + "\":\"([^\"]+)\"", Pattern.CASE_INSENSITIVE).matcher(payload);
+      while (m.find() && m.groupCount() > 0) {
+        for (int i = 1; i <= m.groupCount(); i++) {
+          if (m.group(i) != null)
+            builder.append(term + ": " + m.group(i) + " ");
+        }
       }
-    }
-  });
-  message.annotations().setNotes(builder.toString());
-}
-return true;
+    });
+    message.annotations().setNotes(builder.toString());
+  }
+  return true;

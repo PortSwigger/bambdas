@@ -1,14 +1,19 @@
-/**
- * Check the CORS vulnerability
- * @author https://github.com/JaveleyQAQ/
- **/
+id: 771fd354-1b32-4147-9e22-024ae2c66b10
+name: Detect CORS
+function: CUSTOM_COLUMN
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+   * Check the CORS vulnerability
+   * @author https://github.com/JaveleyQAQ/
+   **/
 
-if (requestResponse.hasResponse() && requestResponse.request().hasHeader("Origin") && requestResponse.response().hasHeader("Access-Control-Allow-Origin"))
-{  
-    var requestOrigin = requestResponse.request().headerValue("Origin");
-    var responseOrigin = requestResponse.response().headerValue("Access-Control-Allow-Origin");
-    return requestOrigin.equals(responseOrigin) ? Character.toString(0x2757).concat("CORS?") : responseOrigin;
-    
-} else {
-    return "";
-}
+  if (requestResponse.hasResponse() && requestResponse.request().hasHeader("Origin") && requestResponse.response().hasHeader("Access-Control-Allow-Origin"))
+  {
+      var requestOrigin = requestResponse.request().headerValue("Origin");
+      var responseOrigin = requestResponse.response().headerValue("Access-Control-Allow-Origin");
+      return requestOrigin.equals(responseOrigin) ? Character.toString(0x2757).concat("CORS?") : responseOrigin;
+
+  } else {
+      return "";
+  }

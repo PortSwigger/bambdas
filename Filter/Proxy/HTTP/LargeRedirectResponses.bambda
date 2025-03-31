@@ -1,13 +1,18 @@
-/**
- * Flags redirect responses with a body over 1000 bytes.
- * 
- * @author albinowax
- * 
- * Can indicate sites that forgot to terminate script execution when the user fails
- * authentication, typically leading to information disclosure.
- **/
+id: d9c58841-a224-3443-23c1-d96fd76e9f03
+name: Large redirect responses
+function: VIEW_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+   * Flags redirect responses with a body over 1000 bytes.
+   *
+   * @author albinowax
+   *
+   * Can indicate sites that forgot to terminate script execution when the user fails
+   * authentication, typically leading to information disclosure.
+   **/
 
-return requestResponse.hasResponse() &&
-       requestResponse.response().statusCode() <= 399 &&
-       requestResponse.response().statusCode() >= 300 &&
-       requestResponse.response().body().length() > 1000;
+  return requestResponse.hasResponse() &&
+         requestResponse.response().statusCode() <= 399 &&
+         requestResponse.response().statusCode() >= 300 &&
+         requestResponse.response().body().length() > 1000;

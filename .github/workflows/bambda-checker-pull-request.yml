@@ -19,5 +19,5 @@ jobs:
 
       - name: Validate Bambdas
         run: |
-          [ $(sha256sum BambdaChecker-1.3.jar | awk '{ print $1 }') = '4df32c3375dad2563080fdfb19a85970332ee8c0f635f946e7e5b4994f6442e4' ]
-          java -jar BambdaChecker-1.3.jar validateonly
+          [ $(sha256sum BambdaChecker-1.4.jar | awk '{ print $1 }') = '1c18afc1cca105403158a220b99c389cffb110068a659f4b269f5797b47cc98f' ]
+          java -jar BambdaChecker-1.4.jar validateonly

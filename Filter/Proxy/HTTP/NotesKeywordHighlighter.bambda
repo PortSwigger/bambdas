@@ -1,31 +1,36 @@
-/**
- * Finds entries with notes containing a specified keyword
- * @author Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
- * This Bambda filters Proxy HTTP history for entries with notes containing a specified keyword.
- * It checks for a specific keyword within the notes and highlights the matching entries.
- * Users can easily modify the 'keyword' variable to suit their specific search criteria.
- **/
+id: 22065105-d467-4b5a-b5d5-0085417353ac
+name: Notes keyword highlighter
+function: VIEW_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+   * Finds entries with notes containing a specified keyword
+   * @author Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
+   * This Bambda filters Proxy HTTP history for entries with notes containing a specified keyword.
+   * It checks for a specific keyword within the notes and highlights the matching entries.
+   * Users can easily modify the 'keyword' variable to suit their specific search criteria.
+   **/
 
-// User-defined keyword for filtering notes
-String keyword = "High"; // Replace "High" with your desired keyword
-boolean caseSensitive = true; // Set to true for case-sensitive search false for case-insensitive PortSwiggerWiener  <3
+  // User-defined keyword for filtering notes
+  String keyword = "High"; // Replace "High" with your desired keyword
+  boolean caseSensitive = true; // Set to true for case-sensitive search false for case-insensitive PortSwiggerWiener  <3
 
-// Check if there's a response and the response has notes
-if (requestResponse.annotations().hasNotes()) {
-    // Retrieve the notes
-    String notes = requestResponse.annotations().notes();
+  // Check if there's a response and the response has notes
+  if (requestResponse.annotations().hasNotes()) {
+      // Retrieve the notes
+      String notes = requestResponse.annotations().notes();
 
-    // Adjust for case sensitivity
-    String processedNotes = caseSensitive ? notes : notes.toLowerCase();
-    String processedKeyword = caseSensitive ? keyword : keyword.toLowerCase();
+      // Adjust for case sensitivity
+      String processedNotes = caseSensitive ? notes : notes.toLowerCase();
+      String processedKeyword = caseSensitive ? keyword : keyword.toLowerCase();
 
-    // Check if the notes contain the specified keyword
-    if (processedNotes.contains(processedKeyword)) {
-        // If keyword is found, set highlight color and return true
-        requestResponse.annotations().setHighlightColor(HighlightColor.YELLOW);
-        return true;
-    }
-}
+      // Check if the notes contain the specified keyword
+      if (processedNotes.contains(processedKeyword)) {
+          // If keyword is found, set highlight color and return true
+          requestResponse.annotations().setHighlightColor(HighlightColor.YELLOW);
+          return true;
+      }
+  }
 
-// If the keyword is not found or there are no notes, return false
-return false;
+  // If the keyword is not found or there are no notes, return false
+  return false;

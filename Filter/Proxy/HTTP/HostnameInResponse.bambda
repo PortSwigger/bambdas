@@ -1,12 +1,17 @@
-/**
- * Finds responses which contain the hostname.
- *
- * Useful to identify possible attack surface for host header injection and
- * web cache poisioning attacks.
- *
- * @author emanuelduss
- **/
+id: 569ddc51-98c9-2944-5bdd-4bd8503727b4
+name: Hostname in response
+function: VIEW_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+   * Finds responses which contain the hostname.
+   *
+   * Useful to identify possible attack surface for host header injection and
+   * web cache poisioning attacks.
+   *
+   * @author emanuelduss
+   **/
 
-var hostname = requestResponse.request().headerValue("Host");
+  var hostname = requestResponse.request().headerValue("Host");
 
-return requestResponse.hasResponse() && requestResponse.response().contains(hostname, false);
+  return requestResponse.hasResponse() && requestResponse.response().contains(hostname, false);

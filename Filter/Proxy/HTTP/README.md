@@ -11,12 +11,12 @@ Documentation: [Filtering the HTTP history with Bambdas](https://portswigger.net
 ```java
 // Only applies to in-scope requests, feel free to remove this part of the if statement if you want it to apply to all requests
 if(requestResponse.request().isInScope()
-	&& !requestResponse.annotations().hasNotes() //don't apply it if notes are already present
-	&& requestResponse.request().hasHeader("Content-Type")
-	&& requestResponse.request().headerValue("Content-Type").contains("soap+xml")) //look for soap requests
+  && !requestResponse.annotations().hasNotes() //don't apply it if notes are already present
+  && requestResponse.request().hasHeader("Content-Type")
+  && requestResponse.request().headerValue("Content-Type").contains("soap+xml")) //look for soap requests
 {
     StringBuilder builder = new StringBuilder();
-	if(requestResponse.request().bodyToString().contains("<s:Body"))
+  if(requestResponse.request().bodyToString().contains("<s:Body"))
     {
         //Currently looks for the tag just after body and for any usernames in the ws-security header. You can add more of your own here.
         Matcher m = Pattern.compile("<(?:[a-zA-Z0-9]+:)?Username>([^<]+)</(?:[a-zA-Z0-9]+:)*Username>|<(?:[a-zA-Z0-9]+:)*Body[^>]*><([^ ]+)",Pattern.CASE_INSENSITIVE).matcher(requestResponse.request().bodyToString());
@@ -24,7 +24,7 @@ if(requestResponse.request().isInScope()
         while(m.find() && m.groupCount()>0) {
             for(int i=1;i<=m.groupCount();i++) {
                 if(m.group(i)!=null)
-	                builder.append(m.group(i)+" ");
+                  builder.append(m.group(i)+" ");
             }
         }
         requestResponse.annotations().setNotes(builder.toString());
@@ -41,6 +41,29 @@ return true;
 ```java
 // Ensure there is a response and check if the status code is 101
 return requestResponse.hasResponse() && requestResponse.response().statusCode() == 101;
+
+```
+## [Detect403Forbidden.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/Detect403Forbidden.bambda)
+### Bambda Script to Detect "403 Forbidden" in HTTP Response
+#### Author: ctflearner
+```java
+
+return requestResponse.hasResponse() && requestResponse.response().statusCode() == 403;
+
+```
+## [DetectSafeHttpMethods.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/DetectSafeHttpMethods.bambda)
+### Bambda Script to Detect "Safe or Typical HTTP Methods in Requests"
+#### Author: ctflearner
+```java
+
+
+return !requestResponse.request().method().equals("PUT") && 
+                    !requestResponse.request().method().equals("PATCH") && 
+                    !requestResponse.request().method().equals("DELETE") && 
+                    !requestResponse.request().method().equals("HEAD") && 
+                    !requestResponse.request().method().equals("OPTIONS") && 
+                    !requestResponse.request().method().equals("TRACE") && 
+                    !requestResponse.request().method().equals("CONNECT");
 
 ```
 ## [DetectServerNames.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/DetectServerNames.bambda)
@@ -155,6 +178,52 @@ if (foundSuspiciousFunction && enableManualAnnotations) {
 return foundSuspiciousFunction;
 
 ```
+## [DetectWeakReferrerPolicy.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/DetectWeakReferrerPolicy.bambda)
+### Bambda Script to Detect "Weak or Missing Referrer-Policy" Header in HTTP Response
+#### Author: ctflearner
+```java
+
+if (!requestResponse.hasResponse()) {
+    return false;
+}
+
+Optional<HttpHeader> referrerPolicyHeader = Optional.ofNullable(
+    requestResponse.response().header("Referrer-Policy")
+);
+
+if (referrerPolicyHeader.isEmpty()) {
+    return true;
+}
+
+String headerValue = referrerPolicyHeader.get().value().toLowerCase(Locale.US).trim();
+
+// Check for weak referrer policies using a stream
+boolean hasWeakPolicy = requestResponse.response().headers().stream()
+    .filter(header -> header.name().equalsIgnoreCase("Referrer-Policy"))
+    .anyMatch(header -> {
+        String value = header.value().toLowerCase(Locale.US).trim(); // Include Locale for toLowerCase()
+        return value.equals("no-referrer-when-downgrade") || value.equals("unsafe-url");
+    });
+
+return headerValue.equals("no-referrer-when-downgrade") || headerValue.equals("unsafe-url") || hasWeakPolicy;
+
+```
+## [DetectWeakXSSProtectionHeader.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/DetectWeakXSSProtectionHeader.bambda)
+### Bambda Script to Detect "Weak or Misconfigured X-XSS-Protection" Header in HTTP Response
+#### Author: ctflearner
+```java
+
+return requestResponse.hasResponse() &&
+      requestResponse.response().headers().stream()
+          .filter(header -> header.name().equalsIgnoreCase("X-XSS-Protection"))
+          .anyMatch(header -> {
+              String value = header.value().trim();
+              return value.equals("0") || 
+                      value.equals("1") || 
+                      value.toLowerCase(Locale.US).contains("report=");
+          });
+
+```
 ## [EmailHighlighter.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/EmailHighlighter.bambda)
 ### Script to Filter Out Email Addresses in Responses and Highlight Them if Found
 #### Author: Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
@@ -202,6 +271,64 @@ if (emailMatcher.find()) {
 return false;
 
 ```
+## [ExcludeCommonDomains.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/ExcludeCommonDomains.bambda)
+### Remove some unwanted packets in the process of catching packets, you can block out the corresponding domain name according to your own demand For example, if you do not want to see any google request, use the regular ". *google.*", baidu is the same operation! If you just don't want to see requests from firefox.com, then use ". *firefox.com"  Easy to understand, easy to modify
+#### Author: y1shin
+```java
+var host = requestResponse.request().httpService().host();
+
+String[] excludeDomain = {
+  ".*google.*",
+  ".*freebuf.com",
+  ".*googleapis.com",
+  ".*firefox.com",
+  ".*mozilla.*",
+  ".*baidu.com",
+  ".*gtimg.com",
+  ".*github.com",
+  ".*csdn.net",
+  ".*aliyun.com",
+  ".*adtidy.org",
+  ".*qianxin.com",
+  ".*immersivetranslate.com",
+  ".*mozilla.com",
+  ".*openjfx.cn",
+  ".*feishu.cn",
+  ".*grok.com",
+  ".*map.qq.com",
+  ".*mozilla.net",
+  ".*qpic.cn",
+  ".*amazonaws.com",
+  ".*gstatic.com",
+  ".*aliapp.org",
+  ".*alicdn.com",
+  ".*greasyfork.org",
+  ".*sohu.com",
+  ".*youtube.com",
+  ".*piwik.pro",
+  ".*googletagmanager.com",
+  ".*doubleclick.net",
+  ".*portswigger.net",
+  ".*geetest.com",
+  ".*licdn.com",
+  ".*csdnimg.cn",
+  ".*intercom.io",
+  ".*tampermonkey.net",
+  ".*chatgpt.com",
+  ".*aliyun.com",
+  ".*52pojie.cn",
+  ".*bing.com",
+  ".*darkreader.org",
+};
+boolean isExcluded = Arrays.stream(excludeDomain)
+    .map(Pattern::compile)
+    .anyMatch(pattern -> pattern.matcher(host).find());
+if (isExcluded) {
+    return false;
+}
+return true;
+
+```
 ## [FilterAuthenticated.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/FilterAuthenticated.bambda)
 ### Filters authenticated 200 OK requests in Proxy HTTP history. See four config values below.
 #### Author: joe-ds (https://github.com/joe-ds)
@@ -227,7 +354,7 @@ var authHeader = request.hasHeader("Authorization");
 boolean sessionCookie = request.headerValue("Cookie") != null
                             && !sessionCookieName.isEmpty()
                             && request.hasParameter(sessionCookieName, HttpParameterType.COOKIE)
-			                && (sessionCookieValue.isEmpty() || sessionCookieValue.equals(request.parameter(sessionCookieName, HttpParameterType.COOKIE).value()));
+                      && (sessionCookieValue.isEmpty() || sessionCookieValue.equals(request.parameter(sessionCookieName, HttpParameterType.COOKIE).value()));
 
 var path = request.pathWithoutQuery().toLowerCase();
 var mimeType = requestResponse.mimeType();
@@ -358,12 +485,12 @@ return false;
 #### Author: LostCoder
 ```java
 if (requestResponse.request().hasParameter("foo", HttpParameterType.COOKIE)) {
-	var cookieValue = requestResponse
-		.request()
-		.parameter("foo", HttpParameterType.COOKIE)
-		.value();
+  var cookieValue = requestResponse
+    .request()
+    .parameter("foo", HttpParameterType.COOKIE)
+    .value();
 
-	return cookieValue.contains("1337");
+  return cookieValue.contains("1337");
 }
 
 return false;
@@ -384,9 +511,12 @@ return !requestResponse.request().method().equals("OPTIONS");
 
 ```
 ## [FindJSONresponsesWithIncorrectContentType.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/FindJSONresponsesWithIncorrectContentType.bambda)
-### Finds JSON responses with wrong Content-Type  The content is probably json but the content type is not application/json
+### Filter out OPTIONS requests.
 #### Author: albinowax
 ```java
+return !requestResponse.request().method().equals("OPTIONS");
+
+
 var contentType = requestResponse.hasResponse() ? requestResponse.response().headerValue("Content-Type") : null;
 
 if (contentType != null && !contentType.contains("application/json")) {
@@ -405,7 +535,7 @@ return false;
 var req = requestResponse.request();
 
 if (!req.hasParameters()) {
-	return false;
+  return false;
 }
 
 var types = new HttpParameterType[] {
@@ -416,7 +546,7 @@ for (HttpParameterType type : types) {
     if (req.hasParameter("query", type)) {
         var value = req.parameterValue("query", type);
         if (type == HttpParameterType.JSON) {
-	        if (value.contains("\\n")) {
+          if (value.contains("\\n")) {
                 return true;
             }
         } else {
@@ -456,6 +586,27 @@ if (deprecatedMethods.contains(requestMethod)) {
 return false;
 
 ```
+## [HighlightGraphQLMutations.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/HighlightGraphQLMutations.bambda)
+### Bambda to highlight GraphQL Requests.
+#### Author: drwetter (https://github.com/drwetter/)
+```java
+
+// trim some chars just to be sure. For parsing more e.g. JsonNode is better
+var body = requestResponse.request().bodyToString().trim();
+
+// written as regex so that it can be extended if needed
+String graphqlRegexPattern = "query\":\"mutation";
+Pattern graphqlPattern = Pattern.compile(graphqlRegexPattern);
+
+Matcher graphqlMatcher = graphqlPattern.matcher(body);
+if (graphqlMatcher.find()) {
+    requestResponse.annotations().setHighlightColor(HighlightColor.CYAN);
+    requestResponse.annotations().setNotes("mutation");
+}
+
+return true;
+
+```
 ## [HighlightListenerPort.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/HighlightListenerPort.bambda)
 ### Highlight different listener port
 #### Author: Bogo-6 (https://github.com/Bogo-6)
@@ -488,10 +639,10 @@ return color != null || notes != null;
 
 ```
 ## [HighlightParamMinerTargets.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/HighlightParamMinerTargets.bambda)
-### Filters non-empty 200 json-based response classes which can be used to find easy routes to attack with the paramminer guess json params and a custom wordlist, ie:   // $ cat your-oas-api-spec-doc.json | jq -r '.components.schemas.[].properties? | keys? | .[]' | sort -u > json-wordlist.txt
+### Filters non-empty 200 json-based response classes which can be used to find easy routes to attack with the paramminer guess json params and a custom wordlist, ie:     // $ cat your-oas-api-spec-doc.json | jq -r '.components.schemas.[].properties? | keys? | .[]' | sort -u > json-wordlist.txt
 #### Author: GangGreenTemperTatum (https://github.com/GangGreenTemperTatum)
 ```java
-var configNoFilter = false;        // if set to false, won't show JS, GIF, JPG, PNG, CSS.
+ var configNoFilter = false;        // if set to false, won't show JS, GIF, JPG, PNG, CSS.
  var configInScopeOnly = true;      // if set to true, won't show out-of-scope items
 
  if (!requestResponse.hasResponse() || (configInScopeOnly && !requestResponse.request().isInScope()) || !requestResponse.response().isStatusCodeClass(StatusCodeClass.CLASS_2XX_SUCCESS))
@@ -545,18 +696,26 @@ var response = requestResponse.response();
 ```java
 boolean configInScopeOnly = true; // Flag to filter only in-scope items
 
- // Get current time and calculate 48 hours ago
- ZonedDateTime now = ZonedDateTime.now();
- ZonedDateTime fortyEightHoursAgo = now.minusHours(48);
+// Get current time and calculate 48 hours ago
+ZonedDateTime now = ZonedDateTime.now();
+ZonedDateTime fortyEightHoursAgo = now.minusHours(48);
 
- // Check if the request time is within the last 48 hours
- boolean afterCheck = requestResponse.time().isAfter(fortyEightHoursAgo);
+// Check if the request time is within the last 48 hours
+boolean afterCheck = requestResponse.time().isAfter(fortyEightHoursAgo);
 
- // Check if the request is in scope
- boolean inScopeCheck = !configInScopeOnly || requestResponse.request().isInScope();
+// Check if the request is in scope
+boolean inScopeCheck = !configInScopeOnly || requestResponse.request().isInScope();
 
- // Return true only if both conditions are met
- return afterCheck && inScopeCheck;
+// Return true only if both conditions are met
+return afterCheck && inScopeCheck;
+
+```
+## [HighlightPwnFox.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/HighlightPwnFox.bambda)
+### Filter requests in scope and containing the "X-Pwnfox-Color" header.
+#### Author: GangGreenTemperTatum (https://github.com/GangGreenTemperTatum)
+```java
+var request = requestResponse.request();
+return request.isInScope() && request.hasHeader("X-Pwnfox-Color");
 
 ```
 ## [HighlightResponsesWithDeveloperNotes.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/HighlightResponsesWithDeveloperNotes.bambda)
@@ -727,7 +886,7 @@ for (var param : params) {
         var end = "\\s*[(]";
         var callbackRegex = Pattern.compile(start + Pattern.quote(value) + end);
 
-    	if (callbackRegex.matcher(body).find()) return true;
+      if (callbackRegex.matcher(body).find()) return true;
     }
 }
 

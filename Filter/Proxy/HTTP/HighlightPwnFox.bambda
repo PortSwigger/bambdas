@@ -1,8 +1,13 @@
-/**
- * Filter requests in scope and containing the "X-Pwnfox-Color" header.
- *
- * @author GangGreenTemperTatum (https://github.com/GangGreenTemperTatum)
- **/
+id: 757d0906-9da7-474b-325c-b6a89bdc50c1
+name: Highlight pwn fox
+function: VIEW_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+   * Filter requests in scope and containing the "X-Pwnfox-Color" header.
+   *
+   * @author GangGreenTemperTatum (https://github.com/GangGreenTemperTatum)
+   **/
 
- var request = requestResponse.request();
- return request.isInScope() && request.hasHeader("X-Pwnfox-Color");
+   var request = requestResponse.request();
+   return request.isInScope() && request.hasHeader("X-Pwnfox-Color");

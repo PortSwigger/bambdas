@@ -1,16 +1,21 @@
-/**
- * Filters Proxy HTTP history for requests with a specific Cookie value.
- *
- * @author LostCoder
- **/
+id: 48d6a6bb-3675-a171-5cb6-1a72355ce71a
+name: Filter on cookie value
+function: VIEW_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+   * Filters Proxy HTTP history for requests with a specific Cookie value.
+   *
+   * @author LostCoder
+   **/
 
-if (requestResponse.request().hasParameter("foo", HttpParameterType.COOKIE)) {
-	var cookieValue = requestResponse
-		.request()
-		.parameter("foo", HttpParameterType.COOKIE)
-		.value();
+  if (requestResponse.request().hasParameter("foo", HttpParameterType.COOKIE)) {
+    var cookieValue = requestResponse
+      .request()
+      .parameter("foo", HttpParameterType.COOKIE)
+      .value();
 
-	return cookieValue.contains("1337");
-}
+    return cookieValue.contains("1337");
+  }
 
-return false;
+  return false;

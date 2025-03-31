@@ -1,32 +1,37 @@
-/**
- * Finds GraphQL endpoints with a 'query' parameter containing a newline.
- * 
- * @author Gareth Hayes
- **/
+id: b7594dc1-8277-b289-d0b6-2c70485a7d0d
+name: Graph ql endpoints
+function: VIEW_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+   * Finds GraphQL endpoints with a 'query' parameter containing a newline.
+   *
+   * @author Gareth Hayes
+   **/
 
-var req = requestResponse.request();
+  var req = requestResponse.request();
 
-if (!req.hasParameters()) {
-	return false;
-}
+  if (!req.hasParameters()) {
+    return false;
+  }
 
-var types = new HttpParameterType[] {
-    HttpParameterType.JSON, HttpParameterType.BODY, HttpParameterType.URL
-};
+  var types = new HttpParameterType[] {
+      HttpParameterType.JSON, HttpParameterType.BODY, HttpParameterType.URL
+  };
 
-for (HttpParameterType type : types) {
-    if (req.hasParameter("query", type)) {
-        var value = req.parameterValue("query", type);
-        if (type == HttpParameterType.JSON) {
-	        if (value.contains("\\n")) {
-                return true;
-            }
-        } else {
-            if (value.toLowerCase().contains("%0a")) {
-                return true;
-            }
-        }
-    }
-}
+  for (HttpParameterType type : types) {
+      if (req.hasParameter("query", type)) {
+          var value = req.parameterValue("query", type);
+          if (type == HttpParameterType.JSON) {
+            if (value.contains("\\n")) {
+                  return true;
+              }
+          } else {
+              if (value.toLowerCase().contains("%0a")) {
+                  return true;
+              }
+          }
+      }
+  }
 
-return false;
+  return false;
