@@ -1,0 +1,13 @@
+id: f77a47e4-1826-4684-a6be-f82ff93d9500
+name: Sign request
+function: MATCH_AND_REPLACE_REQUEST
+location: PROXY_HTTP_HISTORY
+source: |+
+  var digest = utilities.cryptoUtils().generateDigest(
+      requestResponse.request().body(),
+      DigestAlgorithm.SHA_256
+  );
+  var signature = HexFormat.of().formatHex(digest.getBytes());
+  
+  return requestResponse.request().withAddedHeader("Content-Sha256", signature);
+  

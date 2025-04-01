@@ -1,0 +1,16 @@
+id: 95829147-82d3-43b2-b4f5-22dcecaae711
+name: Support "randomplz" placeholder
+function: MATCH_AND_REPLACE_REQUEST
+location: PROXY_HTTP_HISTORY
+source: |+
+  if (!(requestResponse.request().contains("randomplz", true))) {
+  	return requestResponse.request();
+  }
+  
+  var arr = requestResponse.request().toString().replace(
+      "randomplz",
+      utilities.randomUtils().randomString(8)
+  );
+  
+  return HttpRequest.httpRequest(requestResponse.httpService(), arr);
+  

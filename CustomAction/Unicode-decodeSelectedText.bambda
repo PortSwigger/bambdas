@@ -1,0 +1,9 @@
+id: e2b7cdbb-d20f-496d-8bce-0c5895172643
+name: Unicode-decode selected text
+function: CUSTOM_ACTION
+location: REPEATER
+source: |+
+  Pattern pattern = Pattern.compile("\\\\u([0-9a-fA-F]{4})");
+  String selectedResponseText = selection.responseSelection().contents().toString();
+  logging().logToOutput(pattern.matcher(selectedResponseText).replaceAll(match -> String.valueOf((char) Integer.parseInt(match.group(1), 16))));
+  

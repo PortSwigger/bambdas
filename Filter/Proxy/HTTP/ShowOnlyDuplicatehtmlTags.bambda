@@ -1,0 +1,12 @@
+id: 3d3921c1-da10-4527-bc47-ac11e9c39401
+name: Show only duplicate </html> tags
+function: VIEW_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  return requestResponse.hasResponse()
+      && requestResponse.response().statedMimeType() == MimeType.HTML
+      && utilities.byteUtils().countMatches(
+          requestResponse.response().body().getBytes(),
+          "</html>".getBytes()
+      ) > 1;
+  

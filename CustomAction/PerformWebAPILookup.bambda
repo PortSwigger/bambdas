@@ -1,0 +1,13 @@
+id: 5c76199f-cc12-4bda-9e50-6833a2f8d855
+name: Perform web API lookup
+function: CUSTOM_ACTION
+location: REPEATER
+source: |+
+  // Change apiURL, and add data from requestResponse or selection if required
+  var apiURL = "https://portswigger.net/research/rss";
+  var responseBody = api().http().sendRequest(HttpRequest.httpRequestFromUrl(apiURL)).response().bodyToString();
+  
+  // Change the regex to suit your response. If it's JSON, consider using utilities().jsonUtils()
+  var extractedData = responseBody.split("<item>")[1].split("<link>")[1].split("<")[0];
+  logging().logToOutput(extractedData);
+  

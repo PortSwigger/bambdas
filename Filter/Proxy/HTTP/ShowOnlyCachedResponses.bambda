@@ -1,0 +1,11 @@
+id: 186465d5-3dfb-406b-9c49-03de17651708
+name: Show only cached responses
+function: VIEW_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  if (!requestResponse.hasResponse() || !requestResponse.response().hasHeader("X-Cache")) {
+     	return false;
+  }
+  
+  return requestResponse.response().headerValue("X-Cache").toLowerCase().contains("hit");
+  
