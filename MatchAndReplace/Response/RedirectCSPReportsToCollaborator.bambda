@@ -1,0 +1,24 @@
+id: 34619db4-e891-4df4-9257-949b12173732
+name: Redirect CSP reports to Collaborator
+function: MATCH_AND_REPLACE_RESPONSE
+location: PROXY_HTTP_HISTORY
+source: |+
+  // Modifies the CSP response header to redirect CSP reports to the Collaborator server
+  
+  var resp = requestResponse.response();
+  var csp = "Content-Security-Policy";
+  var collaborator = "https://" + api().collaborator().defaultPayloadGenerator().generatePayload();
+  
+  if(!resp.hasHeader(csp)) {
+  	return resp;
+  }
+  
+  var cspValue = resp
+      .headerValue(csp)
+      .replaceAll("(report-uri|report-to)\\s+[^;]+", "report-to csp-reports");
+  
+  return resp
+      .withUpdatedHeader(csp, cspValue)
+      .withRemovedHeader("Reporting-Endpoints")
+      .withAddedHeader("Reporting-Endpoints", "csp-reports=\""+collaborator+"\"");
+  
