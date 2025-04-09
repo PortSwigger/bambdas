@@ -1,17 +1,22 @@
+/**
+* Navigate anonymously (no cookies, no Authorization header) and look for differences
+*
+* @author: Nicolas Grégoire
+**/
 id: 42246ca1-d9f5-4824-ad72-d053c27e1c8b
-name: Navigate as anon and look for differences
+name: Navigate anonymously and look for differences
 function: CUSTOM_ACTION
 location: REPEATER
 source: |+
   var resp1 = requestResponse.response();
   var resp1_metadata = resp1.statusCode() + "." + resp1.headerValue("Content-Length");
-  
+
   var resp2 = api().http().sendRequest(requestResponse.request().withRemovedHeader("Authorization").withRemovedHeader("Cookie")).response();
   var resp2_metadata = resp2.statusCode() + "." + resp2.headerValue("Content-Length");
-  
+
   if (resp1_metadata.equals(resp2_metadata)) {
       logging().logToOutput("Identical");
   } else {
-  	logging().logToOutput(resp1_metadata + " vs " + resp2_metadata);
+      logging().logToOutput(resp1_metadata + " vs " + resp2_metadata);
   }
-  
+

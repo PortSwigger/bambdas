@@ -1,15 +1,20 @@
+/**
+* Replace space and newline characters with the corresponding Hackvertor tags
+*
+* @author: Nicolas Grégoire
+**/
 id: a91eea9c-3f11-4b33-ae77-8fa3961615df
-name: Insert HV tags "space" and "newline"
+name: Replace space and newline characters with Hackvertor tags
 function: CUSTOM_ACTION
 location: REPEATER
 source: |+
   var data = "";
   if (selection.hasRequestSelection()) {
       logging().logToOutput("Acting on selected text");
-  	 data = selection.requestSelection().contents().toString();
+      data = selection.requestSelection().contents().toString();
   } else {
-  	 logging().logToOutput("Acting on the whole body");
+      logging().logToOutput("Acting on the whole body");
       data = requestResponse.request().bodyToString();
   }
   logging().logToOutput(data.replace(" ", "<@space/>").replace("\n", "<@newline/>"));
-  
+
