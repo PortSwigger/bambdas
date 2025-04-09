@@ -1,0 +1,15 @@
+id: a91eea9c-3f11-4b33-ae77-8fa3961615df
+name: Insert HV tags "space" and "newline"
+function: CUSTOM_ACTION
+location: REPEATER
+source: |+
+  var data = "";
+  if (selection.hasRequestSelection()) {
+      logging().logToOutput("Acting on selected text");
+  	 data = selection.requestSelection().contents().toString();
+  } else {
+  	 logging().logToOutput("Acting on the whole body");
+      data = requestResponse.request().bodyToString();
+  }
+  logging().logToOutput(data.replace(" ", "<@space/>").replace("\n", "<@newline/>"));
+  
