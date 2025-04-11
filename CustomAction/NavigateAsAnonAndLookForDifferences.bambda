@@ -1,13 +1,13 @@
-/**
-* Navigate anonymously (no cookies, no Authorization header) and look for differences
-*
-* @author: Nicolas Grégoire
-**/
 id: 42246ca1-d9f5-4824-ad72-d053c27e1c8b
 name: Navigate anonymously and look for differences
 function: CUSTOM_ACTION
 location: REPEATER
 source: |+
+  /**
+  * Navigate anonymously (no cookies, no Authorization header) and look for differences
+  *
+  * @author: Nicolas Grégoire
+  **/
   var resp1 = requestResponse.response();
   var resp1_metadata = resp1.statusCode() + "." + resp1.headerValue("Content-Length");
 
