@@ -1,13 +1,13 @@
-/**
-* Replace space and newline characters with the corresponding Hackvertor tags
-*
-* @author: Nicolas Grégoire
-**/
 id: a91eea9c-3f11-4b33-ae77-8fa3961615df
 name: Replace space and newline characters with Hackvertor tags
 function: CUSTOM_ACTION
 location: REPEATER
 source: |+
+  /**
+  * Replace space and newline characters with the corresponding Hackvertor tags
+  *
+  * @author: Nicolas Grégoire
+  **/
   var data = "";
   if (selection.hasRequestSelection()) {
       logging().logToOutput("Acting on selected text");
@@ -17,4 +17,3 @@ source: |+
       data = requestResponse.request().bodyToString();
   }
   logging().logToOutput(data.replace(" ", "<@space/>").replace("\n", "<@newline/>"));
-
