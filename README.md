@@ -4,6 +4,8 @@ Bambdas collection for Burp Suite Professional and Community.
 Developed both by PortSwigger and the community with 🧡
 
 ## Bambda Categories
+- [Repeater custom actions](https://github.com/PortSwigger/bambdas/tree/main/CustomAction)
+- [Proxy match and replace rules](https://github.com/PortSwigger/bambdas/tree/main/MatchAndReplace)
 - [Logger view filters](https://github.com/PortSwigger/bambdas/tree/main/Filter/Logger/View)
 - [Proxy HTTP filters](https://github.com/PortSwigger/bambdas/tree/main/Filter/Proxy/HTTP)
 - [Proxy WebSocket filters](https://github.com/PortSwigger/bambdas/tree/main/Filter/Proxy/WS)

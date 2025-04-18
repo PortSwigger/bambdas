@@ -1,0 +1,7 @@
+id: e95cdf2b-c635-4af7-98d8-baa79d8a2348
+name: Add Referer header column
+function: CUSTOM_COLUMN
+location: PROXY_HTTP_HISTORY
+source: |+
+  return requestResponse.request().headerValue("Referer");
+  

@@ -1,0 +1,7 @@
+id: 4717b68b-94a8-4eb2-91da-057ca3bc2f67
+name: Perform reverse DNS lookup
+function: CUSTOM_ACTION
+location: REPEATER
+source: |+
+  logging().logToOutput(java.net.InetAddress.getByName(requestResponse.httpService().ipAddress()).getCanonicalHostName());
+  

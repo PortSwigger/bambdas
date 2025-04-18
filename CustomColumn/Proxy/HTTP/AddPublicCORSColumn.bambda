@@ -1,0 +1,8 @@
+id: 28a33d9b-b5f8-4dd4-834f-f5a2ae169a6a
+name: Add public CORS column
+function: CUSTOM_COLUMN
+location: PROXY_HTTP_HISTORY
+source: |+
+  return requestResponse.hasResponse()
+      && requestResponse.response().hasHeader("Access-Control-Allow-Origin", "*");
+  

@@ -1,0 +1,10 @@
+id: fed34cc2-4081-4492-a6ab-7662889dccd4
+name: Show only large redirect responses
+function: VIEW_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  return requestResponse.hasResponse()
+      && requestResponse.response().statusCode() <= 399
+      && requestResponse.response().statusCode() >= 300
+      && requestResponse.response().body().length() > 1000;
+  

@@ -1,0 +1,26 @@
+id: d1f1a24f-2be4-49a0-b6e6-15c9fb030856
+name: Check host header injections
+function: CUSTOM_ACTION
+location: REPEATER
+source: |+
+  /**
+  * Check for host header injections
+  *
+  * @author GrumpinouT
+  **/
+
+  // Define request
+  var req = requestResponse.request();
+  
+  // Change host header
+  var collaborator = api().collaborator().defaultPayloadGenerator().generatePayload().toString();
+  api().http().sendRequest(req.withUpdatedHeader("Host", collaborator));
+  logging().logToOutput("Collaborator as host header - " + collaborator);
+  
+  // Append collaborator domain to host header
+  var collaborator1 = api().collaborator().defaultPayloadGenerator().generatePayload().toString();
+  api().http().sendRequest(req.withUpdatedHeader("Host", req.headerValue("Host") + "." + collaborator1));
+  logging().logToOutput("Append collaborator to host header - " + collaborator1);
+  
+  // Change port in host header to '1'
+  logging().logToOutput("Added port ':1' to Host header - " + api().http().sendRequest(req.withUpdatedHeader("Host", req.headerValue("Host").replace(":\\d+$", "") + ":1")).response().statusCode());
