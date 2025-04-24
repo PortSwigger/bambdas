@@ -1,0 +1,278 @@
+id: 7b0117fb-276d-4b5b-a7f0-725b6ee11344
+name: Screenshot
+function: CUSTOM_ACTION
+location: REPEATER
+source: |+
+  /* ═══════════  A) transparent overlay with Capture  ═══════════ */
+  final int BORDER = 3, GRIP = 6, BTN_W = 90, BTN_H = 30;
+  final javax.swing.JWindow overlay = new javax.swing.JWindow();
+  overlay.setBounds(200,200,600,350);
+  overlay.setAlwaysOnTop(true);
+  
+  java.awt.Color CLEAR = new java.awt.Color(0,0,0,0);
+  overlay.setBackground(CLEAR);
+  ((javax.swing.JComponent)overlay.getContentPane()).setOpaque(false);
+  overlay.getRootPane().setOpaque(false);
+  overlay.getContentPane().setLayout(null);
+  
+  /* hollow shape + button island */
+  java.awt.geom.Area hole=new java.awt.geom.Area(new java.awt.Rectangle(0,0,
+          overlay.getWidth(),overlay.getHeight()));
+  hole.subtract(new java.awt.geom.Area(new java.awt.Rectangle(
+          BORDER,BORDER,overlay.getWidth()-BORDER*2,overlay.getHeight()-BORDER*2)));
+  hole.add(new java.awt.geom.Area(new java.awt.Rectangle(
+          BORDER+2,BORDER+2,BTN_W+4,BTN_H+4)));
+  overlay.setShape(hole);
+  overlay.addComponentListener(new java.awt.event.ComponentAdapter(){
+      public void componentResized(java.awt.event.ComponentEvent e){
+          int w=overlay.getWidth(),h=overlay.getHeight();
+          java.awt.geom.Area a=new java.awt.geom.Area(new java.awt.Rectangle(0,0,w,h));
+          a.subtract(new java.awt.geom.Area(new java.awt.Rectangle(
+                  BORDER,BORDER,w-BORDER*2,h-BORDER*2)));
+          a.add(new java.awt.geom.Area(new java.awt.Rectangle(
+                  BORDER+2,BORDER+2,BTN_W+4,BTN_H+4)));
+          overlay.setShape(a);
+      }
+  });
+  
+  /* red frame */
+  overlay.setContentPane(new javax.swing.JComponent(){
+      { setLayout(null); setOpaque(false); }
+      protected void paintComponent(java.awt.Graphics g){
+          java.awt.Graphics2D g2=(java.awt.Graphics2D)g.create();
+          g2.setColor(java.awt.Color.RED);
+          g2.setStroke(new java.awt.BasicStroke(BORDER));
+          g2.drawRect(BORDER/2,BORDER/2,getWidth()-BORDER,getHeight()-BORDER);
+          g2.dispose();
+      }
+  });
+  
+  /* Capture button (draggable) */
+  final javax.swing.JButton capture=new javax.swing.JButton("Capture");
+  capture.setBounds(BORDER+4,BORDER+4,BTN_W,BTN_H);
+  overlay.getContentPane().add(capture);
+  java.awt.event.MouseAdapter dragBtn=new java.awt.event.MouseAdapter(){
+      java.awt.Point off;
+      public void mousePressed(java.awt.event.MouseEvent e){ off=e.getPoint(); }
+      public void mouseDragged(java.awt.event.MouseEvent e){
+          java.awt.Point p=javax.swing.SwingUtilities.convertPoint(
+                  capture,e.getPoint(),overlay.getContentPane());
+          capture.setLocation(p.x-off.x,p.y-off.y);
+      }
+  };
+  capture.addMouseListener(dragBtn); capture.addMouseMotionListener(dragBtn);
+  
+  /* simple move / resize for overlay (unchanged) */
+  java.awt.event.MouseAdapter mover=new java.awt.event.MouseAdapter(){
+      java.awt.Point start; java.awt.Rectangle startB; int edge;
+      int edges(java.awt.Point p){
+          int m=0;
+          if(p.x>=overlay.getWidth()-GRIP) m|=1;
+          if(p.y>=overlay.getHeight()-GRIP) m|=2;
+          if(p.x<=GRIP)                    m|=4;
+          if(p.y<=GRIP)                    m|=8;
+          return m;
+      }
+      public void mousePressed(java.awt.event.MouseEvent e){
+          start=e.getLocationOnScreen(); startB=overlay.getBounds();
+          edge=edges(e.getPoint());
+      }
+      public void mouseDragged(java.awt.event.MouseEvent e){
+          java.awt.Point now=e.getLocationOnScreen();
+          int dx=now.x-start.x, dy=now.y-start.y;
+          java.awt.Rectangle r=new java.awt.Rectangle(startB);
+          if(edge==0){ r.x+=dx; r.y+=dy; }
+          else{
+              if((edge&1)!=0) r.width+=dx;
+              if((edge&2)!=0) r.height+=dy;
+              if((edge&4)!=0){ r.x+=dx; r.width-=dx; }
+              if((edge&8)!=0){ r.y+=dy; r.height-=dy; }
+              r.width =java.lang.Math.max(120,r.width);
+              r.height=java.lang.Math.max(90,r.height);
+          }
+          overlay.setBounds(r);
+      }
+  };
+  overlay.addMouseListener(mover); overlay.addMouseMotionListener(mover);
+  
+  /* ═════════ 2. after Capture – compact editor ═════════ */
+  capture.addActionListener(ev -> {
+      try {
+          java.awt.Rectangle reg = overlay.getBounds();
+          overlay.setVisible(false); java.lang.Thread.sleep(80);
+          java.awt.image.BufferedImage snap =
+                  new java.awt.Robot(overlay.getGraphicsConfiguration().getDevice())
+                  .createScreenCapture(reg);
+          overlay.dispose();
+  
+          /* ---- editor basics ---- */
+          final int BAR_W = 140;
+          final javax.swing.JFrame editor = new javax.swing.JFrame("Annotate");
+          editor.setDefaultCloseOperation(javax.swing.JFrame.DISPOSE_ON_CLOSE);
+          editor.getRootPane().setBorder(
+                  javax.swing.BorderFactory.createLineBorder(java.awt.Color.DARK_GRAY,2));
+  
+          javax.swing.JPanel root = new javax.swing.JPanel(new java.awt.BorderLayout());
+          editor.setContentPane(root);
+  
+          /* image + layered drawing pane */
+          javax.swing.JLabel img = new javax.swing.JLabel(new javax.swing.ImageIcon(snap));
+          javax.swing.JLayeredPane stack = new javax.swing.JLayeredPane();
+          stack.setPreferredSize(new java.awt.Dimension(snap.getWidth(), snap.getHeight()));
+          img.setBounds(0,0,snap.getWidth(),snap.getHeight());
+          stack.add(img, java.lang.Integer.valueOf(0));
+  
+          /* drawing state containers */
+          final java.util.List<java.awt.Shape> shapes = new java.util.ArrayList<>();
+          final java.util.List<java.awt.Color> cols   = new java.util.ArrayList<>();
+          final java.util.List<java.lang.String> kinds= new java.util.ArrayList<>();
+  
+          final java.awt.Color[] curCol = { java.awt.Color.RED };
+          final java.lang.String[] mode  = { "RECT" };
+  
+          /* arrays for live drag */
+          final java.awt.Point[] start   = { null };
+          final java.awt.Shape[] preview = { null };
+  
+          /* drawing layer */
+          final javax.swing.JComponent draw = new javax.swing.JComponent(){
+              { setOpaque(false); }
+              protected void paintComponent(java.awt.Graphics g){
+                  java.awt.Graphics2D g2=(java.awt.Graphics2D)g.create();
+                  g2.setStroke(new java.awt.BasicStroke(3f));
+                  for(int i=0;i<shapes.size();i++){
+                      g2.setColor(cols.get(i));
+                      if("HIGHLIGHT".equals(kinds.get(i))) g2.fill(shapes.get(i));
+                      else g2.draw(shapes.get(i));
+                  }
+                  if(preview[0]!=null){
+                      g2.setColor(curCol[0]);
+                      if("HIGHLIGHT".equals(mode[0])) g2.fill(preview[0]);
+                      else g2.draw(preview[0]);
+                  }
+                  g2.dispose();
+              }
+          };
+          draw.setBounds(0,0,snap.getWidth(),snap.getHeight());
+          stack.add(draw, java.lang.Integer.valueOf(100));
+          root.add(stack, java.awt.BorderLayout.CENTER);
+  
+          /* mouse for drawing */
+          java.awt.event.MouseAdapter dm = new java.awt.event.MouseAdapter(){
+              public void mousePressed(java.awt.event.MouseEvent e){ start[0]=e.getPoint(); }
+              public void mouseDragged(java.awt.event.MouseEvent e){
+                  if(start[0]==null) return;
+                  java.awt.Point p=e.getPoint();
+                  if("LINE".equals(mode[0]))
+                      preview[0]=new java.awt.geom.Line2D.Double(start[0],p);
+                  else{
+                      int x=Math.min(start[0].x,p.x), y=Math.min(start[0].y,p.y);
+                      int w=Math.abs(p.x-start[0].x), h=Math.abs(p.y-start[0].y);
+                      preview[0]=new java.awt.geom.Rectangle2D.Double(x,y,w,h);
+                  }
+                  draw.repaint();
+              }
+              public void mouseReleased(java.awt.event.MouseEvent e){
+                  if(preview[0]!=null){
+                      shapes.add(preview[0]);
+                      java.awt.Color c = "HIGHLIGHT".equals(mode[0])
+                              ? new java.awt.Color(curCol[0].getRed(),
+                                                   curCol[0].getGreen(),
+                                                   curCol[0].getBlue(), 80)   // ~30 % opaque
+                              : curCol[0];
+                      cols.add(c); kinds.add(mode[0]);
+                  }
+                  start[0]=null; preview[0]=null; draw.repaint();
+              }
+          };
+          draw.addMouseListener(dm); draw.addMouseMotionListener(dm);
+  
+          /* ---- toolbar ---- */
+          javax.swing.JPanel bar = new javax.swing.JPanel(new java.awt.GridLayout(0,1,4,4));
+          bar.setBorder(javax.swing.BorderFactory.createEmptyBorder(8,8,8,8));
+          bar.setPreferredSize(new java.awt.Dimension(BAR_W, snap.getHeight()));
+          root.add(bar, java.awt.BorderLayout.EAST);
+  
+          /* shape radio buttons */
+          javax.swing.ButtonGroup grpShape = new javax.swing.ButtonGroup();
+          javax.swing.JToggleButton rBtn = new javax.swing.JToggleButton("Rect",true);
+          javax.swing.JToggleButton lBtn = new javax.swing.JToggleButton("Line");
+          javax.swing.JToggleButton hBtn = new javax.swing.JToggleButton("Highlight");
+          grpShape.add(rBtn); grpShape.add(lBtn); grpShape.add(hBtn);
+          java.awt.event.ActionListener shSel = a->{
+              if(a.getSource()==rBtn){ mode[0]="RECT"; draw.setCursor(
+                      java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.CROSSHAIR_CURSOR)); }
+              if(a.getSource()==lBtn){ mode[0]="LINE"; draw.setCursor(
+                      java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.DEFAULT_CURSOR)); }
+              if(a.getSource()==hBtn){ mode[0]="HIGHLIGHT"; draw.setCursor(
+                      java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.CROSSHAIR_CURSOR)); }
+          };
+          rBtn.addActionListener(shSel); lBtn.addActionListener(shSel); hBtn.addActionListener(shSel);
+          bar.add(rBtn); bar.add(lBtn); bar.add(hBtn);
+  
+          /* colour chooser button */
+          javax.swing.JButton colBtn = new javax.swing.JButton("Colour");
+          colBtn.setBackground(curCol[0]); colBtn.setOpaque(true);
+          bar.add(colBtn);
+          colBtn.addActionListener(a -> {
+              java.awt.Color chosen = javax.swing.JColorChooser
+                      .showDialog(editor,"Choose colour",curCol[0]);
+              if(chosen!=null){
+                  curCol[0]=chosen; colBtn.setBackground(chosen);
+              }
+          });
+  
+          /* Undo */
+          javax.swing.JButton undo = new javax.swing.JButton("Undo");
+          bar.add(undo);
+          undo.addActionListener(a -> {
+              if(!shapes.isEmpty()){
+                  shapes.remove(shapes.size()-1);
+                  cols.remove(cols.size()-1);
+                  kinds.remove(kinds.size()-1);
+                  draw.repaint();
+              }
+          });
+  
+          /* Save */
+          javax.swing.JButton save = new javax.swing.JButton("Save");
+          bar.add(save);
+          save.addActionListener(a -> {
+              try{
+                  java.awt.image.BufferedImage out=new java.awt.image.BufferedImage(
+                          snap.getWidth(),snap.getHeight(),
+                          java.awt.image.BufferedImage.TYPE_INT_ARGB);
+                  java.awt.Graphics2D g2=out.createGraphics();
+                  g2.drawImage(snap,0,0,null);
+                  g2.setStroke(new java.awt.BasicStroke(3f));
+                  for(int i=0;i<shapes.size();i++){
+                      g2.setColor(cols.get(i));
+                      if("HIGHLIGHT".equals(kinds.get(i))) g2.fill(shapes.get(i));
+                      else g2.draw(shapes.get(i));
+                  }
+                  g2.dispose();
+  
+                  javax.swing.JFileChooser fc = new javax.swing.JFileChooser();
+                  fc.setSelectedFile(new java.io.File("annotated.png"));
+                  int res = fc.showSaveDialog(editor);
+                  if(res == javax.swing.JFileChooser.APPROVE_OPTION){
+                      java.io.File f = fc.getSelectedFile();
+                      javax.imageio.ImageIO.write(out,"png",f);
+                      javax.swing.JOptionPane.showMessageDialog(editor,
+                              "Saved to:\n"+f.getAbsolutePath());
+                  }
+              }catch(Exception ex){ ex.printStackTrace(); }
+              editor.dispose();
+          });
+  
+          /* size & center */
+          editor.pack();
+          editor.setLocationRelativeTo(null);
+          draw.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.CROSSHAIR_CURSOR));
+          editor.setVisible(true);
+  
+      }catch(Exception ex){ ex.printStackTrace(); }
+  });
+  /* ═══════════ show overlay ═══════════ */
+  overlay.setVisible(true);
+  
