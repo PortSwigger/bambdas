@@ -1,0 +1,21 @@
+id: 257b9355-3db6-4952-b1d0-24d15882f4c7
+name: Slow responses
+function: CUSTOM_COLUMN
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+     * Displays response times once the specified threshold is exceeded.
+     *
+     * @author l4n73rn
+     *
+     * Modified from the SlowResponses filter bambda by ps-porpoise (https://github.com/PortSwigger/bambdas/blob/main/Filter/Logger/View/SlowResponses.bambda)
+  **/
+  
+  var delta = requestResponse.timingData().timeBetweenRequestSentAndStartOfResponse();
+  var threshold = Duration.ofSeconds(3);
+  
+  if (delta != null && delta.toMillis() >= threshold.toMillis()) {
+      return delta.toMillis();
+  } else {
+      return "";
+  }
