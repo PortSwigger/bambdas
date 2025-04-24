@@ -3,7 +3,11 @@ name: Probe for race condition
 function: CUSTOM_ACTION
 location: REPEATER
 source: |+
-  // This will use the single-packet attack for HTTP/2, and last-byte synchronisation for HTTP/1
+  /**
+  * Repeats the request 10 times to trigger race conditions or request smuggling, using the single-packet attack for HTTP/2, and last-byte synchronisation for HTTP/1
+  *
+  * @author James Kettle
+  **/
   int NUMBER_OF_REQUESTS = 10;
   var reqs = new ArrayList<HttpRequest>();
   for (int i = 0; i < NUMBER_OF_REQUESTS; i++) {
