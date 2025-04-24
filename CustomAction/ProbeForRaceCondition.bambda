@@ -1,0 +1,19 @@
+id: eb57d5bd-33e2-4a8c-bf51-bc81bd26613a
+name: Probe for race condition
+function: CUSTOM_ACTION
+location: REPEATER
+source: |+
+  /**
+  * Repeats the request 10 times to trigger race conditions or request smuggling, using the single-packet attack for HTTP/2, and last-byte synchronisation for HTTP/1
+  *
+  * @author James Kettle
+  **/
+  int NUMBER_OF_REQUESTS = 10;
+  var reqs = new ArrayList<HttpRequest>();
+  for (int i = 0; i < NUMBER_OF_REQUESTS; i++) {
+      reqs.add(requestResponse.request());
+  }
+  
+  var responses = api().http().sendRequests(reqs); 
+  var codes = responses.stream().map(HttpRequestResponse::response).map(HttpResponse::statusCode).toList();
+  logging().logToOutput(codes);
