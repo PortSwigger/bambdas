@@ -3,11 +3,11 @@ name: Show only duplicate </html> tags
 function: VIEW_FILTER
 location: PROXY_HTTP_HISTORY
 source: |+
-  /*
+  /**
   * Show only duplicate </html> tags.
   *
   * @author PortSwigger
-  */
+  **/
   return requestResponse.hasResponse()
       && requestResponse.response().statedMimeType() == MimeType.HTML
       && utilities.byteUtils().countMatches(

@@ -3,11 +3,11 @@ name: Add GraphQL operation name column
 function: CUSTOM_COLUMN
 location: PROXY_HTTP_HISTORY
 source: |+
-  /*
+  /**
   * Add GraphQL operation name column.
   *
   * @author PortSwigger
-  */
+  **/
   String requestBody = requestResponse.request().bodyToString();
   
   if (!utilities.jsonUtils().isValidJson(requestBody)) {

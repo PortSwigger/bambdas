@@ -3,11 +3,11 @@ name: Sign request
 function: MATCH_AND_REPLACE_REQUEST
 location: PROXY_HTTP_HISTORY
 source: |+
-  /*
+  /**
   * Sign request.
   *
   * @author PortSwigger
-  */
+  **/
   var digest = utilities.cryptoUtils().generateDigest(
       requestResponse.request().body(),
       DigestAlgorithm.SHA_256

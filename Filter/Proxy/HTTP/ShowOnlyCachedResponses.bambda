@@ -3,11 +3,11 @@ name: Show only cached responses
 function: VIEW_FILTER
 location: PROXY_HTTP_HISTORY
 source: |+
-  /*
+  /**
   * Show only cached responses.
   *
   * @author PortSwigger
-  */
+  **/
   if (!requestResponse.hasResponse() || !requestResponse.response().hasHeader("X-Cache")) {
      	return false;
   }

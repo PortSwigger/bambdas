@@ -3,11 +3,11 @@ name: Perform web API lookup
 function: CUSTOM_ACTION
 location: REPEATER
 source: |+
-  /*
+  /**
   * Perform web API lookup.
   *
   * @author PortSwigger
-  */
+  **/
   // Change apiURL, and add data from requestResponse or selection if required
   var apiURL = "https://portswigger.net/research/rss";
   var responseBody = api().http().sendRequest(HttpRequest.httpRequestFromUrl(apiURL)).response().bodyToString();

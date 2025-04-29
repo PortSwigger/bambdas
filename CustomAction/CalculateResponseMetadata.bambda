@@ -3,11 +3,11 @@ name: Calculate response metadata
 function: CUSTOM_ACTION
 location: REPEATER
 source: |+
-  /*
+  /**
   * Calculate response metadata.
   *
   * @author PortSwigger
-  */
+  **/
   String responseBody = requestResponse.response().bodyToString();
   logging().logToOutput(responseBody.hashCode());
   logging().logToOutput(responseBody.split("\n").length);
