@@ -5,6 +5,34 @@ Please do not manually edit this file, or include any changes to this file in pu
 -->
 # Proxy HTTP Custom Column
 Documentation: [Adding a custom column](https://portswigger.net/burp/documentation/desktop/tools/proxy/http-history#adding-a-custom-column)
+## [AddGraphQLOperationNameColumn.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomColumn/Proxy/HTTP/AddGraphQLOperationNameColumn.bambda)
+### Add GraphQL operation name column.
+#### Author: PortSwigger
+```java
+String requestBody = requestResponse.request().bodyToString();
+
+if (!utilities.jsonUtils().isValidJson(requestBody)) {
+	return "";
+}
+
+return utilities.jsonUtils().readString(requestBody, "operationName");
+
+```
+## [AddPublicCORSColumn.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomColumn/Proxy/HTTP/AddPublicCORSColumn.bambda)
+### Add public CORS column.
+#### Author: PortSwigger
+```java
+return requestResponse.hasResponse()
+    && requestResponse.response().hasHeader("Access-Control-Allow-Origin", "*");
+
+```
+## [AddRefererHeaderColumn.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomColumn/Proxy/HTTP/AddRefererHeaderColumn.bambda)
+### Add Referer header column.
+#### Author: PortSwigger
+```java
+return requestResponse.request().headerValue("Referer");
+
+```
 ## [DetectCORS.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomColumn/Proxy/HTTP/DetectCORS.bambda)
 ### Check the CORS vulnerability
 #### Author: https://github.com/JaveleyQAQ/
@@ -80,6 +108,21 @@ return "";
 return requestResponse.hasResponse() && requestResponse.response().hasHeader("Server")
   ? requestResponse.response().headerValue("Server")
   : "";
+
+```
+## [SlowResponses.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomColumn/Proxy/HTTP/SlowResponses.bambda)
+### Displays response times once the specified threshold is exceeded.
+#### Author: l4n73rn
+```java
+
+var delta = requestResponse.timingData().timeBetweenRequestSentAndStartOfResponse();
+var threshold = Duration.ofSeconds(3);
+
+if (delta != null && delta.toMillis() >= threshold.toMillis()) {
+    return delta.toMillis();
+} else {
+    return "";
+}
 
 ```
 ## [WCFBinarySOAPMethod.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomColumn/Proxy/HTTP/WCFBinarySOAPMethod.bambda)
