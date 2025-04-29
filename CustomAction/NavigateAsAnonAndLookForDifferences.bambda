@@ -6,7 +6,7 @@ source: |+
   /**
   * Navigate anonymously (no cookies, no Authorization header) and look for differences
   *
-  * @author: Nicolas Grégoire
+  * @author Nicolas Grégoire
   **/
   var resp1 = requestResponse.response();
   var resp1_metadata = resp1.statusCode() + "." + resp1.headerValue("Content-Length");

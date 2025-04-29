@@ -3,6 +3,11 @@ name: Retry request without cookies
 function: CUSTOM_ACTION
 location: REPEATER
 source: |+
+  /*
+  * Retry request without cookies.
+  *
+  * @author PortSwigger
+  */
   var req = requestResponse.request();
   logging().logToOutput(api().http().sendRequest(req.withRemovedHeader("Authorization").withRemovedHeader("Cookie")).response().statusCode());
   

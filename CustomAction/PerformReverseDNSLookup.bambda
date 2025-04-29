@@ -3,5 +3,10 @@ name: Perform reverse DNS lookup
 function: CUSTOM_ACTION
 location: REPEATER
 source: |+
+  /*
+  * Perform reverse DNS lookup.
+  *
+  * @author PortSwigger
+  */
   logging().logToOutput(java.net.InetAddress.getByName(requestResponse.httpService().ipAddress()).getCanonicalHostName());
   
