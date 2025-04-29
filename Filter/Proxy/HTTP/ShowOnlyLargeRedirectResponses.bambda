@@ -3,6 +3,11 @@ name: Show only large redirect responses
 function: VIEW_FILTER
 location: PROXY_HTTP_HISTORY
 source: |+
+  /*
+  * Show only large redirect responses.
+  *
+  * @author PortSwigger
+  */
   return requestResponse.hasResponse()
       && requestResponse.response().statusCode() <= 399
       && requestResponse.response().statusCode() >= 300
