@@ -3,10 +3,7 @@ name: Screenshot
 function: CUSTOM_ACTION
 location: REPEATER
 source: |+
-  /**
-  * Create and edit screenshots directly from Repeater.
-  * @author Martin Doyhenard
-  **/
+  /* ═══════════  A) transparent overlay with Capture  ═══════════ */
   final int BORDER = 3, GRIP = 6, BTN_W = 90, BTN_H = 30;
   final javax.swing.JWindow overlay = new javax.swing.JWindow();
   overlay.setBounds(200,200,600,350);
