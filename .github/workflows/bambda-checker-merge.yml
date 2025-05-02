@@ -23,7 +23,7 @@ jobs:
 
       - name: Validate Bambdas & update READMEs
         run: |
-          [ $(sha256sum BambdaChecker-1.4.jar | awk '{ print $1 }') = '1c18afc1cca105403158a220b99c389cffb110068a659f4b269f5797b47cc98f' ]
+          [ $(sha256sum BambdaChecker-1.4.jar | awk '{ print $1 }') = 'f8df4971c990c016ba0a076a8cc49fd3323ef9f883f52c98290b40dacd75aed6' ]
           java -jar BambdaChecker-1.4.jar
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"

@@ -416,4 +416,3 @@ source: |+
   
   /* ── show overlay ─────────────────────────────────────────── */
   overlay.setVisible(true);
-  

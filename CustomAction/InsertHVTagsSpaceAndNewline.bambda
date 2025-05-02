@@ -6,7 +6,7 @@ source: |+
   /**
   * Replace space and newline characters with the corresponding Hackvertor tags
   *
-  * @author: Nicolas Grégoire
+  * @author Nicolas Grégoire
   **/
   var data = "";
   if (selection.hasRequestSelection()) {

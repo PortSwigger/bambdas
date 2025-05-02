@@ -1071,6 +1071,39 @@ if (request.hasParameters()){
 return false;
 
 ```
+## [ShowOnlyCachedResponses.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/ShowOnlyCachedResponses.bambda)
+### Show only cached responses.
+#### Author: PortSwigger
+```java
+if (!requestResponse.hasResponse() || !requestResponse.response().hasHeader("X-Cache")) {
+   	return false;
+}
+
+return requestResponse.response().headerValue("X-Cache").toLowerCase().contains("hit");
+
+```
+## [ShowOnlyDuplicatehtmlTags.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/ShowOnlyDuplicatehtmlTags.bambda)
+### Show only duplicate </html> tags.
+#### Author: PortSwigger
+```java
+return requestResponse.hasResponse()
+    && requestResponse.response().statedMimeType() == MimeType.HTML
+    && utilities.byteUtils().countMatches(
+        requestResponse.response().body().getBytes(),
+        "</html>".getBytes()
+    ) > 1;
+
+```
+## [ShowOnlyLargeRedirectResponses.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/ShowOnlyLargeRedirectResponses.bambda)
+### Show only large redirect responses.
+#### Author: PortSwigger
+```java
+return requestResponse.hasResponse()
+    && requestResponse.response().statusCode() <= 399
+    && requestResponse.response().statusCode() >= 300
+    && requestResponse.response().body().length() > 1000;
+
+```
 ## [ShowRequestsBetweenDates.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/ShowRequestsBetweenDates.bambda)
 ### Shows Requests/Responses before, after, or between specified dates
 #### Author: Nick Coblentz (https://github.com/ncoblentz)

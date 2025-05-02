@@ -3,6 +3,11 @@ name: Add public CORS column
 function: CUSTOM_COLUMN
 location: PROXY_HTTP_HISTORY
 source: |+
+  /**
+  * Add public CORS column.
+  *
+  * @author PortSwigger
+  **/
   return requestResponse.hasResponse()
       && requestResponse.response().hasHeader("Access-Control-Allow-Origin", "*");
   

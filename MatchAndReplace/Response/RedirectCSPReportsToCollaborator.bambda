@@ -3,8 +3,11 @@ name: Redirect CSP reports to Collaborator
 function: MATCH_AND_REPLACE_RESPONSE
 location: PROXY_HTTP_HISTORY
 source: |+
-  // Modifies the CSP response header to redirect CSP reports to the Collaborator server
-  
+  /**
+  * Modifies the CSP response header to redirect CSP reports to the Collaborator server.
+  *
+  * @author PortSwigger
+  **/
   var resp = requestResponse.response();
   var csp = "Content-Security-Policy";
   var collaborator = "https://" + api().collaborator().defaultPayloadGenerator().generatePayload();

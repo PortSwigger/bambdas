@@ -3,6 +3,11 @@ name: Support "randomplz" placeholder
 function: MATCH_AND_REPLACE_REQUEST
 location: PROXY_HTTP_HISTORY
 source: |+
+  /**
+  * Support "randomplz" placeholder.
+  *
+  * @author PortSwigger
+  **/
   if (!(requestResponse.request().contains("randomplz", true))) {
   	return requestResponse.request();
   }

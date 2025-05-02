@@ -3,5 +3,10 @@ name: Add Referer header column
 function: CUSTOM_COLUMN
 location: PROXY_HTTP_HISTORY
 source: |+
+  /**
+  * Add Referer header column.
+  *
+  * @author PortSwigger
+  **/
   return requestResponse.request().headerValue("Referer");
   
