@@ -1,0 +1,23 @@
+id: f9bcf1fe-5759-4dd9-a153-9f72e1ecd38e
+name: Detect Content-Security-Policy-Report-Only Header
+function: VIEW_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+   * Bambda Script to Detect "Content-Security-Policy-Report-Only (CSP-RO)" Header in HTTP Response
+   * @author ctflearner
+   * This script checks if the HTTP response contains the "Content-Security-Policy-Report-Only" header, 
+   * which is used for monitoring CSP violations without enforcing restrictions. 
+   * Additionally, it verifies if the header specifies a "report-uri" directive, 
+   * indicating where CSP violation reports are sent.
+   * The script ensures there is a response and scans the headers for these conditions.
+   **/
+  
+  boolean checkValue = true; // Change this to false if you only want to check for the presence of the header.
+  
+  return requestResponse.hasResponse() && (
+      requestResponse.response().hasHeader("Content-Security-Policy-Report-Only") &&
+      (!checkValue || 
+          requestResponse.response().header("Content-Security-Policy-Report-Only").value().toLowerCase(Locale.US).contains("report-uri")
+      )
+  );
