@@ -51,6 +51,21 @@ return requestResponse.hasResponse() && requestResponse.response().statusCode() 
 return requestResponse.hasResponse() && requestResponse.response().statusCode() == 403;
 
 ```
+## [DetectCSPReportOnlyHeader.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/DetectCSPReportOnlyHeader.bambda)
+### Bambda Script to Detect "Content-Security-Policy-Report-Only (CSP-RO)" Header in HTTP Response
+#### Author: ctflearner
+```java
+
+boolean checkValue = true; // Change this to false if you only want to check for the presence of the header.
+
+return requestResponse.hasResponse() && (
+    requestResponse.response().hasHeader("Content-Security-Policy-Report-Only") &&
+    (!checkValue || 
+        requestResponse.response().header("Content-Security-Policy-Report-Only").value().toLowerCase(Locale.US).contains("report-uri")
+    )
+);
+
+```
 ## [DetectSafeHttpMethods.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/DetectSafeHttpMethods.bambda)
 ### Bambda Script to Detect "Safe or Typical HTTP Methods in Requests"
 #### Author: ctflearner
