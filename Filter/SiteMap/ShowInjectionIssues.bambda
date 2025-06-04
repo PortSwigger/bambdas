@@ -1,0 +1,5 @@
+id: 42f3f244-100c-4d7f-aed2-95d053365e4b
+name: Show injection issues
+function: VIEW_FILTER
+location: SITEMAP
+source: return node.issues().stream().anyMatch(e -> e.name().contains("injection"));
