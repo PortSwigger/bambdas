@@ -1,0 +1,40 @@
+id: 361c963f-346e-427b-a93e-86db21d11a73
+name: RepeaterClip: Share to Clipboard
+function: CUSTOM_ACTION
+location: REPEATER
+source: |+
+  /**
+   * Compresses and encodes the current repeater request, copying the result to the clipboard.
+   *
+   * @author 0xd0ug (https://github.com/0xd0ug)
+   **/
+  
+  try {
+      var httpService = requestResponse.httpService();
+      String protocol = httpService.secure() ? "https" : "http";
+      String host = httpService.host();
+      int port = httpService.port();
+      
+      var requestByteArray = requestResponse.request().toByteArray();
+      
+      var compressedRequest = api.utilities().compressionUtils().compress(requestByteArray, burp.api.montoya.utilities.CompressionType.GZIP);
+      
+      String base64EncodedRequest = api.utilities().base64Utils().encodeToString(compressedRequest);
+      
+      String result = "REPEATERCLIP/" + protocol + "/" + host + "/" + port + "/" + base64EncodedRequest;
+      
+      java.awt.Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new java.awt.datatransfer.StringSelection(result), null);
+      
+      logging.logToOutput("Successfully copied request data to clipboard");
+      logging.logToOutput("Format: " + protocol + "/" + host + "/" + port + "/[base64-encoded-compressed-request]");
+      
+  } catch (Exception e) {
+      try {
+          java.awt.Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new java.awt.datatransfer.StringSelection(""), null);
+      } catch (Exception clipboardError) {
+          logging.logToError("Failed to clear clipboard: " + clipboardError.getMessage());
+      }
+      
+      logging.logToError("Error processing request: " + e.getMessage());
+      e.printStackTrace();
+  }
