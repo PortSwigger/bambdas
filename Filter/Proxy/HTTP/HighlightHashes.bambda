@@ -6,7 +6,7 @@ source: |+
  /**
    * This script highlights and annotates the proxy history if any responses contain a common password hash variant.
    *
-   * @author Daniel Roberts (https://github.com/DannyCymru)
+   * @author Daniel Roberts (https://github.com/ErebusC)
    *
    **/
   if (!requestResponse.hasResponse()){
