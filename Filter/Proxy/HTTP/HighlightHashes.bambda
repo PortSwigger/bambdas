@@ -3,6 +3,12 @@ name: Highlight Hashes
 function: VIEW_FILTER
 location: PROXY_HTTP_HISTORY
 source: |+
+ /**
+   * This script highlights and annotates the proxy history if any responses contain a common password hash variant.
+   *
+   * @author Daniel Roberts (https://github.com/DannyCymru)
+   *
+   **/
   if (!requestResponse.hasResponse()){
   	return false;
   }
