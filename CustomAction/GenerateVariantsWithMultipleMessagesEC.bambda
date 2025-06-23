@@ -1,0 +1,25 @@
+id: 67b816cc-e062-4446-87a8-2eba0dc1dfd0
+name: Generate variants with multiple messages
+function: CUSTOM_ACTION
+location: REPEATER
+source: |+
+  var selectedText = selection.requestSelection().contents().toString();
+  
+  if (selectedText.isEmpty()) {
+    return;
+  }
+  
+  Prompt prompt = api.ai().prompt();
+  List<Message> context = new ArrayList<>();
+  context.add(Message.systemMessage("You are a web security expert. Be creative. Just output vectors separated by new lines. Do not output markdown. Do not prefix with a number. Do not quote with backticks. Work out what is being tested then create 10 variants separated by new lines. The variants you create should be useful for bypassing a WAF for security testing purposes. Create 10 variants of this:"));
+  context.add(Message.userMessage(selectedText));
+  
+  PromptResponse promptResponse1 = prompt.execute(PromptOptions.promptOptions(), context.toArray(new Message[0]));
+  logging().logToOutput(promptResponse1.content()); //10 vectors
+  context.add(Message.assistantMessage(promptResponse1.content()));
+  context.add(Message.userMessage("Now url encoded them"));
+  
+  PromptResponse promptResponse2 = prompt.execute(PromptOptions.promptOptions(), context.toArray(new Message[0]));
+  context.add(Message.assistantMessage(promptResponse2.content()));
+  logging().logToOutput(promptResponse2.content()); //the same vectors urlencoded
+  
