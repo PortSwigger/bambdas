@@ -3,6 +3,14 @@ name: New view filter
 function: VIEW_FILTER
 location: PROXY_HTTP_HISTORY
 source: |+
+  /**
+   * A short description of what the script does.
+   *
+   * @author <your_name>
+   *
+   * Add further notes here.
+   *
+   **/
   if (!requestResponse.hasResponse() || !requestResponse.response().hasHeader("X-Cache")) {
      	return false;
   }

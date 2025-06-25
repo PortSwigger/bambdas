@@ -3,6 +3,14 @@ name: Generate variants with multiple messages
 function: CUSTOM_ACTION
 location: REPEATER
 source: |+
+   /**
+   * A short description of what the script does.
+   *
+   * @author <your_name>
+   *
+   * Add further notes here.
+   *
+   **/
   var selectedText = selection.requestSelection().contents().toString();
   
   if (selectedText.isEmpty()) {
