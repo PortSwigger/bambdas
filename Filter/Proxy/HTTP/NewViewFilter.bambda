@@ -1,0 +1,11 @@
+id: 6321364e-23ad-4fe2-bb6f-1920431873fb
+name: New view filter
+function: VIEW_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  if (!requestResponse.hasResponse() || !requestResponse.response().hasHeader("X-Cache")) {
+     	return false;
+  }
+  
+  return requestResponse.response().headerValue("X-Cache").toLowerCase().contains("hit");
+  
