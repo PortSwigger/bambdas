@@ -3,7 +3,7 @@ name: Validate Bambdas
 on: [workflow_dispatch]
 
 jobs:
-  update_readmes:
+  validate_bambdas:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
