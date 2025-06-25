@@ -81,6 +81,84 @@ var codes = responses.stream().map(HttpRequestResponse::response).map(HttpRespon
 logging().logToOutput(codes);
 
 ```
+## [RepeaterClipNewFromClipboard.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomAction/RepeaterClipNewFromClipboard.bambda)
+### Given the clipboard contains a repeater request compressed and encoded by the RepeaterClip Bambda, this Bambda creates a new Repeater tab containing that request.
+#### Author: 0xd0ug (https://github.com/0xd0ug)
+```java
+
+try {
+    String clipboardContent = (String) java.awt.Toolkit.getDefaultToolkit().getSystemClipboard().getData(java.awt.datatransfer.DataFlavor.stringFlavor);
+
+    if (clipboardContent == null || !clipboardContent.startsWith("REPEATERCLIP/")) {
+        logging.logToError("Invalid clipboard content. Expected format: REPEATERCLIP/protocol/host/port/base64data");
+        return;
+    }
+
+    String[] parts = clipboardContent.split("/", 5);
+    if (parts.length != 5) {
+        logging.logToError("Invalid clipboard format. Expected 5 parts separated by '/'");
+        return;
+    }
+
+    String protocol = parts[1];
+    String host = parts[2];
+    int port = Integer.parseInt(parts[3]);
+    String base64Data = parts[4];
+
+    var decodedData = api.utilities().base64Utils().decode(burp.api.montoya.core.ByteArray.byteArray(base64Data));
+    var decompressedRequest = api.utilities().compressionUtils().decompress(decodedData, burp.api.montoya.utilities.CompressionType.GZIP);
+
+    boolean isSecure = "https".equals(protocol);
+    var httpService = burp.api.montoya.http.HttpService.httpService(host, port, isSecure);
+    var restoredRequest = burp.api.montoya.http.message.requests.HttpRequest.httpRequest(httpService, decompressedRequest);
+
+    api.repeater().sendToRepeater(restoredRequest);
+
+    logging.logToOutput("Successfully restored request from clipboard and sent to new Repeater tab");
+    logging.logToOutput("Protocol: " + protocol + ", Host: " + host + ", Port: " + port);
+
+} catch (Exception e) {
+    logging.logToError("Error restoring request from clipboard: " + e.getMessage());
+    e.printStackTrace();
+}
+
+```
+## [RepeaterClipShareToClipboard.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomAction/RepeaterClipShareToClipboard.bambda)
+### Compresses and encodes the current repeater request, copying the result to the clipboard.
+#### Author: 0xd0ug (https://github.com/0xd0ug)
+```java
+
+try {
+    var httpService = requestResponse.httpService();
+    String protocol = httpService.secure() ? "https" : "http";
+    String host = httpService.host();
+    int port = httpService.port();
+
+    var requestByteArray = requestResponse.request().toByteArray();
+
+    var compressedRequest = api.utilities().compressionUtils().compress(requestByteArray, burp.api.montoya.utilities.CompressionType.GZIP);
+
+    String base64EncodedRequest = api.utilities().base64Utils().encodeToString(compressedRequest);
+
+    String result = "REPEATERCLIP/" + protocol + "/" + host + "/" + port + "/" + base64EncodedRequest;
+
+    java.awt.Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new java.awt.datatransfer.StringSelection(result), null);
+
+    logging.logToOutput("Successfully copied request data to clipboard");
+    logging.logToOutput("Format: " + protocol + "/" + host + "/" + port + "/[base64-encoded-compressed-request]");
+
+} catch (Exception e) {
+    try {
+        java.awt.Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new java.awt.datatransfer.StringSelection(""), null);
+    } catch (Exception clipboardError) {
+        logging.logToError("Failed to clear clipboard: " + clipboardError.getMessage());
+    }
+
+    logging.logToError("Error processing request: " + e.getMessage());
+    e.printStackTrace();
+}
+
+```
 ## [RetryRequestWithoutCookies.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomAction/RetryRequestWithoutCookies.bambda)
 ### Retry request without cookies.
 #### Author: PortSwigger
