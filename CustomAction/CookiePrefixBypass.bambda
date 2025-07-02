@@ -4,7 +4,7 @@ function: CUSTOM_ACTION
 location: REPEATER
 source: |+
   /**
-  * Prob Cookie prefix bypass attack
+  * Probe Cookie prefix bypass attack
   *
   * @author d0ge
   **/
