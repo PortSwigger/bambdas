@@ -622,6 +622,58 @@ if (graphqlMatcher.find()) {
 return true;
 
 ```
+## [HighlightHashes.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/HighlightHashes.bambda)
+### This script highlights and annotates the proxy history if any responses contain a common password hash variant.
+#### Author: Daniel Roberts (https://github.com/ErebusC)
+```java
+if (!requestResponse.hasResponse()){
+	return false;
+}
+
+var response_body = requestResponse.response().bodyToString();
+
+boolean manualColorHighlightEnabled = true;
+boolean found_hash = false;
+
+// Regex for all common password hashes one may find during a web application test  
+String regex = "['\"]?\\s*(?:"
+    + "\\$argon2(?:id|i|d)?\\$v=\\d+\\$m=\\d+,t=\\d+,p=\\d+\\$[A-Za-z0-9+/=]+\\$[A-Za-z0-9+/=]+"
+    + "|\\$2[abxyz]?\\$\\d{1,2}\\$[./A-Za-z0-9]{53}"
+    + "|(?i)pbkdf2_[a-z0-9]+\\$\\d+\\$[A-Za-z0-9+/=]+\\$[A-Za-z0-9+/=]+"
+    + "|\\$(1|5|6)\\$[./A-Za-z0-9]{1,16}\\$[./A-Za-z0-9]{22,}"
+    + "|\\$P\\$[./A-Za-z0-9]{31}"
+    + "|\\b[a-fA-F0-9]{128}\\b"
+    + "|\\b[a-fA-F0-9]{96}\\b"
+    + "|\\b[a-fA-F0-9]{64}\\b"
+    + "|\\b[a-fA-F0-9]{40}\\b"
+    + "|\\b[a-fA-F0-9]{32}\\b"
+    + ")\\s*['\"]?";
+
+Pattern hash_patterns = Pattern.compile(regex);
+
+Matcher hash_matcher = hash_patterns.matcher(response_body);
+
+var annotate = requestResponse.annotations();
+String hashes = "Potential hash identified: ";
+
+while(hash_matcher.find()){
+    found_hash = true;
+    hashes += hash_matcher.group()+"\n";
+}
+
+if (found_hash){
+    annotate.setHighlightColor(HighlightColor.BLUE);
+
+    if(!annotate.hasNotes()){
+    	annotate.setNotes(hashes);
+    }
+    else if(annotate.hasNotes() && !annotate.notes().contains(hashes)){
+        annotate.setNotes(annotate.notes() + hashes);
+    }
+}
+return true;
+
+```
 ## [HighlightListenerPort.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/HighlightListenerPort.bambda)
 ### Highlight different listener port
 #### Author: Bogo-6 (https://github.com/Bogo-6)

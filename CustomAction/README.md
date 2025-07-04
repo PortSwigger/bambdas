@@ -14,6 +14,173 @@ logging().logToOutput(responseBody.hashCode());
 logging().logToOutput(responseBody.split("\n").length);
 
 ```
+## [CookieInjection.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomAction/CookieInjection.bambda)
+### Probe Cookie injection via parameter manipulation
+#### Author: d0ge
+```java
+if(!requestResponse.hasResponse()) return;
+var req = requestResponse.request();
+var res = requestResponse.response();
+
+var originalParameters = req.parameters();
+
+var existingNames = originalParameters.stream()
+    .map(HttpParameter::name)
+    .collect(java.util.stream.Collectors.toSet());
+
+var cookieParameters = res.cookies().stream()
+    .filter(c -> !existingNames.contains(c.name()))
+    .map(c -> HttpParameter.urlParameter(c.name(), c.value()))
+    .toList();
+
+var testParameters = new java.util.ArrayList<HttpParameter>();
+testParameters.addAll(originalParameters);
+testParameters.addAll(cookieParameters);
+
+for(HttpParameter parameter: testParameters) {
+  var canary = api().utilities().randomUtils().randomString(parameter.value().length());
+  HttpParameter injectParameter;
+  if(req.method().equalsIgnoreCase("GET")){
+      injectParameter = HttpParameter.urlParameter(parameter.name(), parameter.value() + canary);
+  } else {
+  	injectParameter = HttpParameter.bodyParameter(parameter.name(), parameter.value() + canary);
+  }
+  var exploit = req.withRemovedParameters(parameter).withAddedParameters(injectParameter);
+  var respRx = api().http().sendRequest(exploit);
+  if (!respRx.hasResponse()) continue;
+  var foundCookies = respRx.response().cookies()
+  	.stream()
+  	.filter(c -> c.name().equalsIgnoreCase(parameter.name()) && c.value().contains(canary))
+     	.collect(Collectors.toList());
+  if(foundCookies.isEmpty()) continue;
+  logging().logToOutput(String.format(
+  "[INFO] Cookie override detected: server reflected injected value in Set-Cookie header: %s=%s%s",
+  parameter.name(), parameter.value(), canary));
+  var attr = api().utilities().randomUtils().randomString(4);
+  var attributeExploit = req.withRemovedParameters(parameter).withAddedParameters(HttpParameter.parameter(injectParameter.name(), injectParameter.value() + "%3b" + attr, injectParameter.type()));
+  var attrRx = api().http().sendRequest(attributeExploit);
+  if (!attrRx.hasResponse()) continue;
+
+  if(!attrRx.response().headers().stream().filter(t -> t.name().equalsIgnoreCase("Set-Cookie")).anyMatch(t -> t.value().contains(";"+attr))) continue;
+  logging().logToOutput(String.format(
+  "[INFO] Cookie attribute override detected: server accepted injected attribute: %s", attr));
+  api().siteMap().add(
+  burp.api.montoya.scanner.audit.issues.AuditIssue.auditIssue(
+	"Cookie Injection via Parameter Manipulation",
+	"The server allows user-controlled request parameters to modify response cookies. This includes both overwriting cookie values and injecting new cookie attributes using semicolons <b>;</b>.",
+	String.format(
+	  "During testing, the parameter <b>%s</b> was modified to include an injected value: <b>%s%s</b>. " +
+	  "The server reflected this value in the <b>Set-Cookie</b> header. Further testing showed the server accepted an injected attribute: <b>%s</b>, " +
+	  "indicating improper input sanitization when constructing cookie headers.",
+	  parameter.name(), parameter.value(), canary, attr),
+	req.url(),
+	burp.api.montoya.scanner.audit.issues.AuditIssueSeverity.LOW,
+	burp.api.montoya.scanner.audit.issues.AuditIssueConfidence.CERTAIN,
+	"To prevent cookie injection, avoid directly embedding user-controlled input into Set-Cookie headers. Sanitize all cookie values and avoid using delimiters like semicolons <b>;</b>. " +
+	"More details: <a href=\"https://portswigger.net/research/cookie-chaos\">https://portswigger.net/research/cookie-chaos</a>",
+	"",
+	burp.api.montoya.scanner.audit.issues.AuditIssueSeverity.LOW,
+	respRx.withResponseMarkers(Marker.marker(Range.range(respRx.response().toString().indexOf(canary), attrRx.response().toString().indexOf(canary) + canary.length()))), 
+    attrRx.withResponseMarkers(Marker.marker(Range.range(attrRx.response().toString().indexOf(attr), attrRx.response().toString().indexOf(attr) + 4)))));
+}
+
+```
+## [CookiePrefixBypass.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomAction/CookiePrefixBypass.bambda)
+### Probe Cookie prefix bypass attack
+#### Author: d0ge
+```java
+  if (!requestResponse.hasResponse()) return;
+
+  var req = requestResponse.request();
+  var res = requestResponse.response();
+
+  var map = new java.util.LinkedHashMap<String, HttpParameter>();
+  res.cookies().stream()
+     .filter(c -> c.name().startsWith("__Host-") || c.name().startsWith("__Secure-"))
+      .forEach(c -> map.put(c.name(), HttpParameter.cookieParameter(c.name(), c.value())));
+  req.parameters().stream()
+      .filter(p -> p.type() == HttpParameterType.COOKIE
+               && (p.name().startsWith("__Host-") || p.name().startsWith("__Secure-")))
+      .forEach(p -> map.put(p.name(), HttpParameter.cookieParameter(p.name(), p.value())));
+
+  var merged = new java.util.ArrayList<>(map.values());
+  if (merged.isEmpty()) {
+    logging().logToOutput("[INFO] No '__Host-' or '__Secure-' cookies found in response.");
+    return;
+  }
+  var exploit = req
+      .withRemovedParameters(merged)
+      .withAddedParameters(
+          merged.stream()
+                .map(p -> HttpParameter.cookieParameter("§§§" + p.name(), p.value()))
+                .toList()
+      );
+  var downgrade = exploit.toString().replaceFirst("HTTP/2","HTTP/1.1");
+  var prob = downgrade.replaceAll("§§§", "");
+  var prob1 = api().http().sendRequest(HttpRequest.httpRequest(req.httpService(), prob), HttpMode.HTTP_1);
+  if(!prob1.hasResponse()) {
+  	logging().logToError("[ERROR] HTTP/1.1 is not supported by the server.");
+    return;
+  }
+  var attributes1 = prob1.response().attributes(AttributeType.COOKIE_NAMES);
+
+  var data = ByteArray.byteArray(downgrade);
+  int idx;
+  while ((idx = data.indexOf("§§§")) != -1) {
+      data.setByte(idx,   (byte) 0xE2);
+      data.setByte(idx+1, (byte) 0x80);
+      data.setByte(idx+2, (byte) 0x80);
+  }
+
+  var respRx = api().http()
+      .sendRequest(HttpRequest.httpRequest(
+          req.httpService(), data), HttpMode.HTTP_1);
+  if (!respRx.hasResponse()) return;
+  var attributes2 = respRx.response().attributes(AttributeType.COOKIE_NAMES);
+  if(attributes1.getFirst().value() ==  attributes1.getFirst().value()) {
+    logging().logToOutput("[WARNING] Potential secure-prefix bypass detected! Check 'All issues' Tab for details.");
+    api().siteMap().add(
+    burp.api.montoya.scanner.audit.issues.AuditIssue.auditIssue(
+        "Cookie Prefix Bypass",
+        "The server appears to be vulnerable to a <b>Unicode-based bypass</b> affecting cookies with the <b>__Host-</b> or <b>__Secure-</b> prefix. This issue exploits RFC6265bis trimming behavior, allowing an attacker to set privileged cookies using visually similar names.",
+        "Ensure the server does not silently strip or normalize <i>Unicode space separator characters</i> (e.g. U+2000–U+200A) before parsing cookie names. These characters can be used to bypass prefix restrictions in modern browsers like Chrome and Firefox.",
+        req.url(),
+        burp.api.montoya.scanner.audit.issues.AuditIssueSeverity.LOW,
+        burp.api.montoya.scanner.audit.issues.AuditIssueConfidence.TENTATIVE,
+        "For technical background on Unicode-based cookie prefix bypasses, see: <a href=\"https://portswigger.net/research/cookie-chaos\">https://portswigger.net/research/cookie-chaos</a>",
+        "",
+        burp.api.montoya.scanner.audit.issues.AuditIssueSeverity.LOW,
+        respRx
+    )
+);
+  } else {
+    logging().logToOutput("[NOTICE] Response cookie headers differ — manual review recommended.");
+    logging().logToOutput("[DEBUG] Baseline response headers:");
+  	logging().logToOutput(
+  	    prob1.response()
+  	          .headers()
+  	          .stream()
+  				.filter(h -> h.name().equalsIgnoreCase("set-cookie"))
+  	          .map(Object::toString)
+  	          .collect(Collectors.joining("\n"))
+  	);
+  }
+  logging().logToOutput("[DEBUG] Request cookies: ");
+  logging().logToOutput(merged.stream()
+            .map(t -> t.name() + "=" + t.value())
+            .collect(Collectors.joining("\n"))
+  );
+  logging().logToOutput("[DEBUG] Attack response headers:");
+  logging().logToOutput(
+      respRx.response()
+            .headers()
+            .stream()
+  			.filter(h -> h.name().equalsIgnoreCase("set-cookie"))
+            .map(Object::toString)
+            .collect(Collectors.joining("\n"))
+  );
+
+```
 ## [InsertHVTagsSpaceAndNewline.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomAction/InsertHVTagsSpaceAndNewline.bambda)
 ### Replace space and newline characters with the corresponding Hackvertor tags
 #### Author: Nicolas Grégoire
