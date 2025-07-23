@@ -181,6 +181,58 @@ for(HttpParameter parameter: testParameters) {
   );
 
 ```
+## [HackingAssistant.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomAction/HackingAssistant.bambda)
+### Creates an AI assistant that can modify the HTTP request with instructions given in the prompt supplied by the user. Example instructions are "Exploit this XSS" or "URL encode this"
+#### Author: Gareth Heyes
+```java
+var selectedText = (selection.hasRequestSelection() ? selection.requestSelection() : selection.responseSelection()).contents().toString();
+
+var userPrompt = javax.swing.JOptionPane.showInputDialog(null, "Enter a AI prompt to run on the selection", "AI Prompt", javax.swing.JOptionPane.QUESTION_MESSAGE);
+
+if(userPrompt == null) return;
+
+var systemPrompt = """
+You are an assistant inside Burp Suite's Repeater. 
+The user is going to give you a LLM prompt and some selected input, a HTTP request and response as a JSON object. 
+You should do what the user requests and bear in mind it's used for web security research.
+You should always return your response as a JSON object. Do not output markdown. Your response should always start with "{".
+Your response should always end with "}".
+If the user asks you to modify request you can return a property called modified request where you should place the modified request.
+The description field should contain a short description of what you've done.
+The JSON object should always be returned like this:
+{
+  "modifiedRequest": string
+  "description": string
+}
+""";
+
+var jsonInput = JsonObjectNode.jsonObjectNode();
+jsonInput.putString("Selected text", selectedText);
+jsonInput.putString("Request", requestResponse.request().toString());
+jsonInput.putString("Response", requestResponse.response().toString());
+
+var aiResponse = api.ai().prompt().execute(PromptOptions.promptOptions().withTemperature(1.0), 
+Message.systemMessage(systemPrompt), Message.userMessage(userPrompt + "\n\n" + jsonInput.toJsonString())
+).content();
+
+aiResponse = aiResponse.replaceFirst("^\\s*```json","");
+aiResponse = aiResponse.replaceFirst("\\s*```$","");
+
+if(!api.utilities().jsonUtils().isValidJson(aiResponse)) {
+   logging().logToError("The AI returned invalid json:" + aiResponse);
+   return;
+}
+
+var modifiedRequest = api().utilities().jsonUtils().readString(aiResponse, "modifiedRequest");
+var description = api().utilities().jsonUtils().readString(aiResponse, "description");
+
+if(modifiedRequest != null) {
+    httpEditor.requestPane().set(modifiedRequest);
+}
+
+api.logging().logToOutput(description);
+
+```
 ## [InsertHVTagsSpaceAndNewline.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomAction/InsertHVTagsSpaceAndNewline.bambda)
 ### Replace space and newline characters with the corresponding Hackvertor tags
 #### Author: Nicolas Grégoire
@@ -746,6 +798,15 @@ canvas.dispatchEvent(
 
 /* ── show overlay ─────────────────────────────────────────── */
 overlay.setVisible(true);
+
+```
+## [TestHTTPTRACESupport.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomAction/TestHTTPTRACESupport.bambda)
+### Test support for HTTP Trace method.
+#### Author: righettod (https://github.com/righettod)
+```java
+var req = requestResponse.request();
+var httpCode = api().http().sendRequest(req.withMethod("TRACE")).response().statusCode();
+logging().logToOutput("HTTP " + httpCode + " returned.");
 
 ```
 ## [Unicode-decodeSelectedText.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomAction/Unicode-decodeSelectedText.bambda)
