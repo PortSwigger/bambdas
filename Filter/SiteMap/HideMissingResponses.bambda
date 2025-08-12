@@ -1,3 +1,10 @@
+/**
+ * Filters the sitemap to hide any requests
+ * which do not have a response.
+ *
+ * @author Robin Wood (@digininja)
+ **/
+
 if (node.requestResponse().response() == null) {
     return false;
 }
