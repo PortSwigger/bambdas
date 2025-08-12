@@ -1,0 +1,5 @@
+if (node.requestResponse().response() == null) {
+    return false;
+}
+
+return true;
