@@ -800,6 +800,33 @@ canvas.dispatchEvent(
 overlay.setVisible(true);
 
 ```
+## [SmugglingOrPipelining.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomAction/SmugglingOrPipelining.bambda)
+### Identifies whether a response containing two response header lines is caused by pipelining or request smuggling. 98% accurate. Further info: https://portswigger.net/research/smuggling-or-pipelining
+#### Author: James Kettle (https://github.com/albinowax)
+```java
+
+if (!requestResponse.response().bodyToString().contains("HTTP/1")) {
+    logging().logToOutput("This script should only be run on a nested response");
+	return;
+}
+
+var req = requestResponse.request();
+if (req.contains("HTTP/2 ", true)) {
+    logging().logToOutput("This looks like smuggling, as it has a HTTP/1 response nested inside a HTTP/2 response");
+    return;
+}
+
+HttpRequest probe = HttpRequest.httpRequest(req.httpService(), req.toByteArray().subArray(0, req.toByteArray().length()-1));
+RequestOptions options = RequestOptions.requestOptions().withResponseTimeout(5000).withHttpMode(HttpMode.HTTP_1);
+HttpRequestResponse resp = api().http().sendRequest(probe, options);
+if (resp.hasResponse()) {
+     logging().logToOutput("Looks like pipelining");
+} else {
+     logging().logToOutput("Looks like smuggling");
+}
+logging().logToOutput("For further information, refer to https://portswigger.net/research/smuggling-or-pipelining");
+
+```
 ## [TestHTTPTRACESupport.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomAction/TestHTTPTRACESupport.bambda)
 ### Test support for HTTP Trace method.
 #### Author: righettod (https://github.com/righettod)
