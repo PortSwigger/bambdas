@@ -5,7 +5,6 @@ location: REPEATER
 source: |+
   /**
    * Identifies whether a response containing two response header lines is caused by pipelining or request smuggling. 98% accurate.
-
     * Further info: https://portswigger.net/research/smuggling-or-pipelining
    * @author James Kettle (https://github.com/albinowax)
    **/
@@ -31,3 +30,4 @@ source: |+
   }
   logging().logToOutput("For further information, refer to https://portswigger.net/research/smuggling-or-pipelining");
   
+
