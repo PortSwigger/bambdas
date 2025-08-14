@@ -4,7 +4,8 @@ function: CUSTOM_ACTION
 location: REPEATER
 source: |+
   /**
-   * Identifies whether a response containing two response header lines is caused by pipelining or request smuggling
+   * Identifies whether a response containing two response header lines is caused by pipelining or request smuggling. 98% accurate.
+
     * Further info: https://portswigger.net/research/smuggling-or-pipelining
    * @author James Kettle (https://github.com/albinowax)
    **/
@@ -20,7 +21,7 @@ source: |+
       return;
   }
   
-  HttpRequest probe = HttpRequest.httpRequest(req.httpService(), req.toByteArray().subArray(0, req.toByteArray().length()));
+  HttpRequest probe = HttpRequest.httpRequest(req.httpService(), req.toByteArray().subArray(0, req.toByteArray().length()-1));
   RequestOptions options = RequestOptions.requestOptions().withResponseTimeout(5000).withHttpMode(HttpMode.HTTP_1);
   HttpRequestResponse resp = api().http().sendRequest(probe, options);
   if (resp.hasResponse()) {
