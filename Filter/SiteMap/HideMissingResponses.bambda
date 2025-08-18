@@ -1,0 +1,13 @@
+id: dea70f1e-9b93-45e3-a597-c4ed4c2d6f05
+name: Hide missing responses
+function: VIEW_FILTER
+location: SITEMAP
+source: |+
+  /**
+   * Filters the sitemap to hide any requests
+   * which do not have a response.
+   *
+   * @author Robin Wood (@digininja)
+   **/
+  
+  return node.requestResponse().hasResponse();
