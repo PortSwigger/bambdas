@@ -5,8 +5,4 @@
  * @author Robin Wood (@digininja)
  **/
 
-if (node.requestResponse().response() == null) {
-    return false;
-}
-
-return true;
+return node.requestResponse().hasResponse();
