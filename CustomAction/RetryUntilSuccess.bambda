@@ -8,17 +8,16 @@ source: |+
    *
    * @author James Kettle (https://github.com/albinowax)
    **/
-  var req = requestResponse.request();
+  var httpVersion = HttpMode.HTTP_1;
   var maxAttempts = 20;
-  var boringStatus = api().http().sendRequest(requestResponse.request()).response().statusCode();
+  var boringStatus = requestResponse.response().statusCode();
   
   for (int i=0; i<maxAttempts; i++) {
-   	    var resp = api().http().sendRequest(requestResponse.request()).response();
-  		var status = resp.statusCode();
+   	    var attack = api().http().sendRequest(requestResponse.request(), httpVersion);
+  		var status = attack.response().statusCode();
       	logging().logToOutput(status+",");
       	if (status != boringStatus) {
-  			httpEditor.responsePane().set(resp.toByteArray());
+  			httpEditor.responsePane().set(attack.response().toByteArray());
           	break;
       	}
   }
-  
