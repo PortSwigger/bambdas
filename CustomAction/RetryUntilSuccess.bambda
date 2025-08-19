@@ -8,7 +8,7 @@ source: |+
    *
    * @author James Kettle (https://github.com/albinowax)
    **/
-  var httpVersion = HttpMode.HTTP_1;
+  var httpVersion = requestResponse.request().httpVersion().equals("HTTP/2") ? HttpMode.HTTP_2 : HttpMode.HTTP_1;
   var maxAttempts = 20;
   var boringStatus = requestResponse.response().statusCode();
   
@@ -21,3 +21,4 @@ source: |+
           	break;
       	}
   }
+
