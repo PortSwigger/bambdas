@@ -422,6 +422,25 @@ var req = requestResponse.request();
 logging().logToOutput(api().http().sendRequest(req.withRemovedHeader("Authorization").withRemovedHeader("Cookie")).response().statusCode());
 
 ```
+## [RetryUntilSuccess.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomAction/RetryUntilSuccess.bambda)
+### Repeats the request until a different status code is observed
+#### Author: James Kettle (https://github.com/albinowax)
+```java
+var httpVersion = requestResponse.request().httpVersion().equals("HTTP/2") ? HttpMode.HTTP_2 : HttpMode.HTTP_1;
+var maxAttempts = 20;
+var boringStatus = requestResponse.response().statusCode();
+
+for (int i=0; i<maxAttempts; i++) {
+ 	    var attack = api().http().sendRequest(requestResponse.request(), httpVersion);
+		var status = attack.response().statusCode();
+    	logging().logToOutput(status+",");
+    	if (status != boringStatus) {
+			httpEditor.responsePane().set(attack.response().toByteArray());
+        	break;
+    	}
+}
+
+```
 ## [Screenshot.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomAction/Screenshot.bambda)
 ### Create and edit screenshots directly from Repeater.
 #### Author: Martin Doyhenard
