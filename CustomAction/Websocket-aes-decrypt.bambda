@@ -1,0 +1,35 @@
+id: 912e3faa-2b15-49b7-93bb-5dee4eefd94d
+name: websocket-aes-decrypt
+function: VIEW_FILTER
+location: PROXY_WEBSOCKET
+source: |+
+  /**
+  Script created to decrypt AES encrypted websocket message. The script decrypt websocket message and log the plaintext as notes.
+  
+  @author https://github.com/m0dslacker/websocket-aes-decrypt
+  **/
+  
+  try {
+      String KEY = "AESKEY"; //Change key
+      String ALGORITHM = "AES";
+      String TRANSFORMATION = "AES/ECB/PKCS5Padding";
+      
+  	javax.crypto.spec.SecretKeySpec keySpec = new javax.crypto.spec.SecretKeySpec(KEY.getBytes(), ALGORITHM);
+      javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance(TRANSFORMATION);
+      cipher.init(javax.crypto.Cipher.DECRYPT_MODE, keySpec);
+      //logging().logToOutput("[DEBUG] To decrypt : " + message.payload().toString());
+  	ByteArray encrypted  = utilities().base64Utils().decode(message.payload());
+      byte [] decrypted = cipher.doFinal(encrypted.getBytes());
+      String plaintext = new String(decrypted);
+      message.annotations().setNotes(plaintext);
+      //logging().logToOutput("[DEBUG] Attempting to decrypt");
+      //logging().logToOutput("[DEBUG] Plaintext : "  + plaintext);
+  }
+  catch (Exception e){
+      logging().logToError("[ERROR] Unable to decrypt");
+  }
+  finally {
+  	logging().logToOutput("[INFO] Attempted decrypt");
+  }
+  
+  return true;
