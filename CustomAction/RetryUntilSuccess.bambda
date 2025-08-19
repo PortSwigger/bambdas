@@ -7,17 +7,17 @@ source: |+
    * Repeats the request until a different status code is observed
    *
    * @author James Kettle (https://github.com/albinowax)
-  */
-  var httpVersion = HttpMode.HTTP_1;
+   **/
+  var req = requestResponse.request();
   var maxAttempts = 20;
-  var boringStatus = requestResponse.response().statusCode();
+  var boringStatus = api().http().sendRequest(requestResponse.request()).response().statusCode();
   
   for (int i=0; i<maxAttempts; i++) {
-   	    var attack = api().http().sendRequest(requestResponse.request(), httpVersion);
-  		var status = attack.response().statusCode();
+   	    var resp = api().http().sendRequest(requestResponse.request()).response();
+  		var status = resp.statusCode();
       	logging().logToOutput(status+",");
       	if (status != boringStatus) {
-  			httpEditor.responsePane().set(attack.response().toByteArray());
+  			httpEditor.responsePane().set(resp.toByteArray());
           	break;
       	}
   }
