@@ -1,0 +1,13 @@
+id: 5380ba12-ed58-4c05-8646-54e850b6536b
+name: Test HTTP TRACE support
+function: CUSTOM_ACTION
+location: REPEATER
+source: |+
+  /**
+  * Test support for HTTP Trace method.
+  *
+  * @author righettod (https://github.com/righettod)
+  **/
+  var req = requestResponse.request();
+  var httpCode = api().http().sendRequest(req.withMethod("TRACE")).response().statusCode();
+  logging().logToOutput("HTTP " + httpCode + " returned.");
