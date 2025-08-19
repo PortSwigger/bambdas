@@ -1,0 +1,24 @@
+id: e7f97f70-da57-46f3-ab51-22a8242f589e
+name: Retry until success
+function: CUSTOM_ACTION
+location: REPEATER
+source: |+
+  /**
+   * Repeats the request until a different status code is observed
+   *
+   * @author James Kettle (https://github.com/albinowax)
+   **/
+  var httpVersion = requestResponse.request().httpVersion().equals("HTTP/2") ? HttpMode.HTTP_2 : HttpMode.HTTP_1;
+  var maxAttempts = 20;
+  var boringStatus = requestResponse.response().statusCode();
+  
+  for (int i=0; i<maxAttempts; i++) {
+   	    var attack = api().http().sendRequest(requestResponse.request(), httpVersion);
+  		var status = attack.response().statusCode();
+      	logging().logToOutput(status+",");
+      	if (status != boringStatus) {
+  			httpEditor.responsePane().set(attack.response().toByteArray());
+          	break;
+      	}
+  }
+
