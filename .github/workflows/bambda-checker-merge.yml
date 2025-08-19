@@ -1,15 +1,12 @@
 name: Run Bambda Checker on Merge
 
 on:
-  pull_request:
-    types:
-      - closed
+  push:
     branches:
       - main
 
 jobs:
-  update_readmes:
-    if: github.event.pull_request.merged 
+  update_readmes: 
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
