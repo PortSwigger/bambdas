@@ -18,7 +18,32 @@ jobs:
           java-version: '21'
           distribution: 'oracle'
 
+      - name: Check for Bambda file changes
+        id: check_bambda_changes
+        run: |
+          # Get the list of all touched .bambda files (added, modified, deleted)
+          ALL_BAMBDA_CHANGES=$(git diff --name-only HEAD~1 HEAD | grep '\.bambda$' || true)
+          
+          if [ -n "$ALL_BAMBDA_CHANGES" ]; then
+            echo "bambdas_changed=true" >> $GITHUB_OUTPUT
+            
+            # Check if any are new files
+            NEW_BAMBDAS=$(git diff --name-only --diff-filter=A HEAD~1 HEAD | grep '\.bambda$' || true)
+            if [ -n "$NEW_BAMBDAS" ]; then
+              echo "new_bambdas=true" >> $GITHUB_OUTPUT
+              echo "bambda_files<<EOF" >> $GITHUB_OUTPUT
+              echo "$NEW_BAMBDAS" >> $GITHUB_OUTPUT
+              echo "EOF" >> $GITHUB_OUTPUT
+            else
+              echo "new_bambdas=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "bambdas_changed=false" >> $GITHUB_OUTPUT
+            echo "new_bambdas=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Validate Bambdas & update READMEs
+        if: steps.check_bambda_changes.outputs.bambdas_changed == 'true'
         run: |
           [ $(sha256sum BambdaChecker-1.4.jar | awk '{ print $1 }') = 'f8df4971c990c016ba0a076a8cc49fd3323ef9f883f52c98290b40dacd75aed6' ]
           java -jar BambdaChecker-1.4.jar
@@ -27,3 +52,49 @@ jobs:
           git add .
           git commit -m "Update README.md files" || true
           git push || true
+
+      - name: Create Discord message
+        if: steps.check_bambda_changes.outputs.new_bambdas == 'true'
+        id: create_message
+        run: |
+          BAMBDA_LIST="${{ steps.check_bambda_changes.outputs.bambda_files }}"
+          BAMBDA_COUNT=$(echo "$BAMBDA_LIST" | wc -l)
+          
+          # Create Discord message
+          MESSAGE="🎋 **New Bambda files added!** 🎋\n\n"
+          MESSAGE="${MESSAGE}**${BAMBDA_COUNT} new Bambda(s) added:**\n\n"
+          
+          # Process each new bambda file
+          while IFS= read -r file; do
+            if [ -n "$file" ]; then
+              # Extract Javadoc description and author
+              DESCRIPTION=$(sed -n '/\/\*\*/,/\*\*\//p' "$file" | grep -v '@author' | grep -v '/\*\*' | grep -v '\*\*/' | grep -v '^\s*\*\s*$' | head -1 | sed 's/^\s*\*\s*//')
+              AUTHOR=$(sed -n '/\/\*\*/,/\*\*\//p' "$file" | grep '@author' | sed 's/^\s*\*\s*@author\s*//')
+              
+              # Create direct GitHub link to the file
+              FILE_URL="https://github.com/${{ github.repository }}/blob/${{ github.sha }}/$file"
+              
+              # Add to message
+              MESSAGE="${MESSAGE}📄 **[$file]($FILE_URL)**\n"
+              if [ -n "$DESCRIPTION" ]; then
+                MESSAGE="${MESSAGE}   *$DESCRIPTION*\n"
+              fi
+              if [ -n "$AUTHOR" ]; then
+                MESSAGE="${MESSAGE}   👤 Author: $AUTHOR\n"
+              fi
+              MESSAGE="${MESSAGE}\n"
+            fi
+          done <<< "$BAMBDA_LIST"
+          
+          # Save message to output
+          echo "discord_message<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$MESSAGE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Send Discord notification
+        if: steps.check_bambda_changes.outputs.new_bambdas == 'true'
+        run: |
+          curl -H "Content-Type: application/json" \
+               -X POST \
+               -d "{\"content\": \"${{ steps.create_message.outputs.discord_message }}\"}" \
+               "${{ secrets.DISCORD_WEBHOOK_URL }}"
