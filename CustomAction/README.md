@@ -248,20 +248,20 @@ if(defaultValue == null) return;
 var chain = "";
 
 if(value.contains(",")) {
-var values = value.split(",");
-chain = "url(" + domainPrefix + "/" + values[values.length-1] + ")";
-if(values.length < 2) return;
+  var values = value.split(",");
+  chain = "url(" + domainPrefix + "/" + values[values.length-1] + ")";
+  if(values.length < 2) return;
 
-for (var i = values.length - 2; i > 0; i--) {
-    chain = String.format("if(style(--val:\"%s\"): url(%s/%s); else: %s)", values[i], domainPrefix, values[i], chain);
-}
+  for (var i = values.length - 2; i > 0; i--) {
+      chain = String.format("if(style(--val:\"%s\"): url(%s/%s); else: %s)", values[i], domainPrefix, values[i], chain);
+  }
 
-} else {
-var maxVal = Integer.parseInt(value);
-chain = "url(" + domainPrefix + "/" + maxVal + ")";
-for (var i = maxVal - 1; i > 0; i--) {
-    chain = String.format("if(style(--val:\"%d\"): url(%s/%d); else: %s)", i, domainPrefix, i, chain);
-}
+  } else {
+    var maxVal = Integer.parseInt(value);
+    chain = "url(" + domainPrefix + "/" + maxVal + ")";
+    for (var i = maxVal - 1; i > 0; i--) {
+        chain = String.format("if(style(--val:\"%d\"): url(%s/%d); else: %s)", i, domainPrefix, i, chain);
+    }
 }
 
 var styleStr = String.format("--val: attr(%s); --steal: %s; background: image-set(var(--steal));", attribute, chain);
