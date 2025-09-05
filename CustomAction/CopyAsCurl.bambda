@@ -1,0 +1,52 @@
+id: 367ca5ff-3d6a-49a8-8bad-dbca110adf8c
+name: CopyAsCurl
+function: CUSTOM_ACTION
+location: REPEATER
+source: |+
+  /**
+     * Convert the request to a cURL command, copying the command to the clipboard.
+     *
+     * @author madneal (https://github.com/madneal)
+  **/
+  
+  var request = requestResponse.request();
+  
+  var curlCommand = new StringBuilder("curl ");
+  final String lineBreak = " \\\n  "; // Defines the multi-line format
+  
+  if (!"GET".equalsIgnoreCase(request.method())) {
+      curlCommand.append("-X ").append(request.method()).append(" ");
+  }
+  
+  curlCommand.append("'").append(request.url()).append("'");
+  
+  // Add each header on a new line.
+  for (var header : request.headers()) {
+      String headerName = header.name();
+      // Skip headers that curl handles automatically.
+      if ("Host".equalsIgnoreCase(headerName) || "Content-Length".equalsIgnoreCase(headerName)) {
+          continue;
+      }
+      String headerValue = header.value().replace("'", "'\\''");
+      curlCommand.append(lineBreak)
+                 .append("-H '").append(headerName).append(": ").append(headerValue).append("'");
+  }
+  
+  // Add the request body on a new line if it exists.
+  if (request.body().length() > 0) {
+      String body = request.bodyToString().replace("'", "'\\''");
+      curlCommand.append(lineBreak)
+                 .append("--data-binary '").append(body).append("'");
+  }
+  
+  // Get the final command as a string.
+  String finalCommand = curlCommand.toString();
+  
+  // Copy the command to the system clipboard.
+  java.awt.Toolkit.getDefaultToolkit().getSystemClipboard().setContents(
+      new java.awt.datatransfer.StringSelection(finalCommand),
+      null
+  );
+  
+  // Log a confirmation message.
+  api.logging().logToOutput("Formatted cURL command copied to clipboard.");
