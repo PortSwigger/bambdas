@@ -28,7 +28,7 @@ source: |+
   } else {
        logging().logToOutput("Looks like smuggling");
   }
-  logging().logToOutput("For further information, refer to https://portswigger.net/research/smuggling-or-pipelining");
+  logging().logToOutput("For further information, refer to https://portswigger.net/research/how-to-distinguish-http-pipelining-from-request-smuggling");
   
 
 
