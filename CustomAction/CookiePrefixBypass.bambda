@@ -59,19 +59,19 @@ source: |+
   if(attributes1.getFirst().value() ==  attributes1.getFirst().value()) {
     logging().logToOutput("[WARNING] Potential secure-prefix bypass detected! Check 'All issues' Tab for details.");
     api().siteMap().add(
-    burp.api.montoya.scanner.audit.issues.AuditIssue.auditIssue(
-        "Cookie Prefix Bypass",
-        "The server appears to be vulnerable to a <b>Unicode-based bypass</b> affecting cookies with the <b>__Host-</b> or <b>__Secure-</b> prefix. This issue exploits RFC6265bis trimming behavior, allowing an attacker to set privileged cookies using visually similar names.",
-        "Ensure the server does not silently strip or normalize <i>Unicode space separator characters</i> (e.g. U+2000–U+200A) before parsing cookie names. These characters can be used to bypass prefix restrictions in modern browsers like Chrome and Firefox.",
-        req.url(),
-        burp.api.montoya.scanner.audit.issues.AuditIssueSeverity.LOW,
-        burp.api.montoya.scanner.audit.issues.AuditIssueConfidence.TENTATIVE,
-        "For technical background on Unicode-based cookie prefix bypasses, see: <a href=\"https://portswigger.net/research/cookie-chaos\">https://portswigger.net/research/cookie-chaos</a>",
-        "",
-        burp.api.montoya.scanner.audit.issues.AuditIssueSeverity.LOW,
-        respRx
-    )
-);
+      burp.api.montoya.scanner.audit.issues.AuditIssue.auditIssue(
+          "Cookie Prefix Bypass",
+          "The server appears to be vulnerable to a <b>Unicode-based bypass</b> affecting cookies with the <b>__Host-</b> or <b>__Secure-</b> prefix. This issue exploits RFC6265bis trimming behavior, allowing an attacker to set privileged cookies using visually similar names.",
+          "Ensure the server does not silently strip or normalize <i>Unicode space separator characters</i> (e.g. U+2000–U+200A) before parsing cookie names. These characters can be used to bypass prefix restrictions in modern browsers like Chrome and Firefox.",
+          req.url(),
+          burp.api.montoya.scanner.audit.issues.AuditIssueSeverity.LOW,
+          burp.api.montoya.scanner.audit.issues.AuditIssueConfidence.TENTATIVE,
+          "For technical background on Unicode-based cookie prefix bypasses, see: <a href=\"https://portswigger.net/research/cookie-chaos\">https://portswigger.net/research/cookie-chaos</a>",
+          "",
+          burp.api.montoya.scanner.audit.issues.AuditIssueSeverity.LOW,
+          respRx
+      )
+    );
   } else {
     logging().logToOutput("[NOTICE] Response cookie headers differ — manual review recommended.");
     logging().logToOutput("[DEBUG] Baseline response headers:");
@@ -97,4 +97,5 @@ source: |+
   			.filter(h -> h.name().equalsIgnoreCase("set-cookie"))
             .map(Object::toString)
             .collect(Collectors.joining("\n"))
+
   );
