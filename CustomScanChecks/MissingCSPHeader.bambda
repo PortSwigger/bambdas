@@ -1,0 +1,40 @@
+id: e43ab4e4-8277-438a-8598-1666d55a78c8
+name: Missing CSP Header
+function: SCAN_CHECK_PASSIVE_PER_REQUEST
+location: SCANNER
+source: |
+  /**
+   * Identifies requests with missing CSP headers.
+   * @author PortSwigger
+  **/
+
+  if (!requestResponse.hasResponse())
+  {
+      return AuditResult.auditResult();
+  }
+
+  if (!requestResponse.response().hasHeader("Content-Security-Policy"))
+  {
+      var issueTitle = "Content Security Policy header missing";
+      var issueDetail = "The response does not include a Content-Security-Policy header. Without this header the browser cannot enforce a restrictive policy for scripts, styles, images and other resources, increasing exposure to XSS, click-jacking and content-injection attacks.";
+      var remediation = "Add a suitable Content-Security-Policy header, for example: Content-Security-Policy: default-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'none';";
+      var background = "Content Security Policy (CSP) is an HTTP response header that tells the browser which sources are permitted for each resource type. A correctly configured CSP helps mitigate XSS and other code-injection flaws by limiting the origins from which content can be loaded.";
+      var remediationBackground = "Create a baseline policy in report-only mode, review violation reports, then switch to enforcement. Start with default-src 'self' and add only the sources that the application legitimately requires.";
+
+      return AuditResult.auditResult(
+              AuditIssue.auditIssue(
+                      issueTitle,
+                      issueDetail,
+                      remediation,
+                      requestResponse.request().url(),
+                      AuditIssueSeverity.LOW,
+                      AuditIssueConfidence.FIRM,
+                      background,
+                      remediationBackground,
+                      AuditIssueSeverity.LOW,
+                      requestResponse
+              )
+      );
+  }
+
+  return AuditResult.auditResult();
