@@ -17,7 +17,7 @@ jobs:
         run: |
           set -e
           echo "Verifying checksum..."
-          expected='7720217e95d5b3f167dff73c446f776be5f9618b8e6db38bbec544b1b09169ac'
+          expected='085787c80b9f70f431c6f5a329cf59385b67e69d74116b11e5c4ccbc021ec3d6'
           actual=$(sha256sum BambdaChecker-1.5.jar | awk '{ print $1 }')
           if [ "$actual" != "$expected" ]; then
             echo "Checksum mismatch: expected $expected, got $actual"
