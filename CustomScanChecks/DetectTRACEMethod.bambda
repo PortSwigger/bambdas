@@ -1,0 +1,51 @@
+id: f59682fd-748c-4340-a987-cc597bec4251
+name: Detect TRACE method
+function: SCAN_CHECK_ACTIVE_PER_REQUEST
+location: SCANNER
+source: |
+  /**
+   * Identifies requests with TRACE method enabled.
+   * @author PortSwigger
+   **/
+
+  for (var i = 0; i < 5; i++)
+  {
+      var canary = api().utilities().randomUtils().randomString(8);
+      var request = requestResponse.request().withAddedHeader("Max-Forwards", String.valueOf(i)).withHeader("Foo", canary).withMethod("TRACE");
+      var response = http.sendRequest(request);
+
+      if (response.hasResponse() && response.response().body().indexOf(canary, false) > -1)
+      {
+          var name = "TRACE method enabled";
+          var detail =
+                  "<p>The server responded to a <code>TRACE</code> request and echoed back request headers, " +
+                  "including a unique marker header (<code>" + canary + "</code>), indicating that the TRACE method is enabled.</p>";
+          var remediation =
+                  "<ul>" +
+                  "<li>Disable the TRACE method on all web servers, load balancers, and reverse proxies.</li>" +
+                  "<li>Block TRACE in any upstream WAF or gateway configuration.</li>" +
+                  "<li>Verify after changes with a TRACE request and <code>Max-Forwards</code> at each hop.</li>" +
+                  "</ul>";
+          var background =
+                  "<p><code>TRACE</code> echoes the received request. If proxies or servers reflect auth headers, attackers can abuse this behavior to steal a sensitive information.</p>";
+          var remediationBackground =
+                  "<p>Most servers allow disabling TRACE via configuration (e.g., Apache <code>TraceEnable off</code>)</p>";
+
+          return AuditResult.auditResult(
+                  AuditIssue.auditIssue(
+                          name,
+                          detail,
+                          remediation,
+                          requestResponse.request().url(),
+                          AuditIssueSeverity.INFORMATION,
+                          AuditIssueConfidence.CERTAIN,
+                          background,
+                          remediationBackground,
+                          AuditIssueSeverity.INFORMATION,
+                          response
+                  )
+          );
+      }
+  }
+
+  return AuditResult.auditResult();
