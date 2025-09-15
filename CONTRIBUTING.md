@@ -78,11 +78,11 @@ To run validation locally:
 2. Run one of the following commands:
    - To validate only:  
      ```bash
-     java -jar BambdaChecker-1.4.jar validateonly
+     java -jar BambdaChecker-1.5.jar validateonly
      ```
    - To validate and generate an updated `README.md` (for your own reference only):  
      ```bash
-     java -jar BambdaChecker-1.4.jar
+     java -jar BambdaChecker-1.5.jar
      ```
 
 > **Note:** Do not commit the locally generated `README.md` in your pull request.
