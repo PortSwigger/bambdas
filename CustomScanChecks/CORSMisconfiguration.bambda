@@ -13,8 +13,8 @@ source: |
       return null;
   }
 
-  var evilHttps = "https://" + api().utilities().randomUtils().randomString(6) + ".evil.test";
-  var evilHttp = "http://" + api().utilities().randomUtils().randomString(6) + ".evil.test";
+  var evilHttps = "https://" + api().utilities().randomUtils().randomString(6) + "." + api().utilities().randomUtils().randomString(3);
+  var evilHttp = "http://" + api().utilities().randomUtils().randomString(6) + "." + api().utilities().randomUtils().randomString(3);
 
   for (var origin : new String[]{evilHttps, evilHttp})
   {
