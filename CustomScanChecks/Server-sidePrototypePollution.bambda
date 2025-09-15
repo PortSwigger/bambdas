@@ -1,0 +1,58 @@
+id: 060e304b-9cf1-4a9c-b08d-01506f613233
+name: Server-side prototype pollution
+function: SCAN_CHECK_ACTIVE_PER_REQUEST
+location: SCANNER
+source: |
+  /**
+   * Identifies server-side prototype pollution.
+   * @author PortSwigger
+   **/
+
+  var statusKey = "status";
+  var statusVal = "555";
+  var request = requestResponse.request();
+
+  var basePath = request.path();
+  var baselineReq = http.sendRequest(request.withMethod("GET").withPath(basePath));
+  var baseStatus = baselineReq.hasResponse() ? baselineReq.response().statusCode() : -1;
+
+  var body = "{\"__proto__\":{\"" + statusKey + "\":" + statusVal + "}}";
+  var inj = http.sendRequest(request.withMethod("POST").withHeader("Content-Type", "application/json").withBody(ByteArray.byteArray(body)));
+
+  var broken = body.substring(0, body.length() - 1); // remove closing }
+
+  var errReq = http.sendRequest(
+                  request
+                      .withMethod("POST")
+                     .withHeader("Content-Type", "application/json")
+                     .withBody(ByteArray.byteArray(broken))
+  );
+
+  if (!errReq.hasResponse())
+  {
+      return AuditResult.auditResult();
+  }
+
+  var errStatus = errReq.response().statusCode();
+  var respBody = errReq.response().body().toString();
+  var statusMatch = (errStatus == Integer.parseInt(statusVal)) || respBody.contains("\"status\":" + statusVal) || respBody.contains("\"statusCode\":" + statusVal);
+
+  if (statusMatch && errStatus != baseStatus)
+  {
+      return AuditResult.auditResult(
+              AuditIssue.auditIssue(
+                      "Server-side Prototype Pollution (status override)",
+                      "HTTP status or JSON status/statusCode field reflects overridden value of " + statusVal + ".",
+                      "Sanitize '__proto__', use null-prototype objects.",
+                      requestResponse.request().url(),
+                      AuditIssueSeverity.HIGH,
+                      AuditIssueConfidence.FIRM,
+                      "",
+                      "",
+                      AuditIssueSeverity.HIGH,
+                      errReq
+              )
+      );
+  }
+
+  return AuditResult.auditResult();
