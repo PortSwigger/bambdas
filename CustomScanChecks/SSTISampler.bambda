@@ -1,0 +1,53 @@
+id: 4ab9589a-0da5-4310-920d-bce6066ad1f6
+name: SSTI sampler
+function: SCAN_CHECK_ACTIVE_PER_INSERTION_POINT
+location: SCANNER
+source: |
+  /**
+   * Identifies server-side template injection.
+   * @author PortSwigger
+   **/
+
+  if (insertionPoint == null)
+  {
+      return AuditResult.auditResult();
+  }
+
+  record Probe(String name, String[] payloads, String expectRegex) {}
+
+  var probes = List.of(
+          new Probe("Jinja/Twig", new String[]{"{{7*7}}", "}} {{7*7}} {{", "#{7*7}#"}, "\\b49\\b"),
+          new Probe("Velocity/Thymeleaf/Freemarker", new String[]{"${7*7}", "}}${7*7}{{"}, "\\b49\\b"),
+          new Probe("Go template", new String[]{"{{print 7*7}}", "}} {{print 7*7}} {{"}, "\\b49\\b")
+  );
+
+  for (var probe : probes)
+  {
+      for (var payload : probe.payloads())
+      {
+          var rr = http.sendRequest(insertionPoint.buildHttpRequestWithPayload(ByteArray.byteArray(payload)));
+          if (rr.hasResponse())
+          {
+              var body = rr.response().body().toString();
+              if (body.matches("(?s).*" + probe.expectRegex() + ".*") && !body.contains(payload))
+              {
+                  return AuditResult.auditResult(
+                          AuditIssue.auditIssue(
+                                  "Server-Side Template Injection (" + probe.name() + ")",
+                                  "Evaluated with payload: <code>" + api().utilities().htmlUtils().encode(payload) + "</code>",
+                                  "Avoid evaluating user input; sandbox templating.",
+                                  rr.request().url(),
+                                  AuditIssueSeverity.HIGH,
+                                  AuditIssueConfidence.FIRM,
+                                  "",
+                                  "",
+                                  AuditIssueSeverity.HIGH,
+                                  rr
+                          )
+                  );
+              }
+          }
+      }
+  }
+
+  return AuditResult.auditResult();
