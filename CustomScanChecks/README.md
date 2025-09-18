@@ -5,6 +5,55 @@ Please do not manually edit this file, or include any changes to this file in pu
 -->
 # Custom Scan Checks
 Documentation: [Custom scan checks](https://portswigger.net/burp/documentation/desktop/extend-burp/custom-scan-checks)
+## [CORSMisconfiguration.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomScanChecks/CORSMisconfiguration.bambda)
+### Identifies CORS misconfiguration.
+#### Author: PortSwigger
+```java
+if (!requestResponse.hasResponse())
+{
+    return null;
+}
+
+var evilHttps = "https://" + api().utilities().randomUtils().randomString(6) + "." + api().utilities().randomUtils().randomString(3);
+var evilHttp = "http://" + api().utilities().randomUtils().randomString(6) + "." + api().utilities().randomUtils().randomString(3);
+
+for (var origin : new String[]{evilHttps, evilHttp})
+{
+    var rr = http.sendRequest(requestResponse.request().withAddedHeader("Origin", origin));
+    if (!rr.hasResponse())
+    {
+        continue;
+    }
+
+    var headers = rr.response().headers().toString().toLowerCase();
+    var creds = headers.contains("access-control-allow-credentials: true");
+    var reflect = headers.contains("access-control-allow-origin: " + origin.toLowerCase());
+    var vary = headers.contains("vary: origin");
+
+    if (reflect)
+    {
+        var severity = creds ? AuditIssueSeverity.HIGH : AuditIssueSeverity.MEDIUM;
+        var note = vary ? "" : " (missing Vary: Origin)";
+        return AuditResult.auditResult(
+                AuditIssue.auditIssue(
+                        "CORS: arbitrary origin reflection" + note,
+                        "Reflected Origin: " + origin + "; credentials=" + creds,
+                        "Use strict allowlist; include Vary: Origin.",
+                        rr.request().url(),
+                        severity,
+                        AuditIssueConfidence.FIRM,
+                        "",
+                        "",
+                        severity,
+                        rr
+                )
+        );
+    }
+}
+
+return AuditResult.auditResult();
+
+```
 ## [DetectTRACEMethod.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomScanChecks/DetectTRACEMethod.bambda)
 ### Identifies requests with TRACE method enabled.
 #### Author: PortSwigger
