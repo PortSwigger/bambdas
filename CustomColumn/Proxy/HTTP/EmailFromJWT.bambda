@@ -1,0 +1,29 @@
+id: 33165d46-bb6b-46c1-bf83-dbbf7a783a32
+name: EmailFromJWT
+function: CUSTOM_COLUMN
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+  * Add email claim from JWT column.
+  *
+  * @author Muhammad Zeeshan (https://gist.github.com/Xib3rR4dAr)
+  *
+  * Extracts the email claim from a JWT in the request's Authorization header and displays it as a custom column in the HTTP history.
+  **/
+  
+  if (!requestResponse.finalRequest().hasHeader("Authorization")) {
+      return "";
+  }
+  
+  var headerValue = requestResponse.request().headerValue("Authorization");
+  
+  var jwtFrags = headerValue.split("\\.");
+  
+  if (jwtFrags.length != 3 ) {
+      return "";
+  }
+  
+  var payloadJson = utilities().base64Utils().decode(jwtFrags[1], Base64DecodingOptions.URL).toString();
+  
+  return utilities().jsonUtils().readString(payloadJson, "email");
+  
