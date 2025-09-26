@@ -3,7 +3,7 @@ name: Random characters based on regex
 function: CUSTOM_ACTION
 location: REPEATER
 source: |+
- /**
+  /**
   * Creates a random string in the output log or replaces the $random placeholder in the request.
   * The string is generated using a regular expression class received from the user input dialog.
   * @author Gareth Heyes
