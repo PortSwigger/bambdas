@@ -1,0 +1,48 @@
+id: e7f1e32a-390c-4517-8595-b86a9a9e8cc8
+name: Random characters based on regex
+function: CUSTOM_ACTION
+location: REPEATER
+source: |+
+  /**
+  * Creates a random string in the output log or replaces the $random placeholder in the request.
+  * The string is generated using a regular expression class received from the user input dialog.
+  * @author Gareth Heyes
+  **/
+  var patternStr = javax.swing.JOptionPane.showInputDialog(null, "Enter regex pattern like [a-z]{4} or [0-5]{10}", "Random chars based on regex", javax.swing.JOptionPane.QUESTION_MESSAGE);
+  if (patternStr == null) { 
+      logging.logToOutput("No pattern entered, cancelled."); 
+      return; 
+  }
+  
+  var randomCharsBasedOnRegex = (Function<String, String>)(pattern -> {
+      var m = Pattern.compile("(\\[[^\\]]+\\])\\{(\\d+)\\}").matcher(pattern);
+      if (!m.matches()) throw new IllegalArgumentException("Only [chars]{n} supported");
+      var charClass = m.group(1);
+      var count = Integer.parseInt(m.group(2));
+      var inner = charClass.substring(1, charClass.length() - 1);
+      var chars = new ArrayList<Character>();
+      for (int i = 0; i < inner.length();) {
+          if (i + 2 < inner.length() && inner.charAt(i + 1) == '-') {
+              char start = inner.charAt(i);
+              char end = inner.charAt(i + 2);
+              for (char c = start; c <= end; c++) chars.add(c);
+              i += 3;
+          } else {
+              chars.add(inner.charAt(i));
+              i++;
+          }
+      }
+      var sb = new StringBuilder();
+      var rand = new Random();
+      for (int i = 0; i < count; i++) sb.append(chars.get(rand.nextInt(chars.size())));
+      return sb.toString();
+  });
+  
+  var generated = randomCharsBasedOnRegex.apply(patternStr);
+  
+  if(requestResponse.request().toString().contains("$random")) {
+    httpEditor.requestPane().replace("$random", generated);
+  } else {
+  	logging.logToOutput("Random chars: " + generated);
+  }
+  
