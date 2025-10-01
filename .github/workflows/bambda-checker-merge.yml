@@ -22,13 +22,11 @@ jobs:
       - name: Check for Bambda file changes
         id: check_bambda_changes
         run: |
-          # Get the list of all touched .bambda files (added, modified, deleted)
           ALL_BAMBDA_CHANGES=$(git diff --name-only HEAD~1 HEAD | grep '\.bambda$' || true)
-          
+
           if [ -n "$ALL_BAMBDA_CHANGES" ]; then
             echo "bambdas_changed=true" >> $GITHUB_OUTPUT
-            
-            # Check if any are new files
+
             NEW_BAMBDAS=$(git diff --name-only --diff-filter=A HEAD~1 HEAD | grep '\.bambda$' || true)
             if [ -n "$NEW_BAMBDAS" ]; then
               echo "new_bambdas=true" >> $GITHUB_OUTPUT
@@ -61,22 +59,15 @@ jobs:
 
           BAMBDA_LIST="${{ steps.check_bambda_changes.outputs.bambda_files }}"
 
-          # Process each new bambda file and send individual webhook
           while IFS= read -r file; do
             if [ -n "$file" ]; then
-              BAMBDA_NAME=$(basename "$file" .bambda)
-
-              # Extract Javadoc description and author
+              BAMBDA_NAME=$(grep '^name:' "$file" | head -1 | sed 's/^name: *//')
               DESCRIPTION=$(sed -n '/\/\*\*/,/\*\*\//p' "$file" | grep -v '@author' | grep -v '/\*\*' | grep -v '\*\*/' | grep -v '^\s*\*\s*$' | head -1 | sed 's/^\s*\*\s*//')
               AUTHOR=$(sed -n '/\/\*\*/,/\*\*\//p' "$file" | grep '@author' | sed 's/^\s*\*\s*@author\s*//')
-
-              # Create direct GitHub link to the file
               FILE_URL="https://github.com/${{ github.repository }}/blob/main/$file"
 
-              # Build message title (JSON-escaped)
               MSG_TITLE=$(jq -n --arg title ":tada: ${BAMBDA_NAME}" '$title')
 
-              # Build description
               MSG_DESC=""
               if [ -n "$DESCRIPTION" ]; then
                 MSG_DESC="**Description:** ${DESCRIPTION}\n\n"
@@ -84,11 +75,8 @@ jobs:
               if [ -n "$AUTHOR" ]; then
                 MSG_DESC="${MSG_DESC}**Author:** ${AUTHOR}"
               fi
-
-              # JSON-escape the description
               MSG_DESC=$(jq -n --arg desc "$MSG_DESC" '$desc')
 
-              # Send webhook for this Bambda
               HTTP_CODE=$(curl -s -w "%{http_code}" -o /dev/null \
                 -H "Content-Type: application/json" \
                 -X POST -d @- "${{ secrets.DISCORD_WEBHOOK_URL }}" <<EOF
