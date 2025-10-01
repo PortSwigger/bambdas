@@ -22,13 +22,11 @@ jobs:
       - name: Check for Bambda file changes
         id: check_bambda_changes
         run: |
-          # Get the list of all touched .bambda files (added, modified, deleted)
           ALL_BAMBDA_CHANGES=$(git diff --name-only HEAD~1 HEAD | grep '\.bambda$' || true)
-          
+
           if [ -n "$ALL_BAMBDA_CHANGES" ]; then
             echo "bambdas_changed=true" >> $GITHUB_OUTPUT
-            
-            # Check if any are new files
+
             NEW_BAMBDAS=$(git diff --name-only --diff-filter=A HEAD~1 HEAD | grep '\.bambda$' || true)
             if [ -n "$NEW_BAMBDAS" ]; then
               echo "new_bambdas=true" >> $GITHUB_OUTPUT
@@ -54,48 +52,52 @@ jobs:
           git commit -m "Update README.md files" || true
           git push || true
 
-      - name: Create Discord message
+      - name: Send Discord webhooks for new Bambdas
         if: steps.check_bambda_changes.outputs.new_bambdas == 'true'
-        id: create_message
         run: |
+          set -euo pipefail
+
           BAMBDA_LIST="${{ steps.check_bambda_changes.outputs.bambda_files }}"
-          BAMBDA_COUNT=$(echo "$BAMBDA_LIST" | wc -l)
-          
-          # Create Discord message
-          MESSAGE="🎋 **New Bambda files added!** 🎋\n\n"
-          MESSAGE="${MESSAGE}**${BAMBDA_COUNT} new Bambda(s) added:**\n\n"
-          
-          # Process each new bambda file
+
           while IFS= read -r file; do
             if [ -n "$file" ]; then
-              # Extract Javadoc description and author
+              BAMBDA_NAME=$(grep '^name:' "$file" | head -1 | sed 's/^name: *//')
               DESCRIPTION=$(sed -n '/\/\*\*/,/\*\*\//p' "$file" | grep -v '@author' | grep -v '/\*\*' | grep -v '\*\*/' | grep -v '^\s*\*\s*$' | head -1 | sed 's/^\s*\*\s*//')
               AUTHOR=$(sed -n '/\/\*\*/,/\*\*\//p' "$file" | grep '@author' | sed 's/^\s*\*\s*@author\s*//')
-              
-              # Create direct GitHub link to the file
-              FILE_URL="https://github.com/${{ github.repository }}/blob/${{ github.sha }}/$file"
-              
-              # Add to message
-              MESSAGE="${MESSAGE}📄 **[$file]($FILE_URL)**\n"
+              FILE_URL="https://github.com/${{ github.repository }}/blob/main/$file"
+
+              MSG_TITLE=$(jq -n --arg title ":tada: ${BAMBDA_NAME}" '$title')
+
+              MSG_DESC=""
               if [ -n "$DESCRIPTION" ]; then
-                MESSAGE="${MESSAGE}   *$DESCRIPTION*\n"
+                MSG_DESC="${DESCRIPTION}\n\n"
               fi
               if [ -n "$AUTHOR" ]; then
-                MESSAGE="${MESSAGE}   👤 Author: $AUTHOR\n"
+                MSG_DESC="${MSG_DESC}**Author:** ${AUTHOR}"
               fi
-              MESSAGE="${MESSAGE}\n"
+              MSG_DESC=$(jq -n --arg desc "$MSG_DESC" '$desc')
+
+              HTTP_CODE=$(curl -s -w "%{http_code}" -o /dev/null \
+                -H "Content-Type: application/json" \
+                -X POST -d @- "${{ secrets.DISCORD_WEBHOOK_URL }}" <<EOF
+              {
+                "embeds": [
+                  {
+                    "type": "rich",
+                    "title": $MSG_TITLE,
+                    "description": $MSG_DESC,
+                    "color": 2123412,
+                    "url": "$FILE_URL"
+                  }
+                ]
+              }
+          EOF
+              )
+
+              if [ "$HTTP_CODE" -ne 204 ]; then
+                echo "Webhook request failed for $file with response code: $HTTP_CODE"
+              else
+                echo "Webhook request succeeded for $file"
+              fi
             fi
           done <<< "$BAMBDA_LIST"
-          
-          # Save message to output
-          echo "discord_message<<EOF" >> $GITHUB_OUTPUT
-          echo -e "$MESSAGE" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Send Discord notification
-        if: steps.check_bambda_changes.outputs.new_bambdas == 'true'
-        run: |
-          curl -H "Content-Type: application/json" \
-               -X POST \
-               -d "{\"content\": \"${{ steps.create_message.outputs.discord_message }}\"}" \
-               "${{ secrets.DISCORD_WEBHOOK_URL }}"
