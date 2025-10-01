@@ -70,7 +70,7 @@ jobs:
 
               MSG_DESC=""
               if [ -n "$DESCRIPTION" ]; then
-                MSG_DESC="**Description:** ${DESCRIPTION}\n\n"
+                MSG_DESC="${DESCRIPTION}\n\n"
               fi
               if [ -n "$AUTHOR" ]; then
                 MSG_DESC="${MSG_DESC}**Author:** ${AUTHOR}"
