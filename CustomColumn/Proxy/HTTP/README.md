@@ -48,6 +48,28 @@ if (requestResponse.hasResponse() && requestResponse.request().hasHeader("Origin
 }
 
 ```
+## [EmailFromJWT.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomColumn/Proxy/HTTP/EmailFromJWT.bambda)
+### Add email claim from JWT column.
+#### Author: Muhammad Zeeshan (https://gist.github.com/Xib3rR4dAr)
+```java
+
+if (!requestResponse.finalRequest().hasHeader("Authorization")) {
+    return "";
+}
+
+var headerValue = requestResponse.request().headerValue("Authorization");
+
+var jwtFrags = headerValue.split("\\.");
+
+if (jwtFrags.length != 3 ) {
+    return "";
+}
+
+var payloadJson = utilities().base64Utils().decode(jwtFrags[1], Base64DecodingOptions.URL).toString();
+
+return utilities().jsonUtils().readString(payloadJson, "email");
+
+```
 ## [JWTAlgorithm.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomColumn/Proxy/HTTP/JWTAlgorithm.bambda)
 ### Extracts the JWT alg value from JWT session Cookies
 #### Author: trikster

@@ -337,6 +337,49 @@ var codes = responses.stream().map(HttpRequestResponse::response).map(HttpRespon
 logging().logToOutput(codes);
 
 ```
+## [RandomCharactersBasedOnRegex.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomAction/RandomCharactersBasedOnRegex.bambda)
+### Creates a random string in the output log or replaces the $random placeholder in the request. The string is generated using a regular expression class received from the user input dialog.
+#### Author: Gareth Heyes
+```java
+var patternStr = javax.swing.JOptionPane.showInputDialog(null, "Enter regex pattern like [a-z]{4} or [0-5]{10}", "Random chars based on regex", javax.swing.JOptionPane.QUESTION_MESSAGE);
+if (patternStr == null) { 
+    logging.logToOutput("No pattern entered, cancelled."); 
+    return; 
+}
+
+var randomCharsBasedOnRegex = (Function<String, String>)(pattern -> {
+    var m = Pattern.compile("(\\[[^\\]]+\\])\\{(\\d+)\\}").matcher(pattern);
+    if (!m.matches()) throw new IllegalArgumentException("Only [chars]{n} supported");
+    var charClass = m.group(1);
+    var count = Integer.parseInt(m.group(2));
+    var inner = charClass.substring(1, charClass.length() - 1);
+    var chars = new ArrayList<Character>();
+    for (int i = 0; i < inner.length();) {
+        if (i + 2 < inner.length() && inner.charAt(i + 1) == '-') {
+            char start = inner.charAt(i);
+            char end = inner.charAt(i + 2);
+            for (char c = start; c <= end; c++) chars.add(c);
+            i += 3;
+        } else {
+            chars.add(inner.charAt(i));
+            i++;
+        }
+    }
+    var sb = new StringBuilder();
+    var rand = new Random();
+    for (int i = 0; i < count; i++) sb.append(chars.get(rand.nextInt(chars.size())));
+    return sb.toString();
+});
+
+var generated = randomCharsBasedOnRegex.apply(patternStr);
+
+if(requestResponse.request().toString().contains("$random")) {
+  httpEditor.requestPane().replace("$random", generated);
+} else {
+	logging.logToOutput("Random chars: " + generated);
+}
+
+```
 ## [RepeaterClipNewFromClipboard.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomAction/RepeaterClipNewFromClipboard.bambda)
 ### Given the clipboard contains a repeater request compressed and encoded by the RepeaterClip Bambda, this Bambda creates a new Repeater tab containing that request.
 #### Author: 0xd0ug (https://github.com/0xd0ug)
