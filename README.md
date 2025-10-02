@@ -23,7 +23,7 @@ Bambdas are scripts that run in supported Burp tools. They enable you to quickly
 - **Table columns** – Add custom table columns to surface important data.
 - **Repeater custom actions** – Extract, transform, and analyze data in Burp Repeater.
 - **Match and replace rules** – Replace parts of HTTP and WebSocket messages as they pass through the proxy.
-- **Custom scan checks** – Create your own active and passive scan checks.
+- **Custom scan checks** – Create your own active and passive scan checks. This repo contains checks written in Java. For checks written in our BChecks language, see the [BChecks repository](https://github.com/PortSwigger/BChecks).
 
 > 💡 You can use table filter scripts in both **Burp Suite Community Edition** and **Burp Suite Professional**. All other scripts require **Burp Suite Professional**.
 
@@ -48,6 +48,7 @@ You can explore the repository by script type:
 - [Repeater custom actions](https://github.com/PortSwigger/bambdas/tree/main/CustomAction)
 - [Match and replace rules](https://github.com/PortSwigger/bambdas/tree/main/MatchAndReplace)
 - [Custom scan checks](https://github.com/PortSwigger/bambdas/tree/main/CustomScanChecks)
+  - This repo contains checks written in Java. To view or contribute checks written in our BChecks language, see the [BChecks GitHub repository](https://github.com/PortSwigger/BChecks).
 
 ---
 
