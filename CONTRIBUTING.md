@@ -2,13 +2,15 @@
 
 Thanks for contributing to the Bambdas repository! 🚀
 
-> If this is your first time contributing, start with our step-by-step guide: [Submitting scripts to our GitHub repository](https://portswigger.net/burp/documentation/desktop/extend-burp/bambdas/creating/contribute-scripts).
+> 🔎 Note on scan checks: This repository is for Java-based Bambda scripts (including custom scan checks). If you want to contribute scan checks written in the BChecks language, please head to the [BChecks repository](https://github.com/PortSwigger/BChecks?tab=contributing-ov-file) instead.
 
 This page is a quick reference for users who have contributed before. It covers:
 
 - An overview of the submission process  
 - How to run validation manually  
 - The submission requirements your script must meet
+
+If this is your first time contributing, start with our step-by-step guide instead: [Submitting scripts to our GitHub repository](https://portswigger.net/burp/documentation/desktop/extend-burp/bambdas/creating/contribute-scripts).
 
 > Please make sure you are familiar with and respect our [Code of Conduct](https://github.com/PortSwigger/bambdas/blob/main/CODE_OF_CONDUCT.md) when making submissions.
 
