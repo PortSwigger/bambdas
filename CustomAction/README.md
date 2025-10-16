@@ -5,6 +5,24 @@ Please do not manually edit this file, or include any changes to this file in pu
 -->
 # Custom Actions
 Documentation: [Custom actions](https://portswigger.net/burp/documentation/desktop/tools/repeater/http-messages/custom-actions)
+## [BypassFirstRequestValidation.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomAction/BypassFirstRequestValidation.bambda)
+### This hides your repeater request behind an innocent GET request. It's useful for bypassing server-level validation sometimes.
+#### Author: James Kettle (https://github.com/albinowax)
+```java
+var connectionId = utilities().randomUtils().randomString(8);
+var options = RequestOptions.requestOptions().withConnectionId(connectionId).withHttpMode(HttpMode.HTTP_1);
+
+// Send a simple GET / HTTP/1.1 to the target as the precusor request
+var url = requestResponse.request().url();
+var precursorRequest = HttpRequest.httpRequestFromUrl(url); 
+precursorRequest = precursorRequest.withPath("/").withHeader("Connection", "keep-alive");
+
+// Send the attack in the repeater, and update the response pane
+api().http().sendRequest(precursorRequest, options);
+var response = api().http().sendRequest(requestResponse.request(), options);
+httpEditor.responsePane().set(response.response().toByteArray());
+
+```
 ## [CalculateResponseMetadata.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomAction/CalculateResponseMetadata.bambda)
 ### Calculate response metadata.
 #### Author: PortSwigger
