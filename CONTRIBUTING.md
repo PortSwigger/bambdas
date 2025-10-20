@@ -20,10 +20,30 @@ If this is your first time contributing, start with our step-by-step guide inste
 
 To ensure an efficient review, please submit one script at a time. Bundling multiple scripts may delay publication if any of them require changes.
 
-Follow these steps to submit your script:
+**We offer two ways to submit your script:**
 
-1. Add a Javadoc block at the top of your script that meets our [file requirements](https://github.com/PortSwigger/bambdas/blob/main/CONTRIBUTING.md#submission-guidelines).
-2. Refine your script to meet our [quality standards](https://github.com/PortSwigger/bambdas/blob/main/CONTRIBUTING.md#submission-guidelines).
+#### Option 1: Issue Form Submission (Recommended)
+
+The easiest way to submit is via our automated issue form:
+
+1. Create and test your script in Burp Suite
+2. Add a Javadoc block with description and `@author` tag
+3. Export your script from Burp's Bambda library
+4. Go to the [Bambda submission form](https://github.com/PortSwigger/bambdas/issues/new?template=bambda-submission.yml)
+5. Upload or paste your `.bambda` file
+
+That's it! The automation will:
+- Automatically determine the correct directory based on your script's `function` and `location`
+- Convert the `name` field to camel case for the filename
+- Create a pull request with all necessary information
+- Link the PR to your issue (auto-closes when merged)
+
+#### Option 2: Manual Submission
+
+If you prefer the traditional method:
+
+1. Add a Javadoc block at the top of your script that meets our [file requirements](#submission-guidelines).
+2. Refine your script to meet our [quality standards](#submission-guidelines).
 3. Export your script from Burp's Bambda library. Use camel case for the filename.
 4. Fork our GitHub repository.
 5. In the forked repo, add your script to the appropriate directory.
@@ -43,15 +63,16 @@ Each file must meet the following requirements:
 - Be in YAML format, containing the required metadata: `ID`, `name`, `function`, `location`, and `source`.  
   _To ensure metadata is correct, [export your script](https://portswigger.net/burp/documentation/desktop/extend-burp/bambdas/managing#exporting-scripts) from the Bambda library in Burp._
 - Have a filename in camel case. For example, `MyCustomScript.bambda`
+  _If using the issue form submission, the `name` field will be automatically converted to camel case._
 - Start with a Javadoc block, in the following order:
   1. A short description (1–2 sentences) of what the script does.
-  2. An `@author` tag in this format:
+  2. An `@author` tag. You can use any format:
      ```java
-     @author <your_name> (https://github.com/<your_profile>)
+     @author Your Name
+     @author Your Name (https://github.com/yourprofile)
      ```
-     _Use a direct, unobscured GitHub profile link._
-  3. If needed, add extra notes below the `@author` tag.  
-     _These won’t appear in the directory README._
+  3. If needed, add extra notes below the `@author` tag.
+     _These won't appear in the directory README._
      
 > For an example, see [this script](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/FilterOnCookieValue.bambda).
 

@@ -1,0 +1,89 @@
+name: Submit a Bambda Script
+description: Submit a new Bambda script to the repository
+title: "[Bambda Submission]: "
+labels: ["bambda-submission"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Submit a Bambda Script
+
+        Thank you for contributing to the Bambdas repository! 🚀
+
+        Please fill out this form to submit your Bambda script. Once submitted, an automated workflow will create a pull request for review.
+
+        **Important**: Please ensure you have read the [Contributing Guidelines](https://github.com/PortSwigger/bambdas/blob/main/CONTRIBUTING.md) before submitting.
+
+  - type: textarea
+    id: bambda-file
+    attributes:
+      label: Bambda File
+      description: |
+        **Option 1 (Recommended)**: Drag and drop your `.bambda` file here, or click to browse and attach it.
+
+        **Option 2**: Paste the complete content of your exported `.bambda` file below.
+
+        **Important**:
+        - Export your script from Burp's Bambda library to ensure correct YAML format
+        - The file must include ALL required fields: `id`, `name`, `function`, `location`, and `source`
+        - The `name` field will be automatically converted to camel case for the filename
+          - E.g., "My Custom Script" → `MyCustomScript.bambda`
+          - Non-alphanumeric characters will be stripped
+        - The `source` must contain a Javadoc comment with description and `@author` tag
+
+        Example format:
+        ```yaml
+        id: 48d6a6bb-3675-a171-5cb6-1a72355ce71a
+        name: My Custom Script
+        function: VIEW_FILTER
+        location: PROXY_HTTP_HISTORY
+        source: |+
+          /**
+           * Short description of what the script does.
+           *
+           * @author Your Name (https://github.com/yourusername)
+           **/
+
+          // Your code here
+          return true;
+        ```
+      placeholder: Drag and drop your .bambda file here, or paste the file contents below
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-notes
+    attributes:
+      label: Additional Notes (Optional)
+      description: Any additional context or notes about your submission
+      placeholder: This script was tested with Burp Suite Professional version 2024.x
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Submission Checklist
+      description: Please confirm you have completed the following
+      options:
+        - label: I have tested this script in Burp Suite and it compiles successfully
+          required: true
+        - label: I have included a Javadoc block with description and @author tag
+          required: true
+        - label: I have used camel case for the filename
+          required: true
+        - label: I have read and agree to follow the [Code of Conduct](https://github.com/PortSwigger/bambdas/blob/main/CODE_OF_CONDUCT.md)
+          required: true
+        - label: This script does not replicate existing Burp Suite Professional functionality
+          required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+
+        Once you submit this issue, an automated workflow will:
+        1. Validate your submission
+        2. Create a new branch
+        3. Add your Bambda file to the appropriate directory
+        4. Create a pull request linked to this issue
+
+        You'll be notified if there are any validation errors. Otherwise, a pull request will be created for review by the maintainers.

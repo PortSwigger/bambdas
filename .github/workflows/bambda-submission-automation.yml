@@ -1,0 +1,347 @@
+name: Bambda Submission Automation
+
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  process-submission:
+    if: contains(github.event.issue.labels.*.name, 'bambda-submission')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Parse issue form
+        id: parse
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueBody = context.payload.issue.body;
+
+            // Parse the issue form fields
+            const parseField = (fieldName) => {
+              const regex = new RegExp(`### ${fieldName}\\s*\\n\\s*\\n([\\s\\S]*?)(?=\\n### |$)`, 'i');
+              const match = issueBody.match(regex);
+              return match ? match[1].trim() : '';
+            };
+
+            let bambdaFileContent = parseField('Bambda File');
+            const additionalNotes = parseField('Additional Notes \\(Optional\\)');
+
+            // Check if content contains a file upload link (GitHub attachment format)
+            const fileUploadMatch = bambdaFileContent.match(/\[([^\]]+\.bambda)\]\((https:\/\/[^\)]+)\)/);
+            let bambdaCode = bambdaFileContent;
+
+            if (fileUploadMatch) {
+              const fileUrl = fileUploadMatch[2];
+
+              // Fetch the uploaded file content
+              try {
+                const response = await fetch(fileUrl);
+                if (!response.ok) throw new Error(`Failed to fetch file: ${response.status}`);
+                bambdaCode = await response.text();
+                console.log('Successfully fetched uploaded file');
+              } catch (error) {
+                throw new Error(`Could not fetch uploaded file: ${error.message}`);
+              }
+            } else {
+              // Clean up any markdown formatting if pasted
+              bambdaCode = bambdaCode.replace(/^```ya?ml?\s*\n/gm, '').replace(/\n```\s*$/gm, '');
+            }
+
+            // Validate required fields
+            if (!bambdaCode) {
+              throw new Error('Missing Bambda file content');
+            }
+
+            // Basic validation that the bambda code looks like YAML
+            if (!bambdaCode.includes('id:') || !bambdaCode.includes('name:') ||
+                !bambdaCode.includes('function:') || !bambdaCode.includes('location:') ||
+                !bambdaCode.includes('source:')) {
+              throw new Error('Bambda file must include all required YAML fields: id, name, function, location, source');
+            }
+
+            // Check for Javadoc in the source
+            if (!bambdaCode.includes('/**') || !bambdaCode.includes('@author')) {
+              throw new Error('Bambda source must include a Javadoc comment with @author tag');
+            }
+
+            // Extract metadata from the bambda YAML
+            const nameMatch = bambdaCode.match(/^name:\s*(.+)$/m);
+            if (!nameMatch) {
+              throw new Error('Could not extract name from Bambda YAML');
+            }
+            const bambdaDisplayName = nameMatch[1].trim();
+
+            // Extract function and location to determine directory
+            const functionMatch = bambdaCode.match(/^function:\s*(.+)$/m);
+            const locationMatch = bambdaCode.match(/^location:\s*(.+)$/m);
+
+            if (!functionMatch || !locationMatch) {
+              throw new Error('Could not extract function and location from Bambda YAML');
+            }
+
+            const bambdaFunction = functionMatch[1].trim();
+            const bambdaLocation = locationMatch[1].trim();
+
+            // Map function + location to directory path
+            const getDirectory = (func, loc) => {
+              // CustomAction
+              if (func === 'CUSTOM_ACTION') return 'CustomAction';
+
+              // CustomColumn
+              if (func === 'CUSTOM_COLUMN') {
+                if (loc === 'PROXY_HTTP_HISTORY') return 'CustomColumn/Proxy/HTTP';
+                if (loc === 'PROXY_WS_HISTORY') return 'CustomColumn/Proxy/WS';
+                if (loc === 'LOGGER') return 'CustomColumn/Logger';
+              }
+
+              // Filter
+              if (func === 'VIEW_FILTER') {
+                if (loc === 'PROXY_HTTP_HISTORY') return 'Filter/Proxy/HTTP';
+                if (loc === 'PROXY_WS_HISTORY') return 'Filter/Proxy/WS';
+                if (loc === 'SITE_MAP') return 'Filter/SiteMap';
+                if (loc === 'LOGGER') return 'Filter/Logger/View';
+              }
+
+              // Match and Replace
+              if (func === 'MATCH_REPLACE') {
+                if (loc === 'REQUEST') return 'MatchAndReplace/Request';
+                if (loc === 'RESPONSE') return 'MatchAndReplace/Response';
+              }
+
+              // Custom Scan Checks
+              if (func.startsWith('SCAN_CHECK_')) return 'CustomScanChecks';
+
+              throw new Error(`Unknown function/location combination: ${func} / ${loc}`);
+            };
+
+            const bambdaDirectory = getDirectory(bambdaFunction, bambdaLocation);
+
+            // Convert the name field to camel case for filename
+            // Strip all non-alphanumeric characters and convert to PascalCase
+            const bambdaFilename = bambdaDisplayName
+              .split(/[^a-zA-Z0-9]+/)  // Split on any non-alphanumeric character
+              .filter(word => word.length > 0)  // Remove empty strings
+              .map(word => {
+                // Capitalize first letter, lowercase the rest
+                return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+              })
+              .join('');  // Join with no separator for camel case
+
+            // Validate we got a valid filename
+            if (!bambdaFilename || bambdaFilename.length === 0) {
+              throw new Error(`Could not generate valid filename from name "${bambdaDisplayName}". Please use a name with alphanumeric characters.`);
+            }
+
+            // Final validation that filename is camel case
+            if (!/^[A-Z][a-zA-Z0-9]*$/.test(bambdaFilename)) {
+              throw new Error(`Generated filename "${bambdaFilename}" is not valid camel case. Original name: "${bambdaDisplayName}"`);
+            }
+
+            if (bambdaFilename !== bambdaDisplayName) {
+              console.log(`Converted name "${bambdaDisplayName}" to camel case filename: "${bambdaFilename}"`);
+            }
+
+            // Extract author information
+            const authorMatch = bambdaCode.match(/@author\s+(.+?)$/m);
+            const authorName = authorMatch ? authorMatch[1].trim() : 'Unknown';
+
+            // Extract description from Javadoc
+            const javadocMatch = bambdaCode.match(/\/\*\*\s*\n\s*\*\s*(.+?)(?:\s*\*\s*\n\s*\*\s*@author)/s);
+            const description = javadocMatch ? javadocMatch[1].trim().replace(/\s*\*\s*/g, ' ') : bambdaDisplayName;
+
+            // Set outputs
+            core.setOutput('bambda-filename', bambdaFilename);
+            core.setOutput('bambda-display-name', bambdaDisplayName);
+            core.setOutput('bambda-directory', bambdaDirectory);
+            core.setOutput('bambda-function', bambdaFunction);
+            core.setOutput('bambda-location', bambdaLocation);
+            core.setOutput('description', description);
+            core.setOutput('author-name', authorName);
+            core.setOutput('bambda-code', bambdaCode);
+            core.setOutput('additional-notes', additionalNotes);
+
+            return {
+              bambdaFilename,
+              bambdaDisplayName,
+              bambdaDirectory,
+              description,
+              authorName
+            };
+
+      - name: Create branch and add bambda file
+        id: create-pr
+        env:
+          BAMBDA_FILENAME: ${{ steps.parse.outputs.bambda-filename }}
+          BAMBDA_DIRECTORY: ${{ steps.parse.outputs.bambda-directory }}
+          BAMBDA_CODE: ${{ steps.parse.outputs.bambda-code }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Create a new branch
+          BRANCH_NAME="bambda-submission-${ISSUE_NUMBER}-${BAMBDA_FILENAME}"
+          git checkout -b "$BRANCH_NAME"
+
+          # Create the bambda file in the appropriate directory
+          BAMBDA_PATH="${BAMBDA_DIRECTORY}/${BAMBDA_FILENAME}.bambda"
+          mkdir -p "$(dirname "$BAMBDA_PATH")"
+          echo "$BAMBDA_CODE" > "$BAMBDA_PATH"
+
+          # Add and commit the file
+          git add "$BAMBDA_PATH"
+          git commit -m "Add ${BAMBDA_FILENAME} bambda from issue #${ISSUE_NUMBER}"
+
+          # Push the branch
+          git push origin "$BRANCH_NAME"
+
+          echo "branch-name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "bambda-path=$BAMBDA_PATH" >> $GITHUB_OUTPUT
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'oracle'
+
+      - name: Run bambda validation
+        id: validate
+        continue-on-error: true
+        run: |
+          # Verify BambdaChecker checksum
+          if [ ! -f "BambdaChecker-1.5.jar" ]; then
+            echo "BambdaChecker-1.5.jar not found in repository"
+            echo "Skipping validation - will be run during PR workflow"
+            echo "validation-skipped=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          EXPECTED_CHECKSUM="085787c80b9f70f431c6f5a329cf59385b67e69d74116b11e5c4ccbc021ec3d6"
+          ACTUAL_CHECKSUM=$(sha256sum BambdaChecker-1.5.jar | awk '{ print $1 }')
+
+          if [ "$ACTUAL_CHECKSUM" != "$EXPECTED_CHECKSUM" ]; then
+            echo "BambdaChecker checksum mismatch"
+            echo "validation-skipped=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Run validation
+          java -jar BambdaChecker-1.5.jar validateonly
+          VALIDATION_RESULT=$?
+
+          if [ $VALIDATION_RESULT -ne 0 ]; then
+            echo "validation-failed=true" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          echo "validation-failed=false" >> $GITHUB_OUTPUT
+          echo "validation-skipped=false" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        if: steps.validate.outputs.validation-failed != 'true'
+        uses: actions/github-script@v7
+        env:
+          BRANCH_NAME: ${{ steps.create-pr.outputs.branch-name }}
+          BAMBDA_FILENAME: ${{ steps.parse.outputs.bambda-filename }}
+          BAMBDA_DISPLAY_NAME: ${{ steps.parse.outputs.bambda-display-name }}
+          BAMBDA_PATH: ${{ steps.create-pr.outputs.bambda-path }}
+          DESCRIPTION: ${{ steps.parse.outputs.description }}
+          AUTHOR_NAME: ${{ steps.parse.outputs.author-name }}
+          ADDITIONAL_NOTES: ${{ steps.parse.outputs.additional-notes }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        with:
+          script: |
+            const { BRANCH_NAME, BAMBDA_FILENAME, BAMBDA_DISPLAY_NAME, BAMBDA_PATH, DESCRIPTION, AUTHOR_NAME, ADDITIONAL_NOTES, ISSUE_NUMBER } = process.env;
+
+            const prBody = `## Bambda Submission
+
+            This PR was automatically created from issue #${ISSUE_NUMBER}.
+
+            ### Bambda Details
+            - **Name**: ${BAMBDA_DISPLAY_NAME}
+            - **File**: \`${BAMBDA_PATH}\`
+            - **Description**: ${DESCRIPTION}
+            - **Author**: ${AUTHOR_NAME}
+
+            ${ADDITIONAL_NOTES ? `### Additional Notes\n${ADDITIONAL_NOTES}\n` : ''}
+
+            ### Bambda Contributions Checklist
+            * [ ] Bambda has a valid [header](https://github.com/PortSwigger/bambdas/blob/main/CONTRIBUTING.md), featuring an \`@author\` annotation and suitable description
+            * [ ] Bambda compiles and executes as expected
+            * [ ] Only .bambda files have been added or modified (README.md files are automatically updated / generated after PR merge)
+            * [ ] Bambda is in valid yaml format, and has a name, id, function, and location. To ensure this is correct, export the Bambda from your Bambda library in Burp.
+
+            ---
+
+            Closes #${ISSUE_NUMBER}`;
+
+            const pr = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[Bambda Submission] ${BAMBDA_DISPLAY_NAME}`,
+              head: BRANCH_NAME,
+              base: 'main',
+              body: prBody
+            });
+
+            // Comment on the issue with the PR link
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ISSUE_NUMBER,
+              body: `✅ Thank you for your submission! A pull request has been automatically created: #${pr.data.number}\n\nThe maintainers will review your Bambda and provide feedback on the PR.`
+            });
+
+            // Link the issue to the PR
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ISSUE_NUMBER,
+              state: 'open'
+            });
+
+            return pr.data.number;
+
+      - name: Comment on validation failure
+        if: steps.validate.outputs.validation-failed == 'true'
+        uses: actions/github-script@v7
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        with:
+          script: |
+            const { ISSUE_NUMBER } = process.env;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ISSUE_NUMBER,
+              body: `❌ **Validation Failed**\n\nYour Bambda submission did not pass validation. Please check the following:\n\n- Ensure the Bambda code is in valid YAML format\n- Verify all required fields are present (id, name, function, location, source)\n- Make sure the Javadoc comment includes an @author tag\n- Check that the code compiles in Burp Suite\n\nPlease update your issue with the corrected Bambda code, and the automation will run again.`
+            });
+
+      - name: Comment on error
+        if: failure() && steps.parse.outcome == 'failure'
+        uses: actions/github-script@v7
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        with:
+          script: |
+            const { ISSUE_NUMBER } = process.env;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ISSUE_NUMBER,
+              body: `❌ **Submission Error**\n\nThere was an error processing your submission. Please check that:\n\n- All required fields are filled out\n- The Bambda name is in camel case (e.g., MyCustomScript)\n- The Bambda code includes all required YAML fields\n- A Javadoc comment with @author tag is present\n\nIf you continue to experience issues, please review the [Contributing Guidelines](https://github.com/PortSwigger/bambdas/blob/main/CONTRIBUTING.md).`
+            });
