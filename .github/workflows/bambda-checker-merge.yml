@@ -70,10 +70,14 @@ jobs:
 
               MSG_DESC=""
               if [ -n "$DESCRIPTION" ]; then
-                MSG_DESC="${DESCRIPTION}\n\n"
+                MSG_DESC="${DESCRIPTION}"
               fi
               if [ -n "$AUTHOR" ]; then
-                MSG_DESC="${MSG_DESC}**Author:** ${AUTHOR}"
+                if [ -n "$MSG_DESC" ]; then
+                  MSG_DESC="${MSG_DESC}"$'\n\n'"**Author:** ${AUTHOR}"
+                else
+                  MSG_DESC="**Author:** ${AUTHOR}"
+                fi
               fi
               MSG_DESC=$(jq -n --arg desc "$MSG_DESC" '$desc')
 
