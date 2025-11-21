@@ -1,0 +1,44 @@
+id: f5d02e4b-2a05-4101-83be-e29877dff0c2
+name: Protobuf
+function: MATCH_AND_REPLACE_REQUEST
+location: PROXY_HTTP_HISTORY
+source: |-
+  /**
+  * Protobuf Request Decompressor
+  *
+  * @author d0ge
+  **/
+  var req = requestResponse.request();
+  
+  if(!req.hasHeader("Content-Encoding")) return req;
+
+  var encodingHeader = req.headerValue("Content-Encoding");
+  
+  var body = req.body();
+  
+  var encodings = encodingHeader.split(",");
+  
+  for (var i = encodings.length - 1; i >= 0; i--) {
+      var enc = encodings[i].trim().toLowerCase();
+      
+      if(enc.isBlank()) continue;
+      
+      try {
+          if (enc.equals("gzip")) {
+              body = utilities().compressionUtils().decompress(body, CompressionType.GZIP);
+          } else if (enc.equals("deflate")) {
+              body = utilities().compressionUtils().decompress(body, CompressionType.DEFLATE);
+          } else if (enc.equals("br")) {
+              body = utilities().compressionUtils().decompress(body, CompressionType.BROTLI);
+          } else if (enc.equals("identity")) {
+              // no-op
+          } else {
+              break;
+          }
+      } catch (Exception e) {
+          return req;
+      }
+  }
+  
+  // Return a new request with the decoded body
+  return req.withBody(body).withRemovedHeader("Content-Encoding");
