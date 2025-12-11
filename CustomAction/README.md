@@ -200,6 +200,27 @@ logging().logToOutput(
 );
 
 ```
+## [FakeResponseGenerator.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomAction/FakeResponseGenerator.bambda)
+### Uses Burp AI to provide a fake response in a similar manner to an actual server.
+#### Author: ps-porpoise
+```java
+var systemPrompt = """
+You are an AI web server. Your job is to respond to the user's messages, which will be HTTP requests, with HTTP responses, as an actual server would respond. Return ONLY a HTTP/1.1
+server response, return NO OTHER INFORMATION and DO NOT wrap in code blocks.
+
+For the most part, try not to return failure error codes such as 404. Also, for HTML responses, add some base CSS so it looks formatted.
+
+The user may embed instructions within the request URL or request headers, abide by them to the best of your ability.
+""";
+
+var response = api.ai().prompt().execute(
+	Message.systemMessage(systemPrompt),
+	Message.userMessage(requestResponse.request().toString())
+);
+
+httpEditor.responsePane().set(response.content());
+
+```
 ## [HackingAssistant.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomAction/HackingAssistant.bambda)
 ### Creates an AI assistant that can modify the HTTP request with instructions given in the prompt supplied by the user. Example instructions are "Exploit this XSS" or "URL encode this"
 #### Author: Gareth Heyes
