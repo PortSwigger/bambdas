@@ -10,7 +10,7 @@ source: |+
   * https://raw.githubusercontent.com/renniepak/CSPBypass/refs/heads/main/data.tsv
   *
   * @author Gareth Heyes
-  */
+  **/
 
   if (requestResponse.request().httpService() == null || requestResponse.response() == null) {
       return;
