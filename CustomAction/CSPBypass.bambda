@@ -6,6 +6,7 @@ source: |+
   /**
   * Reads the CSP of a response and detects if there is a CSP bypass.
   * Big thanks https://bsky.app/profile/renniepak.nl for CSPBypass.com
+  * Note: Makes a HTTP request to https://raw.githubusercontent.com/renniepak/CSPBypass/refs/heads/main/data.tsv
   * @author Gareth Heyes
   **/
 
@@ -143,6 +144,7 @@ source: |+
   var vectors = fetchVectors.apply(csp);
 
   if (!vectors.isEmpty()) {
+      api().logging().logToOutput("These vectors use data from CSPbypass.com. Use at your own risk.\n");
       api().logging().logToOutput("Found CSP bypass vectors:\n");
       for (var v : vectors) {
           api().logging().logToOutput(v.replaceAll("<script src", "<script/src")+"\n");
