@@ -71,6 +71,11 @@ jobs:
         run: |
           set -euo pipefail
 
+          to_sentence_case() {
+            local str=$1
+            echo "$str" | sed 's/_/ /g' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) tolower(substr($i,2))}1'
+          }
+
           extract_metadata() {
             local file=$1
             local field=$2
@@ -90,6 +95,14 @@ jobs:
                   grep '@author' |
                   sed 's/^[[:space:]]*\*[[:space:]]*@author[[:space:]]*//'
                 ;;
+              function)
+                local raw=$(grep '^function:' "$file" | head -1 | sed 's/^function: *//')
+                to_sentence_case "$raw"
+                ;;
+              location)
+                local raw=$(grep '^location:' "$file" | head -1 | sed 's/^location: *//')
+                to_sentence_case "$raw"
+                ;;
             esac
           }
 
@@ -97,22 +110,26 @@ jobs:
             local name=$1
             local description=$2
             local author=$3
-            local url=$4
+            local function=$4
+            local location=$5
+            local url=$6
 
             jq -n \
               --arg name ":tada: $name" \
               --arg description "$description" \
               --arg author "$author" \
+              --arg function "$function" \
+              --arg location "$location" \
               --arg url "$url" \
               '{
                 embeds: [{
                   type: "rich",
                   title: $name,
                   description: (
-                    [
-                      $description,
-                      "**Author:** " + $author
-                    ] | join("\n\n")
+                    $description + "\n\n" +
+                    "**Author:** " + $author + "\n" +
+                    "**Function:** " + $function + "\n" +
+                    "**Location:** " + $location
                   ),
                   color: 2123412,
                   url: $url
@@ -128,10 +145,12 @@ jobs:
             name=$(extract_metadata "$file" name)
             description=$(extract_metadata "$file" description)
             author=$(extract_metadata "$file" author)
+            function=$(extract_metadata "$file" function)
+            location=$(extract_metadata "$file" location)
             url="https://github.com/${GITHUB_REPOSITORY}/blob/main/$file"
 
             safe_name=$(echo "$file" | sed 's/[^a-zA-Z0-9._-]/_/g')
-            build_payload "$name" "$description" "$author" "$url" > "webhook_payloads/${safe_name}.json"
+            build_payload "$name" "$description" "$author" "$function" "$location" "$url" > "webhook_payloads/${safe_name}.json"
             echo "$safe_name" >> webhook_payloads/file_list.txt
           done <<< "$BAMBDA_LIST"
 
