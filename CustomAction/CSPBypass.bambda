@@ -1,0 +1,152 @@
+id: 87693a5a-3a31-4caa-a225-b5eb87ae686c
+name: CSP bypass
+function: CUSTOM_ACTION
+location: REPEATER
+source: |+
+  /**
+  * Reads the CSP of a response and detects if there is a CSP bypass.
+  * Big thanks https://bsky.app/profile/renniepak.nl for CSPBypass.com
+  * @author Gareth Heyes
+  **/
+
+  Function<Void, Void> noBypassNeeded = (ignored) -> {
+      api().logging().logToOutput(
+          "CSP allows scripts from any domain for " +
+          requestResponse.request().httpService().host()
+      );
+      return null;
+  };
+
+  if (requestResponse.request().httpService() == null || requestResponse.response() == null) return;
+  if (!requestResponse.response().hasHeader("Content-Security-Policy")) {
+   	 noBypassNeeded.apply(null);
+      return;
+  }
+  //Big thanks https://bsky.app/profile/renniepak.nl
+  var dataUrl = "https://raw.githubusercontent.com/renniepak/CSPBypass/refs/heads/main/data.tsv";
+  var sb = new StringBuilder();
+  for (var header : requestResponse.response().headers()) {
+      if ("Content-Security-Policy".equalsIgnoreCase(header.name())) {
+          var value = header.value();
+          if (value == null || value.isEmpty()) {
+              continue;
+          }
+
+          if (sb.length() > 0) {
+              sb.append("; ");
+          }
+          sb.append(value.trim());
+      }
+  }
+
+  var csp = sb.toString();
+  if (csp.isEmpty()) {
+      noBypassNeeded.apply(null);
+      return;
+  }
+
+  Function<String, Boolean> scriptsAllowedFromAnyDomain = cspHeader -> {
+      if (cspHeader == null || cspHeader.isEmpty()) {
+          return true;
+      }
+
+      var directives = new HashMap<String, String>();
+
+      for (var part : cspHeader.split(";")) {
+          var trimmed = part.trim();
+          if (trimmed.isEmpty()) continue;
+
+          int space = trimmed.indexOf(' ');
+          if (space == -1) continue;
+
+          var name = trimmed.substring(0, space).toLowerCase(Locale.ROOT);
+          var value = trimmed.substring(space + 1).trim();
+          directives.put(name, value);
+      }
+
+      var sources = directives.get("script-src");
+      if (sources == null) {
+          sources = directives.get("default-src");
+      }
+
+      if (sources == null || sources.isEmpty()) {
+          return true;
+      }
+
+      var tokens = sources.split("\\s+");
+
+      for (var t : tokens) {
+          if ("'none'".equals(t)) {
+              return false;
+          }
+      }
+
+      boolean hasWildcard = false;
+      boolean hasSchemeWildcard = false;
+
+      for (var t : tokens) {
+          if ("*".equals(t)) {
+              hasWildcard = true;
+          } else if (t.endsWith(":")) {
+              hasSchemeWildcard = true;
+          }
+      }
+
+      return hasWildcard || hasSchemeWildcard;
+  };
+
+  Function<String, List<String>> fetchVectors = cspHeader -> {
+      var results = new ArrayList<String>();
+
+      try {
+          var http = api().http();
+          var tsvRequest = HttpRequest.httpRequestFromUrl(dataUrl);
+          var tsvResponse = http.sendRequest(tsvRequest, HttpMode.HTTP_1);
+
+          if (!tsvResponse.hasResponse()) return results;
+
+          var body = tsvResponse.response().bodyToString();
+          if (body == null || body.isEmpty()) return results;
+
+          var lines = body.split("\\R");
+          for (var line : lines) {
+              var trimmed = line.trim();
+              if (trimmed.isEmpty() || trimmed.startsWith("#")) continue;
+
+              var parts = trimmed.split("\\t", 2);
+              if (parts.length < 2) continue;
+
+              var host = parts[0].trim();
+              var vector = parts[1].trim();
+              if (host.isEmpty() || vector.isEmpty()) continue;
+
+              String quoted = Pattern.quote(host);
+              String pattern = "(^|[\\s;])(?:\\*\\.)?" + quoted + "(?=[\\s;]|$)";
+              if (Pattern.compile(pattern).matcher(cspHeader).find()) {
+                  results.add(vector);
+              }
+          }
+      } catch (Exception e) {
+          api().logging().logToError(
+              "Failed to fetch or parse CSP bypass data: " + e.getMessage()
+          );
+      }
+
+      return results;
+  };
+
+  if (scriptsAllowedFromAnyDomain.apply(csp)) {
+      noBypassNeeded.apply(null);
+      return;
+  }
+
+  var vectors = fetchVectors.apply(csp);
+
+  if (!vectors.isEmpty()) {
+      api().logging().logToOutput("Found CSP bypass vectors:\n");
+      for (var v : vectors) {
+          api().logging().logToOutput(v.replaceAll("<script src", "<script/src")+"\n");
+      }
+  } else {
+  	api().logging().logToOutput("No CSP bypass found.");
+  }
