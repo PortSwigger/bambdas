@@ -6,8 +6,11 @@ on:
       - main
 
 jobs:
-  update_readmes: 
+  update_readmes:
     runs-on: ubuntu-latest
+    outputs:
+      new_bambdas: ${{ steps.check_bambda_changes.outputs.new_bambdas }}
+      bambda_files: ${{ steps.check_bambda_changes.outputs.bambda_files }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -52,19 +55,29 @@ jobs:
           git commit -m "Update README.md files" || true
           git push || true
 
+  send_discord_webhooks:
+    runs-on: ubuntu-latest
+    needs: update_readmes
+    if: needs.update_readmes.outputs.new_bambdas == 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
       - name: Send Discord webhooks for new Bambdas
-        if: steps.check_bambda_changes.outputs.new_bambdas == 'true'
+        env:
+          BAMBDA_LIST: ${{ needs.update_readmes.outputs.bambda_files }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           set -euo pipefail
-
-          BAMBDA_LIST="${{ steps.check_bambda_changes.outputs.bambda_files }}"
 
           while IFS= read -r file; do
             if [ -n "$file" ]; then
               BAMBDA_NAME=$(grep '^name:' "$file" | head -1 | sed 's/^name: *//')
               DESCRIPTION=$(sed -n '/\/\*\*/,/\*\*\//p' "$file" | grep -v '@author' | grep -v '/\*\*' | grep -v '\*\*/' | grep -v '^\s*\*\s*$' | head -1 | sed 's/^\s*\*\s*//')
               AUTHOR=$(sed -n '/\/\*\*/,/\*\*\//p' "$file" | grep '@author' | sed 's/^\s*\*\s*@author\s*//')
-              FILE_URL="https://github.com/${{ github.repository }}/blob/main/$file"
+              FILE_URL="https://github.com/${GITHUB_REPOSITORY}/blob/main/$file"
 
               MSG_TITLE=$(jq -n --arg title ":tada: ${BAMBDA_NAME}" '$title')
 
@@ -78,7 +91,7 @@ jobs:
 
               HTTP_CODE=$(curl -s -w "%{http_code}" -o /dev/null \
                 -H "Content-Type: application/json" \
-                -X POST -d @- "${{ secrets.DISCORD_WEBHOOK_URL }}" <<EOF
+                -X POST -d @- "$DISCORD_WEBHOOK_URL" <<EOF
               {
                 "embeds": [
                   {
