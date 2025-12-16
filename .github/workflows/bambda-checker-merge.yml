@@ -82,11 +82,13 @@ jobs:
               description)
                 sed -n '/\/\*\*/,/\*\*\//p' "$file" |
                   grep -v '@author' | grep -v '/\*\*' | grep -v '\*\*/' |
-                  grep -v '^\s*\*\s*$' | head -1 | sed 's/^\s*\*\s*//'
+                  grep -v '^[[:space:]]*\*[[:space:]]*$' | head -1 |
+                  sed 's/^[[:space:]]*\*[[:space:]]*//'
                 ;;
               author)
                 sed -n '/\/\*\*/,/\*\*\//p' "$file" |
-                  grep '@author' | sed 's/^\s*\*\s*@author\s*//'
+                  grep '@author' |
+                  sed 's/^[[:space:]]*\*[[:space:]]*@author[[:space:]]*//'
                 ;;
             esac
           }
