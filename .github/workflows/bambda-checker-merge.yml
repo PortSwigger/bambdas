@@ -68,14 +68,13 @@ jobs:
 
               MSG_TITLE=$(jq -n --arg title ":tada: ${BAMBDA_NAME}" '$title')
 
-              MSG_DESC=""
-              if [ -n "$DESCRIPTION" ]; then
-                MSG_DESC="${DESCRIPTION}\n\n"
+              MSG_DESC="$DESCRIPTION"
+              if [ -n "$DESCRIPTION" ] && [ -n "$AUTHOR" ]; then
+                MSG_DESC=$(printf "%s\n\n**Author:** %s" "$DESCRIPTION" "$AUTHOR")
+              elif [ -n "$AUTHOR" ]; then
+                MSG_DESC="**Author:** ${AUTHOR}"
               fi
-              if [ -n "$AUTHOR" ]; then
-                MSG_DESC="${MSG_DESC}**Author:** ${AUTHOR}"
-              fi
-              MSG_DESC=$(jq -n --arg desc "$MSG_DESC" '$desc')
+              MSG_DESC=$(jq -Rs '.' <<< "$MSG_DESC")
 
               HTTP_CODE=$(curl -s -w "%{http_code}" -o /dev/null \
                 -H "Content-Type: application/json" \
