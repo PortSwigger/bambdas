@@ -278,7 +278,7 @@ return AuditResult.auditResult();
 var POLL_SLEEP = 1_000;
 var TOTAL_TIME = 10_000;
 var spoofServer = "target.domain";
-var collaboratorClient = api().collaborator().createClient();
+var emailSplittingCollaboratorClient = api().collaborator().createClient();
 var techniques = new String[]{
         "=?x?q?$COLLABORATOR_PAYLOAD=40$COLLABORATOR_SERVER=3e=00?=foo@$SPOOF_SERVER"
 };
@@ -286,7 +286,7 @@ var techniques = new String[]{
 HashMap<String, HttpRequestResponse> requestResponsesSent = new HashMap<>();
 
 for(var technique: techniques) {
-   var payload = collaboratorClient.generatePayload();
+   var payload = emailSplittingCollaboratorClient.generatePayload();
    technique = technique.replaceAll("[$]COLLABORATOR_SERVER", payload.server().get().address());
    technique = technique.replaceAll("[$]COLLABORATOR_PAYLOAD", payload.id().toString());
    technique = technique.replaceAll("[$]SPOOF_SERVER", spoofServer);
@@ -302,7 +302,7 @@ try {
     long start = System.currentTimeMillis();
     while (true) {
         if (System.currentTimeMillis() - start >= TOTAL_TIME) break;
-        List<Interaction> list = collaboratorClient.getAllInteractions();
+        List<Interaction> list = emailSplittingCollaboratorClient.getAllInteractions();
         if (!list.isEmpty()) {
             for (Interaction i : list) {
                 if (!i.smtpDetails().isPresent()) continue;                
