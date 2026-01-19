@@ -329,7 +329,7 @@ return AuditResult.auditResult(auditIssues);
 
 ```
 ## [EmailSplittingDefaultCollaborator.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomScanChecks/EmailSplittingDefaultCollaborator.bambda)
-### Performs an email splitting attack using encoded word. The default Collaborator client is used to retrieve interactions. You should change the spoofServer to be your target domain e.g. example.com Note this scan check using the default Collaborator tab and doesn't raise any issues. This allows you to use a long running task over the 2 minute window for scan checks. The main Collaborator tab will be updated if your probes are successful and receive Collaborator interactions.
+### Performs an email splitting attack using encoded word. The built in Collaborator client is used to retrieve interactions. You should change the spoofServer to be your target domain e.g. example.com
 #### Author: Gareth Heyes
 ```java
 var techniques = new String[]{
@@ -372,7 +372,7 @@ var techniques = new String[]{
 var spoofServer = "target.domain";
 
 for(var technique: techniques) {
-    var payload = api().collaborator().defaultPayloadGenerator().generatePayload();
+    var payload = collaboratorClient.generatePayload();
     technique = technique.replaceAll("[$]COLLABORATOR_SERVER", payload.server().get().address());
     technique = technique.replaceAll("[$]COLLABORATOR_PAYLOAD", payload.id().toString());
     technique = technique.replaceAll("[$]SPOOF_SERVER", spoofServer);
