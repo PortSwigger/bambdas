@@ -14,15 +14,7 @@ source: |
   String urlStr = baserequest.url();
   logging().logToOutput("Original URL: " + urlStr);
   /* ── Parse URL ─────────────────────────────────── */
-  java.net.URL parsed;
-  try {
-      parsed = new java.net.URL(urlStr);
-  } catch (Exception e) {
-      logging().logToOutput("URL parse error: " + e.getMessage());
-      return;
-  }
-
-  String path = parsed.getPath();
+  String path = baserequest.path();
   String currentVersion = null;
   for (int i = 1; i <= 5; i++) {
       if (path.contains("/v" + i)) {
@@ -41,9 +33,7 @@ source: |
       String newVersion = "/v" + i;
       if (newVersion.equals(currentVersion)) continue;
       String newPath = path.replace(currentVersion, newVersion);
-      if (parsed.getQuery() != null) {
-          newPath += "?" + parsed.getQuery();
-      }
+
       logging().logToOutput("Sending modified URL: " + newPath);
       var newRequest = baserequest.withPath(newPath);
       var response = api.http().sendRequest(newRequest);
