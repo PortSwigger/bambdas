@@ -1,0 +1,44 @@
+id: 8c704eed-cda0-4990-9256-ede2f9002379
+name: api downgrade upgrade
+function: CUSTOM_ACTION
+location: REPEATER
+source: |
+  /**
+  * This Downgrade and Upgrade api version based on your current version
+  *
+  * @author radinanti (https://github.com/radinanti)
+  *
+  **/
+
+  var baserequest = requestResponse.request();
+  String urlStr = baserequest.url();
+  logging().logToOutput("Original URL: " + urlStr);
+  /* ── Parse URL ─────────────────────────────────── */
+  String path = baserequest.path();
+  Pattern versionPattern = Pattern.compile("/v(\\d+)");
+  Matcher matcher = versionPattern.matcher(path);
+  if (!matcher.find()) {
+      logging().logToOutput("No version (/v[NUM]) found in path.");
+      return;
+  }
+  String currentVersion = matcher.group(0);
+  /* ── Log detected version ─────────────────────────────────── */
+  logging().logToOutput("Detected version: " + currentVersion);
+  for (int i = 1; i <= 5; i++) {
+      // This checks v1 to v5 if you want more or less change the numbers
+      String newVersion = "/v" + i;
+      if (newVersion.equals(currentVersion)) continue;
+      String newPath = path.replace(currentVersion, newVersion);
+
+      logging().logToOutput("Sending modified URL: " + newPath);
+      var newRequest = baserequest.withPath(newPath);
+      var response = api.http().sendRequest(newRequest);
+      if (response == null) {
+          logging().logToOutput(newVersion + " → No response");
+          continue;
+      }
+      int status = response.response().statusCode();
+      logging().logToOutput(newVersion + " → Status Code: " + status);
+      logging().logToOutput(response.response().headerValue("Content-Type"));
+      logging().logToOutput("=====================================================");
+  }

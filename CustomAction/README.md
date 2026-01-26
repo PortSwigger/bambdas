@@ -5,6 +5,44 @@ Please do not manually edit this file, or include any changes to this file in pu
 -->
 # Custom Actions
 Documentation: [Custom actions](https://portswigger.net/burp/documentation/desktop/tools/repeater/http-messages/custom-actions)
+## [ApiDowngradeUpgrade.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomAction/ApiDowngradeUpgrade.bambda)
+### This Downgrade and Upgrade api version based on your current version
+#### Author: radinanti (https://github.com/radinanti)
+```java
+var baserequest = requestResponse.request();
+String urlStr = baserequest.url();
+logging().logToOutput("Original URL: " + urlStr);
+/* ── Parse URL ─────────────────────────────────── */
+String path = baserequest.path();
+Pattern versionPattern = Pattern.compile("/v(\\d+)");
+Matcher matcher = versionPattern.matcher(path);
+if (!matcher.find()) {
+    logging().logToOutput("No version (/v[NUM]) found in path.");
+    return;
+}
+String currentVersion = matcher.group(0);
+/* ── Log detected version ─────────────────────────────────── */
+logging().logToOutput("Detected version: " + currentVersion);
+for (int i = 1; i <= 5; i++) {
+    // This checks v1 to v5 if you want more or less change the numbers
+    String newVersion = "/v" + i;
+    if (newVersion.equals(currentVersion)) continue;
+    String newPath = path.replace(currentVersion, newVersion);
+
+    logging().logToOutput("Sending modified URL: " + newPath);
+    var newRequest = baserequest.withPath(newPath);
+    var response = api.http().sendRequest(newRequest);
+    if (response == null) {
+        logging().logToOutput(newVersion + " → No response");
+        continue;
+    }
+    int status = response.response().statusCode();
+    logging().logToOutput(newVersion + " → Status Code: " + status);
+    logging().logToOutput(response.response().headerValue("Content-Type"));
+    logging().logToOutput("=====================================================");
+}
+
+```
 ## [BypassFirstRequestValidation.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomAction/BypassFirstRequestValidation.bambda)
 ### This hides your repeater request behind an innocent GET request. It's useful for bypassing server-level validation sometimes.
 #### Author: James Kettle (https://github.com/albinowax)
