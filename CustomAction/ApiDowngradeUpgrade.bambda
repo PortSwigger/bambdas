@@ -15,17 +15,13 @@ source: |
   logging().logToOutput("Original URL: " + urlStr);
   /* ── Parse URL ─────────────────────────────────── */
   String path = baserequest.path();
-  String currentVersion = null;
-  for (int i = 1; i <= 5; i++) {
-      if (path.contains("/v" + i)) {
-          currentVersion = "/v" + i;
-          break;
-      }
-  }
-  if (currentVersion == null) {
+  Pattern versionPattern = Pattern.compile("/v(\\d+)");
+  Matcher matcher = versionPattern.matcher(path);
+  if (!matcher.find()) {
       logging().logToOutput("No version (/v[NUM]) found in path.");
       return;
   }
+  String currentVersion = matcher.group(0);
   /* ── Log detected version ─────────────────────────────────── */
   logging().logToOutput("Detected version: " + currentVersion);
   for (int i = 1; i <= 5; i++) {
