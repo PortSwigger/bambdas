@@ -8,6 +8,7 @@ on:
 jobs:
   update_readmes:
     runs-on: ubuntu-latest
+    if: github.event.repository.fork == false
     outputs:
       new_bambdas: ${{ steps.check_bambda_changes.outputs.new_bambdas }}
       bambda_files: ${{ steps.check_bambda_changes.outputs.bambda_files }}
@@ -58,7 +59,7 @@ jobs:
   send_discord_webhooks:
     runs-on: ubuntu-latest
     needs: update_readmes
-    if: needs.update_readmes.outputs.new_bambdas == 'true'
+    if: needs.update_readmes.outputs.new_bambdas == 'true' && github.event.repository.fork == false
     steps:
       - uses: actions/checkout@v4
         with:
