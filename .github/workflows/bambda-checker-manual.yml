@@ -1,4 +1,4 @@
-name: Run Bambda Checker Manually
+name: Manually update README files
 
 on: [workflow_dispatch]
 
