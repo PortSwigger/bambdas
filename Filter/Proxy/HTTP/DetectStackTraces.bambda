@@ -1,4 +1,4 @@
-id: e10de2cf-fd65-45f8-85ad-1bbf2e98a510
+id: 0a170678-7c39-4433-8e73-0c2bbea8ce37
 name: Detect Stack Traces
 function: VIEW_FILTER
 location: PROXY_HTTP_HISTORY
@@ -21,41 +21,53 @@ source: |+
   String body = response.bodyToString();
 
   // Java stack traces
-  boolean hasJavaStack = body.matches("(?s).*\\bat [a-zA-Z][a-zA-Z0-9_.]*\\.[a-zA-Z][a-zA-Z0-9_]*\\([^)]*\\.java:\\d+\\).*") ||
+  if (body.matches("(?s).*\\bat [a-zA-Z][a-zA-Z0-9_.]*\\.[a-zA-Z][a-zA-Z0-9_]*\\([^)]*\\.java:\\d+\\).*") ||
       body.contains("Exception in thread") ||
-      body.matches("(?s).*(Exception|Error):\\s+.*\\n.*at .*");
+      body.matches("(?s).*(Exception|Error):\\s+.*\\n.*at .*")) {
+      return true;
+  }
 
   // Python tracebacks
-  boolean hasPythonStack = body.contains("Traceback (most recent call last)") ||
-      body.matches("(?s).*File \"[^\"]+\\.py\", line \\d+.*");
+  if (body.contains("Traceback (most recent call last)") ||
+      body.matches("(?s).*File \"[^\"]+\\.py\", line \\d+.*")) {
+      return true;
+  }
 
   // PHP errors
-  boolean hasPHPStack = body.matches("(?s).*Fatal error:.*in /.*\\.php.*line \\d+.*") ||
+  if (body.matches("(?s).*Fatal error:.*in /.*\\.php.*line \\d+.*") ||
       body.matches("(?s).*Warning:.*in /.*\\.php.*line \\d+.*") ||
       body.matches("(?s).*Parse error:.*in /.*\\.php.*line \\d+.*") ||
-      body.matches("(?s).*in /[^ ]+\\.php on line \\d+.*");
+      body.matches("(?s).*in /[^ ]+\\.php on line \\d+.*")) {
+      return true;
+  }
 
   // .NET stack traces
-  boolean hasDotNetStack = body.contains("System.") && 
+  if (body.contains("System.") && 
       body.matches("(?s).*Exception:.*") &&
       (body.matches("(?s).*at [a-zA-Z][a-zA-Z0-9_.]*\\.[a-zA-Z][a-zA-Z0-9_]*\\(.*\\) in .*:\\d+.*") ||
-       body.matches("(?s).*at [a-zA-Z][a-zA-Z0-9_.]*\\.[a-zA-Z][a-zA-Z0-9_]*\\(.*\\).*"));
+       body.matches("(?s).*at [a-zA-Z][a-zA-Z0-9_.]*\\.[a-zA-Z][a-zA-Z0-9_]*\\(.*\\).*"))) {
+      return true;
+  }
 
   // Node.js/JavaScript stack traces
-  boolean hasNodeStack = body.matches("(?s).*Error:.*\\n.*at .* \\([^)]*:\\d+:\\d+\\).*") ||
+  if (body.matches("(?s).*Error:.*\\n.*at .* \\([^)]*:\\d+:\\d+\\).*") ||
       body.matches("(?s).*at .* \\(/[^)]+:\\d+:\\d+\\).*") ||
-      (body.contains("Error:") && body.matches("(?s).*at .*\\.js:\\d+:\\d+.*"));
+      (body.contains("Error:") && body.matches("(?s).*at .*\\.js:\\d+:\\d+.*"))) {
+      return true;
+  }
 
   // Ruby stack traces
-  boolean hasRubyStack = body.matches("(?s).*from /[^ ]+\\.rb:\\d+:in `.*'.*") ||
+  if (body.matches("(?s).*from /[^ ]+\\.rb:\\d+:in `.*'.*") ||
       body.matches("(?s).*Error.*:.*\\n.*\\.rb:\\d+.*") ||
-      body.contains("(backtrace)");
+      body.contains("(backtrace)")) {
+      return true;
+  }
 
   // Go panic stack traces
-  boolean hasGoStack = body.matches("(?s).*panic:.*\\n.*goroutine \\d+.*") ||
+  if (body.matches("(?s).*panic:.*\\n.*goroutine \\d+.*") ||
       body.matches("(?s).*goroutine \\d+ \\[.*\\]:.*") ||
-      (body.contains("panic:") && body.matches("(?s).*/.*\\.go:\\d+.*"));
+      (body.contains("panic:") && body.matches("(?s).*/.*\\.go:\\d+.*"))) {
+      return true;
+  }
 
-  return hasJavaStack || hasPythonStack || hasPHPStack || 
-      hasDotNetStack || hasNodeStack || hasRubyStack || hasGoStack;
-
+  return false;
