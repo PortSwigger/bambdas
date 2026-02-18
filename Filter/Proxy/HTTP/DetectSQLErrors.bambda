@@ -1,0 +1,126 @@
+id: 33c0cf65-9f14-44d3-80ef-b664bfbedf55
+name: DetectSQLErrors
+function: VIEW_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+   * Detects SQL error messages in responses for MySQL, PostgreSQL, Oracle,
+   * SQL Server, SQLite, MariaDB, IBM DB2, and generic ODBC/OLE DB drivers.
+   * Also detects ORM/framework-level errors from PDO, Hibernate, Django, and ActiveRecord.
+   * @author whoamins
+   **/
+
+  if (!requestResponse.hasResponse()) {
+      return false;
+  }
+
+  var response = requestResponse.response();
+
+  if (response.statusCode() < 400) {
+      return false;
+  }
+
+  String body = response.bodyToString();
+
+  if (body.isEmpty()) {
+      return false;
+  }
+
+  // MySQL / MariaDB errors
+  if (body.contains("You have an error in your SQL syntax") ||
+      body.contains("mysql_fetch") ||
+      body.contains("mysql_num_rows") ||
+      body.contains("mysql_query") ||
+      body.contains("MySqlException") ||
+      body.contains("MySqlClient") ||
+      body.matches("(?s).*SQL syntax.*MySQL.*")) {
+      return true;
+  }
+
+  // PostgreSQL errors
+  if (body.contains("pg_query") ||
+      body.contains("pg_exec") ||
+      body.contains("PSQLException") ||
+      body.contains("unterminated quoted string at or near") ||
+      body.matches("(?s).*ERROR:\\s+syntax error at or near.*") ||
+      body.contains("valid PostgreSQL result") ||
+      body.contains("Npgsql.")) {
+      return true;
+  }
+
+  // Oracle errors
+  if (body.matches("(?s).*ORA-\\d{5}.*") ||
+      body.contains("Oracle error") ||
+      body.contains("Oracle.*Driver") ||
+      body.contains("quoted string not properly terminated") ||
+      body.contains("oracleException")) {
+      return true;
+  }
+
+  // SQL Server / Microsoft errors
+  if (body.contains("Unclosed quotation mark") ||
+      body.contains("Microsoft OLE DB") ||
+      body.contains("Microsoft SQL Native Client") ||
+      body.contains("ODBC SQL Server Driver") ||
+      body.contains("SqlException") ||
+      body.contains("SqlClient.") ||
+      body.contains("mssql_query") ||
+      body.matches("(?s).*Msg \\d+, Level \\d+, State \\d+.*") ||
+      body.contains("Incorrect syntax near")) {
+      return true;
+  }
+
+  // SQLite errors
+  if (body.contains("SQLite3::") ||
+      body.contains("SQLITE_ERROR") ||
+      body.contains("sqlite_query") ||
+      body.contains("SQLiteException") ||
+      body.matches("(?s).*near \".*\": syntax error.*")) {
+      return true;
+  }
+
+  // IBM DB2 errors
+  if (body.matches("(?s).*DB2 SQL Error.*") ||
+      body.matches("(?s).*SQLCODE=-\\d+.*") ||
+      body.contains("com.ibm.db2")) {
+      return true;
+  }
+
+  // PHP PDO errors
+  if (body.contains("PDOException") ||
+      body.matches("(?s).*PDO::.*SQLSTATE.*")) {
+      return true;
+  }
+
+  // Hibernate / JPA errors
+  if (body.contains("HibernateException") ||
+      body.contains("QuerySyntaxException") ||
+      body.contains("org.hibernate")) {
+      return true;
+  }
+
+  // Django ORM errors
+  if (body.contains("django.db.utils.") ||
+      body.contains("ProgrammingError at")) {
+      return true;
+  }
+
+  // Ruby ActiveRecord errors
+  if (body.contains("ActiveRecord::StatementInvalid") ||
+      body.contains("ActiveRecord::RecordNotFound")) {
+      return true;
+  }
+
+  // Generic JDBC / ODBC / OLE DB
+  if (body.contains("ODBC Driver") ||
+      body.contains("JDBCException") ||
+      body.contains("java.sql.SQLException") ||
+      body.contains("Data source rejected") ||
+      body.contains("SQLSTATE[") ||
+      body.contains("SQL command not properly ended") ||
+      body.contains("invalid input syntax for") ||
+      body.contains("division by zero")) {
+      return true;
+  }
+
+  return false;
