@@ -1,0 +1,49 @@
+id: 3bf8f408-0829-44fc-b3f4-4277a4d82ae6
+name: CSDVectorDetector
+function: CUSTOM_ACTION
+location: REPEATER
+source: |
+    /**
+    * Detects potential client-side desync (CSD) vectors by sending an HTTP/1.1 POST probe
+    * with a Content-Length inflated by 1 byte beyond the actual body. An immediate response
+    * before the phantom byte is read may indicate a CSD vector.
+    *
+    * @author ZyWAC (https://github.com/ZyWAC)
+    *
+    * Reference: https://portswigger.net/research/client-side-desync
+    **/
+
+    var req = requestResponse.request();
+
+    if (req.httpVersion().equals("HTTP/2")) {
+        logging().logToOutput("[CSD Detector] HTTP/2 detected — only HTTP/1.1 is supported. Aborting.");
+        return;
+    }
+
+    var body = req.body();
+    int realBodyLen = (body != null) ? body.length() : 0;
+    int inflatedLen = realBodyLen + 1;
+
+    logging().logToOutput("[CSD Detector] Target: " + req.httpService());
+    logging().logToOutput("[CSD Detector] Real body length: " + realBodyLen + " bytes | Probing with Content-Length: " + inflatedLen);
+
+    HttpRequest probe = req
+        .withMethod("POST")
+        .withHeader("Connection", "keep-alive")
+        .withHeader("Content-Type", "application/x-www-form-urlencoded")
+        .withHeader("Content-Length", String.valueOf(inflatedLen));
+
+    RequestOptions options = RequestOptions.requestOptions()
+        .withHttpMode(HttpMode.HTTP_1)
+        .withResponseTimeout(5000);
+
+    HttpRequestResponse result = api().http().sendRequest(probe, options);
+
+    var response = result.response();
+    boolean timedOut = (response == null) || (response.statusCode() == 0);
+
+    if (!timedOut) {
+        logging().logToOutput("[+] Potential CSD vector detected — HTTP " + response.statusCode() + " received before body was fully read.");
+    } else {
+        logging().logToOutput("[-] No early-response vector detected.");
+    }
