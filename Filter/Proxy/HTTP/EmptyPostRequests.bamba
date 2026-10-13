@@ -1,0 +1,16 @@
+/**
+ * Show all POST requests with an empty HTTP Body
+ *
+ * @author <h0ng10> (https://github.com/h0ng10)
+ *
+ * List any POST requests with an empty body, pointing to potential CSRF targets
+ *
+ **/
+
+var req = requestResponse.request();
+
+if(req.isInScope()) {
+    
+	return req.method().equalsIgnoreCase("POST") && req.body().length() == 0;
+}
+return false;
