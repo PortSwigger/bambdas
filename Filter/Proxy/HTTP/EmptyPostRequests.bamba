@@ -9,8 +9,8 @@
 
 var req = requestResponse.request();
 
+// Limit to requests in the project scope, remove if not needed
 if(req.isInScope()) {
-    
 	return req.method().equalsIgnoreCase("POST") && req.body().length() == 0;
 }
 return false;
