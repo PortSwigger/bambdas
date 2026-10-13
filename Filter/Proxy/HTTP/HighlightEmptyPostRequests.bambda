@@ -1,0 +1,32 @@
+id: cfc39369-b72b-4c96-be39-90f4ff5d62e7
+name: Highlight POST requests with an empty HTTP Body
+function: VIEW_FILTER
+location: PROXY_HTTP_HISTORY
+source: |+
+  /**
+   * Highlight POST requests with an empty HTTP Body
+   *
+   * @author <h0ng10> (https://github.com/h0ng10)
+   *
+   * List any POST requests with an empty body, pointing to potential CSRF targets
+   *
+   **/
+  
+  var req = requestResponse.request();
+  
+  if (req.isInScope()) {
+  
+  	if (req.method().equalsIgnoreCase("POST") && req.body().length() == 0) {
+      	requestResponse.annotations().setHighlightColor(HighlightColor.YELLOW);
+  
+      	var existing = requestResponse.annotations().notes();
+      	if (existing == null || existing.isEmpty()) {
+          	requestResponse.annotations().setNotes("Empty POST request");
+              
+      	} else if (!existing.contains("Empty POST request")) {
+          	requestResponse.annotations().setNotes(existing + " | Empty POST request");
+     		}
+          return true;
+  	}
+  }
+  return false;
