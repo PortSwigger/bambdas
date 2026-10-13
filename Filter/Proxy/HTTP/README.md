@@ -798,6 +798,31 @@ if (deprecatedMethods.contains(requestMethod)) {
 return false;
 
 ```
+## [HighlightEmptyPostRequests.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/HighlightEmptyPostRequests.bambda)
+### Highlight POST requests with an empty HTTP Body
+#### Author: <h0ng10> (https://github.com/h0ng10)
+```java
+
+var req = requestResponse.request();
+
+if (req.isInScope()) {
+
+	if (req.method().equalsIgnoreCase("POST") && req.body().length() == 0) {
+    	requestResponse.annotations().setHighlightColor(HighlightColor.YELLOW);
+
+    	var existing = requestResponse.annotations().notes();
+    	if (existing == null || existing.isEmpty()) {
+        	requestResponse.annotations().setNotes("Empty POST request");
+
+    	} else if (!existing.contains("Empty POST request")) {
+        	requestResponse.annotations().setNotes(existing + " | Empty POST request");
+   		}
+        return true;
+	}
+}
+return false;
+
+```
 ## [HighlightGraphQLMutations.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/HighlightGraphQLMutations.bambda)
 ### Bambda to highlight GraphQL Requests.
 #### Author: drwetter (https://github.com/drwetter/)
