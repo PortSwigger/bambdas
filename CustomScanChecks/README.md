@@ -157,6 +157,116 @@ if (exploitResponse != null
 return AuditResult.auditResult();
 
 ```
+## [CVE-2026-109618CVE-2026-109619-PHP2Shell.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomScanChecks/CVE-2026-109618CVE-2026-109619-PHP2Shell.bambda)
+### Active scan check for PHP2Shell (CVE-2026-109618, CVE-2026-109619).  Sends one request with an invalid session ID and a session upload progress field. Vulnerable PHP builds print a session-write warning that the fix removes, so the check reports only when that warning appears alongside the two session start-up warnings. It does not attempt to exploit the vulnerability.
+#### Author: Tom SL (https://github.com/TomLefley)
+```java
+String boundary = "----" + api().utilities().randomUtils().randomString(32);
+String token = api().utilities().randomUtils().randomString(20);
+String fileName = api().utilities().randomUtils().randomString(12) + ".txt";
+
+String body =
+        "--" + boundary + "\r\n" +
+        "Content-Disposition: form-data; name=\"PHP_SESSION_UPLOAD_PROGRESS\"\r\n\r\n" +
+        token + "\r\n" +
+        "--" + boundary + "\r\n" +
+        "Content-Disposition: form-data; name=\"f\"; filename=\"" + fileName + "\"\r\n" +
+        "Content-Type: text/plain\r\n\r\n" +
+        "1\r\n" +
+        "--" + boundary + "--\r\n";
+
+HttpRequest request = HttpRequest.httpRequest(requestResponse.httpService(),
+                "POST / HTTP/1.1\r\n" +
+                "Host: " + requestResponse.httpService().host() + "\r\n" +
+                "Cookie: PHPSESSID=_\r\n" +
+                "Content-Type: multipart/form-data; boundary=" + boundary + "\r\n\r\n")
+        .withBody(body);
+
+HttpRequestResponse probe = http.sendRequest(request);
+
+if (!probe.hasResponse())
+{
+    return AuditResult.auditResult();
+}
+
+String responseBody = probe.response().bodyToString();
+if (responseBody == null)
+{
+    return AuditResult.auditResult();
+}
+
+boolean reachedSessionStartup =
+        responseBody.contains("Session ID is too long or contains illegal characters") &&
+        responseBody.contains("Failed to read session data");
+boolean attemptedSessionWrite = responseBody.contains("Failed to write session data (");
+
+if (!reachedSessionStartup || !attemptedSessionWrite)
+{
+    return AuditResult.auditResult();
+}
+
+String detail =
+        "<p><b>Detection Evidence:</b></p>"
+        + "<ul>"
+        + "<li>Burp sent a POST request with an invalid session ID and a session upload progress field</li>"
+        + "<li>PHP reported \"Session ID is too long or contains illegal characters\" and \"Failed to read "
+        + "session data\", confirming the request reached PHP's session start-up</li>"
+        + "<li>PHP also reported \"Failed to write session data\". Only builds without the PHP2Shell fix "
+        + "try to write the session after start-up fails</li>"
+        + "<li>Burp did not attempt to exploit the vulnerability</li>"
+        + "</ul>";
+
+String background =
+        "<p>The server is vulnerable to <b>CVE-2026-109618</b> and <b>CVE-2026-109619</b>"
+        + " (PHP2Shell), critical remote code execution vulnerabilities in the PHP interpreter with a "
+        + "CVSS v4.0 score of 9.2.</p><p><b>Vulnerability Overview:</b></p><ul><li>Unauthenticated "
+        + "remote code execution with the privileges of the PHP process</li><li>CVE-2026-109618: "
+        + "out-of-memory handling can interrupt PHP while internal request data is only partly "
+        + "initialised, and request cleanup then treats the invalid data as valid</li><li>"
+        + "CVE-2026-109619: request-owned state can survive after its memory has been freed, and a "
+        + "later request handled by the same worker can use that stale state</li><li>Affects every PHP "
+        + "installation that serves web requests, including PHP-FPM, Apache with mod_php, php-cgi, "
+        + "FrankenPHP and LiteSpeed</li><li>On Apache with mod_php, the attack can be triggered before "
+        + "any application code runs</li></ul><p><b>Vulnerability Classifications:</b></p><ul><li>"
+        + "CWE-416: Use After Free</li><li>CWE-755: Improper Handling of Exceptional Conditions</li>"
+        + "</ul>";
+
+String remediation =
+        "<p><b>CRITICAL - Immediate Action Required</b></p><p>This vulnerability allows "
+        + "unauthenticated attackers to execute arbitrary code on the server. Patch immediately.</p><p>"
+        + "<b>Upgrade to Patched Versions:</b></p><ul><li><b>PHP 8.5:</b> 8.5.12</li><li><b>PHP "
+        + "8.4:</b> 8.4.27</li><li><b>PHP 8.3:</b> 8.3.36</li><li><b>PHP 8.2:</b> 8.2.35</li><li><b>PHP "
+        + "8.1 and earlier:</b> no longer receive releases from the PHP project. Use a backported fix "
+        + "from your distribution or LTS vendor, the PHP security team's source backports for PHP 7.4, "
+        + "8.0 or 8.1, or upgrade to a supported branch</li></ul><p><b>Remediation Steps:</b></p><ol>"
+        + "<li>Upgrade PHP to a patched version, or install your vendor's backported package</li><li>"
+        + "Restart every PHP worker, such as PHP-FPM pools and Apache</li><li>Verify the fix by "
+        + "re-scanning</li></ol><p><b>Partial Mitigations:</b></p><p>Until you can upgrade, the PHP "
+        + "security advisory lists configuration changes that reduce exposure to specific attack paths, "
+        + "such as setting session.upload_progress.enabled to 0. These changes do not make an "
+        + "installation safe.</p><p><b>References:</b></p><ul><li><a "
+        + "href=\"https://www.php.net/archive/2026.php#2026-10-21-5\">PHP Security Advisory</a></li><li>"
+        + "<a href=\"https://github.com/php/php-src/security/advisories/GHSA-w8hw-w9fx-j79w\">"
+        + "CVE-2026-109618 Details</a></li><li><a "
+        + "href=\"https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp\">"
+        + "CVE-2026-109619 Details</a></li></ul>";
+
+AuditIssue auditIssue = AuditIssue.auditIssue(
+        "PHP remote code execution (PHP2Shell)",
+        detail,
+        remediation,
+        requestResponse.request().url(),
+        AuditIssueSeverity.HIGH,
+        AuditIssueConfidence.FIRM,
+        background,
+        null,
+        AuditIssueSeverity.HIGH,
+        probe
+);
+
+return AuditResult.auditResult(List.of(auditIssue));
+
+```
 ## [CVE-2026-109618CVE-2026-109619-PHP2ShellVulnerablePhpVersion.bambda](https://github.com/PortSwigger/bambdas/blob/main/CustomScanChecks/CVE-2026-109618CVE-2026-109619-PHP2ShellVulnerablePhpVersion.bambda)
 ### Passive scan check that reports PHP versions affected by PHP2Shell (CVE-2026-109618, CVE-2026-109619), read from the X-Powered-By header, or from the Server header when no X-Powered-By header carries a PHP version.
 #### Author: Tom SL (https://github.com/TomLefley)
