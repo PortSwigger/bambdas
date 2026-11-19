@@ -1,3 +1,8 @@
+id: d7788d03-5803-4120-91c8-89343ba5f8bc
+name: JS LinkFinder
+function: SCAN_CHECK_PASSIVE_PER_REQUEST
+location: SCANNER
+source: |2
 /**
  * a passive bambda equivalent of the jslinkfinder extension with built-in deduplication
  *
