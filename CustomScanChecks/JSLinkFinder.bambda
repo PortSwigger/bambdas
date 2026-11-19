@@ -1,0 +1,87 @@
+/**
+ * a passive bambda equivalent of the jslinkfinder extension with built-in deduplication
+ *
+ * @author giuseppesec (https://github.com/giuseppesec)
+ *
+ * to use select the bambda in a passive scan. an issue will be created for found links
+ *
+ **/
+
+if (requestResponse.response() == null) {
+    return AuditResult.auditResult();
+}
+
+String url = requestResponse.request().url();
+String urlLower = url.toLowerCase();
+
+// Must be a JS response: stated MIME type is SCRIPT, or URL contains .js
+boolean isScript = requestResponse.response().statedMimeType() == burp.api.montoya.http.message.MimeType.SCRIPT;
+boolean urlHasJs = urlLower.contains(".js");
+if (!isScript && !urlHasJs) {
+    return AuditResult.auditResult();
+}
+
+// Exclude common JS libraries
+String[] exclusions = {"jquery", "google-analytics", "gpt.js"};
+for (String exc : exclusions) {
+    if (urlLower.contains(exc)) {
+        return AuditResult.auditResult();
+    }
+}
+
+// Deduplicate: track URLs already reported using a JVM-global concurrent set
+// stored in System properties so it persists across invocations of this check.
+@SuppressWarnings("unchecked")
+java.util.Set<String> reportedUrls = (java.util.Set<String>) System.getProperties()
+    .computeIfAbsent("__burp_linkfinder_reported__", k -> java.util.concurrent.ConcurrentHashMap.newKeySet());
+
+if (!reportedUrls.add(url)) {
+    return AuditResult.auditResult();
+}
+
+// LinkFinder regex (credit: GerbenJavado/LinkFinder)
+String regex = "(?:\"|')"
+    + "((?:(?:[a-zA-Z]{1,10}://|//)[^\"'/]{1,}\\.[a-zA-Z]{2,}[^\"']{0,})"
+    + "|(?:(?:/|\\.\\./|\\./)[^\"'><,;| *()(%%$^/\\\\\\[\\]][^\"'><,;|()]{1,})"
+    + "|(?:[a-zA-Z0-9_\\-/]{1,}/[a-zA-Z0-9_\\-/]{1,}\\.(?:[a-zA-Z]{1,4}|action)(?:[\\?|/][^\"|']{0,}|))"
+    + "|(?:[a-zA-Z0-9_\\-]{1,}\\.(?:php|asp|aspx|jsp|json|action|html|js|txt|xml)(?:\\?[^\"|']{0,}|)))"
+    + "(?:\"|')";
+
+java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(regex);
+java.util.regex.Matcher matcher = pattern.matcher(requestResponse.response().bodyToString());
+
+java.util.LinkedHashSet<String> foundLinks = new java.util.LinkedHashSet<>();
+while (matcher.find()) {
+    foundLinks.add(matcher.group(1));
+}
+
+if (foundLinks.isEmpty()) {
+    return AuditResult.auditResult();
+}
+
+StringBuilder detail = new StringBuilder();
+detail.append("JS LinkFinder analysed the following JS file for links: <b>")
+      .append(url).append("</b><br><br>")
+      .append("<b>").append(foundLinks.size()).append("</b> link(s) found:<br><ul>");
+int i = 0;
+for (String link : foundLinks) {
+    detail.append("<li>").append(i).append(" &ndash; ").append(link).append("</li>");
+    i++;
+}
+detail.append("</ul>");
+
+return AuditResult.auditResult(
+    AuditIssue.auditIssue(
+        "JS LinkFinder - Links Found",
+        detail.toString(),
+        null,
+        url,
+        AuditIssueSeverity.INFORMATION,
+        AuditIssueConfidence.CERTAIN,
+        "JS files may hold links to other parts of web applications that are not otherwise visible through crawling.",
+        "This is an informational finding only.",
+        AuditIssueSeverity.INFORMATION,
+        java.util.List.of(requestResponse)
+    )
+);
+
